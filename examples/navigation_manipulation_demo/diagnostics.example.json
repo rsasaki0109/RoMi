@@ -1,0 +1,90 @@
+{
+  "schema_version": "0.1.0",
+  "report_id": "nav_manip_demo_diag_001",
+  "graph_id": "nav_manip_demo_graph",
+  "mode": "simulation",
+  "clock": {
+    "clock_domain": "sim_time",
+    "event_time_ns": 12000000000,
+    "replay_state": "live"
+  },
+  "streams": [
+    {
+      "stream_id": "robot.camera.rgb",
+      "rate_hz": 30.0,
+      "latency_ms": 18.4,
+      "drops": 0,
+      "status": "ok"
+    },
+    {
+      "stream_id": "robot.camera.depth",
+      "rate_hz": 30.0,
+      "latency_ms": 20.1,
+      "drops": 0,
+      "status": "ok"
+    },
+    {
+      "stream_id": "robot.joints.state",
+      "rate_hz": 100.0,
+      "latency_ms": 3.2,
+      "drops": 0,
+      "status": "ok"
+    },
+    {
+      "stream_id": "robot.base.odom",
+      "rate_hz": 50.0,
+      "latency_ms": 5.6,
+      "drops": 1,
+      "status": "warning"
+    },
+    {
+      "stream_id": "robot.frames.tf",
+      "rate_hz": 50.0,
+      "latency_ms": 4.8,
+      "drops": 0,
+      "status": "ok"
+    }
+  ],
+  "frames": {
+    "root_frame": "map",
+    "tracked_frames": [
+      "map",
+      "odom",
+      "base_link",
+      "camera_link",
+      "arm_base_link",
+      "tool0"
+    ],
+    "status": "ok",
+    "warnings": []
+  },
+  "qos": {
+    "status": "warning",
+    "warnings": [
+      {
+        "stream_id": "robot.base.odom",
+        "message": "Observed one sample gap during bridge capture."
+      }
+    ]
+  },
+  "policy": {
+    "policy_id": "mock_nav_manip_policy",
+    "input_freshness": {
+      "robot.camera.rgb": {
+        "age_ms": 24.0,
+        "status": "ok"
+      },
+      "robot.joints.state": {
+        "age_ms": 6.0,
+        "status": "ok"
+      },
+      "robot.base.odom": {
+        "age_ms": 21.0,
+        "status": "ok"
+      }
+    },
+    "inference_latency_ms": 7.5,
+    "last_output_stream": "policy.proposed_action",
+    "authority": "proposed_only"
+  }
+}

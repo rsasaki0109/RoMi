@@ -1,0 +1,69 @@
+{
+  "schema_version": "0.1.0",
+  "episode_id": "nav_manip_demo_001",
+  "scenario": {
+    "name": "navigation_to_table_and_mock_pick",
+    "mode": "simulation",
+    "world_id": "demo_world",
+    "robot_id": "mobile_manipulator_demo"
+  },
+  "clock": {
+    "clock_domain": "sim_time",
+    "start_time_ns": 0,
+    "end_time_ns": 90000000000,
+    "replay_time_scale": 1.0
+  },
+  "streams": [
+    {
+      "stream_id": "robot.camera.rgb",
+      "schema_id": "romi.robotics.stream_metadata/0.1.0",
+      "source": "/camera/color/image_raw",
+      "message_count": 2700
+    },
+    {
+      "stream_id": "robot.camera.depth",
+      "schema_id": "romi.robotics.stream_metadata/0.1.0",
+      "source": "/camera/depth/image_raw",
+      "message_count": 2700
+    },
+    {
+      "stream_id": "robot.joints.state",
+      "schema_id": "romi.robotics.stream_metadata/0.1.0",
+      "source": "/joint_states",
+      "message_count": 9000
+    },
+    {
+      "stream_id": "robot.base.odom",
+      "schema_id": "romi.robotics.stream_metadata/0.1.0",
+      "source": "/odom",
+      "message_count": 4500
+    },
+    {
+      "stream_id": "robot.frames.tf",
+      "schema_id": "romi.robotics.stream_metadata/0.1.0",
+      "source": "/tf",
+      "message_count": 4500
+    },
+    {
+      "stream_id": "policy.proposed_action",
+      "schema_id": "romi.ml.policy_io/0.1.0",
+      "source": "mock_nav_manip_policy",
+      "message_count": 900
+    }
+  ],
+  "runtime_graph": {
+    "graph_id": "nav_manip_demo_graph",
+    "nodes": [
+      "ros2_bridge",
+      "episode_recorder",
+      "observation_synchronizer",
+      "mock_nav_manip_policy",
+      "diagnostics_reporter"
+    ]
+  },
+  "metadata": {
+    "logging_direction": "mcap-compatible",
+    "video_target": "README navigation + manipulation demo",
+    "authority_model": "policy outputs are proposed_only"
+  }
+}

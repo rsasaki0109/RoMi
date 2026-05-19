@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://romi.dev/schemas/robotics/stream_metadata.schema.json",
+  "title": "RoMi Robotics Stream Metadata",
+  "description": "Draft metadata schema for robotics streams bridged from ROS2, simulators, logs, or SDKs.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "stream_id",
+    "semantic_type",
+    "time",
+    "source"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "0.1.0"
+    },
+    "stream_id": {
+      "type": "string"
+    },
+    "semantic_type": {
+      "type": "string",
+      "enum": [
+        "rgb_image",
+        "depth_image",
+        "point_cloud",
+        "camera_info",
+        "joint_state",
+        "odometry",
+        "transform_tree",
+        "task_goal",
+        "command",
+        "diagnostics"
+      ]
+    },
+    "time": {
+      "type": "object",
+      "required": [
+        "clock_domain"
+      ],
+      "properties": {
+        "clock_domain": {
+          "type": "string"
+        },
+        "event_time_field": {
+          "type": "string"
+        },
+        "receive_time_field": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "frame_id": {
+      "type": "string"
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "system"
+      ],
+      "properties": {
+        "system": {
+          "type": "string",
+          "enum": [
+            "ros2",
+            "simulator",
+            "replay",
+            "dataset",
+            "sdk",
+            "romi"
+          ]
+        },
+        "topic": {
+          "type": "string"
+        },
+        "message_type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "tensor": {
+      "type": "object",
+      "properties": {
+        "shape": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "dtype": {
+          "type": "string"
+        },
+        "layout": {
+          "type": "string"
+        },
+        "encoding": {
+          "type": "string"
+        },
+        "device": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "qos": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

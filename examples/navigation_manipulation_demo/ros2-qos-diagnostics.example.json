@@ -1,0 +1,45 @@
+{
+  "schema_version": "0.1.0",
+  "events": [
+    {
+      "schema_version": "0.1.0",
+      "event_id": "ros2_bridge_topic_ok_camera_rgb",
+      "time": {
+        "event_time_ns": 12000000000,
+        "clock_domain": "sim_time"
+      },
+      "severity": "info",
+      "source": "ros2_bridge",
+      "category": "qos",
+      "message": "ROS2 topic mapped to RoMi stream.",
+      "attributes": {
+        "stream_id": "robot.camera.rgb",
+        "source_topic": "/camera/color/image_raw",
+        "source_message_type": "sensor_msgs/msg/Image",
+        "reliability": "best_effort",
+        "durability": "volatile",
+        "history": "keep_last",
+        "depth": 10
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "event_id": "ros2_bridge_gap_odom_001",
+      "time": {
+        "event_time_ns": 12050000000,
+        "clock_domain": "sim_time"
+      },
+      "severity": "warning",
+      "source": "ros2_bridge",
+      "category": "qos",
+      "message": "Observed sample gap on odometry stream.",
+      "attributes": {
+        "stream_id": "robot.base.odom",
+        "source_topic": "/odom",
+        "source_message_type": "nav_msgs/msg/Odometry",
+        "expected_rate_hz": 50.0,
+        "observed_gap_ms": 80.0
+      }
+    }
+  ]
+}
