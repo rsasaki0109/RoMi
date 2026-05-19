@@ -202,6 +202,7 @@ def stream_sample(
         "metadata": {
             "source": "romi_native_sim_source",
             "scenario_id": scenario.get("scenario_id"),
+            "robot_morphology": robot_config(scenario).get("morphology"),
             "sample_index": sample_index,
             "authority": "observation_only",
         },
@@ -297,10 +298,20 @@ def camera_info_summary(scenario: dict[str, Any]) -> dict[str, Any]:
 
 
 def joint_summary(scenario: dict[str, Any], progress: float) -> dict[str, Any]:
-    names = ["shoulder_pan", "shoulder_lift", "elbow", "wrist", "gripper_left", "gripper_right"]
+    names = [
+        "waist_yaw",
+        "torso_lift",
+        "right_shoulder_pitch",
+        "right_elbow",
+        "right_wrist",
+        "gripper_left",
+        "gripper_right",
+    ]
     reach = arm_reach(scenario, progress)
     holding = object_state(scenario, progress) == "held"
     positions = [
+        -0.08 * reach,
+        0.18 * reach,
         -0.22 * reach,
         -0.52 * reach,
         0.82 * reach,
@@ -390,6 +401,7 @@ def emit_episode(args: argparse.Namespace) -> int:
                 "scenario": {
                     "scenario_id": scenario.get("scenario_id"),
                     "name": scenario.get("name"),
+                    "robot_morphology": robot_config(scenario).get("morphology"),
                     "path": str(args.scenario),
                 },
                 "duration_sec": duration_sec,

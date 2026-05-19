@@ -2,7 +2,7 @@
 
 Status: prototype pipeline / smoke-demo ready.
 
-This example is the target for RoMi's first README demo video. It should show a robot navigating to a manipulation area, observing a target, running a mock policy, recording an episode, replaying that episode, and exposing runtime diagnostics.
+This example is the target for RoMi's first README demo video. It should show a semi-humanoid robot navigating to a manipulation area, observing a target, running a mock policy, recording an episode, replaying that episode, and exposing runtime diagnostics.
 
 This directory contains a prototype pipeline for the first README demo. No simulator, transport, or ML framework is selected as a permanent architectural choice.
 
@@ -47,7 +47,7 @@ python3 -m http.server 8000 --bind 127.0.0.1 --directory examples/navigation_man
 xdg-open http://127.0.0.1:8000/romi_2d_sim/
 ```
 
-The simulator shows a small mobile manipulator navigating to a work area, reaching for an object, placing it in a bin, and exposing RoMi-shaped stream counters, runtime graph state, policy proposals, and recent events. It runs without ROS2 or a build step.
+The simulator shows a semi-humanoid mobile manipulator navigating to a work area, reaching for an object, placing it in a bin, and exposing RoMi-shaped stream counters, runtime graph state, policy proposals, and recent events. It runs without ROS2 or a build step.
 
 The browser simulator and `romi_native_sim_source.py` both read `scenario.json`, so the motion shown on screen and the RoMi JSONL artifact stream are generated from the same scenario definition.
 

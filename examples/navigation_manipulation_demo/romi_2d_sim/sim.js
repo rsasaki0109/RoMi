@@ -388,10 +388,22 @@ function drawRobot(progress) {
   const reach = armReach(progress);
   const holding = objectState(progress) === "held";
   const [baseW, baseH] = pair(robot.base_size_px, [68, 46]);
+  const [torsoW, torsoH] = pair(robot.torso_size_px, [42, 58]);
+  const headRadius = Number(robot.head_radius_px ?? 17);
 
   ctx.save();
   ctx.translate(pose.x, pose.y);
   ctx.rotate(pose.yaw);
+
+  ctx.fillStyle = "#17262e";
+  ctx.strokeStyle = "#5d7280";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.ellipse(-22, baseH / 2 + 4, 16, 8, 0, 0, Math.PI * 2);
+  ctx.ellipse(22, baseH / 2 + 4, 16, 8, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
   ctx.fillStyle = "#1e323a";
   ctx.strokeStyle = colors.cyan;
   ctx.lineWidth = 3;
@@ -405,13 +417,34 @@ function drawRobot(progress) {
   ctx.closePath();
   ctx.fill();
 
+  ctx.fillStyle = "#263841";
+  ctx.strokeStyle = colors.cyan;
+  roundRect(-torsoW / 2, -baseH / 2 - torsoH + 8, torsoW, torsoH, 10, true, true);
+
+  ctx.fillStyle = "#22313a";
+  ctx.strokeStyle = "#b7f5ff";
+  ctx.beginPath();
+  ctx.arc(0, -baseH / 2 - torsoH - headRadius + 10, headRadius, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = colors.cyan;
+  ctx.beginPath();
+  ctx.arc(-6, -baseH / 2 - torsoH - headRadius + 7, 2.5, 0, Math.PI * 2);
+  ctx.arc(6, -baseH / 2 - torsoH - headRadius + 7, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+
   ctx.fillStyle = colors.text;
   ctx.font = "12px sans-serif";
-  ctx.fillText(robot.label || "RoMi", -16, 4);
+  ctx.fillText(robot.label || "RoMi-H", -19, -baseH / 2 - 14);
   ctx.restore();
 
   const [shoulderX, shoulderY] = pair(robot.shoulder_offset_px, [28, -9]);
   const shoulder = { x: pose.x + shoulderX, y: pose.y + shoulderY };
+  const [leftShoulderX, leftShoulderY] = pair(robot.left_shoulder_offset_px, [-12, -60]);
+  const leftShoulder = { x: pose.x + leftShoulderX, y: pose.y + leftShoulderY };
+  const [leftHandX, leftHandY] = pair(arm.left_hand_home_offset_px, [-52, -36]);
+  const leftHand = { x: pose.x + leftHandX, y: pose.y + leftHandY };
   const [homeElbowX, homeElbowY] = pair(arm.home_elbow_offset_px, [42, -28]);
   const [homeWristX, homeWristY] = pair(arm.home_wrist_offset_px, [80, -38]);
   const [targetElbowX, targetElbowY] = pair(arm.target_elbow_px, [694, 278]);
@@ -423,6 +456,15 @@ function drawRobot(progress) {
   ctx.strokeStyle = colors.amber;
   ctx.lineWidth = 8;
   ctx.lineCap = "round";
+
+  ctx.globalAlpha = 0.9;
+  ctx.beginPath();
+  ctx.moveTo(leftShoulder.x, leftShoulder.y);
+  ctx.lineTo(leftShoulder.x - 22, leftShoulder.y + 28);
+  ctx.lineTo(leftHand.x, leftHand.y);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
   ctx.beginPath();
   ctx.moveTo(shoulder.x, shoulder.y);
   ctx.lineTo(elbow.x, elbow.y);
@@ -430,7 +472,7 @@ function drawRobot(progress) {
   ctx.lineTo(tool.x, tool.y);
   ctx.stroke();
 
-  for (const point of [shoulder, elbow, wrist]) {
+  for (const point of [leftShoulder, leftHand, shoulder, elbow, wrist]) {
     ctx.fillStyle = "#ffe0a6";
     ctx.beginPath();
     ctx.arc(point.x, point.y, 7, 0, Math.PI * 2);

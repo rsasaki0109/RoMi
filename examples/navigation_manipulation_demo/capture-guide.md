@@ -2,7 +2,7 @@
 
 This guide describes how to capture the first README-oriented navigation + manipulation demo using the current prototype pipeline.
 
-The current visual demo is a RoMi 2D browser simulator. It shows a ROS2-free mobile manipulation scene while exposing RoMi-shaped stream counts, runtime stages, policy proposals, and recent events. The browser simulator and smoke pipeline both read `scenario.json`, so the visual motion and generated RoMi artifacts share the same scenario.
+The current visual demo is a RoMi 2D browser simulator. It shows a ROS2-free semi-humanoid mobile manipulation scene while exposing RoMi-shaped stream counts, runtime stages, policy proposals, and recent events. The browser simulator and smoke pipeline both read `scenario.json`, so the visual motion and generated RoMi artifacts share the same scenario.
 
 ## Capture Goal
 
