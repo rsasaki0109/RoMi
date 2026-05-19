@@ -145,7 +145,7 @@ button:hover {
   border-radius: 7px;
   display: grid;
   gap: 3px;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   margin-bottom: 10px;
   padding: 3px;
 }
@@ -155,6 +155,7 @@ button:hover {
   border: 0;
   border-radius: 5px;
   color: var(--muted);
+  font-size: 14px;
   min-height: 30px;
   padding: 0 6px;
 }
@@ -398,6 +399,81 @@ button:hover {
 
 .policy-window-row em {
   grid-column: 1 / -1;
+}
+
+.safety-boundary {
+  background: #101920;
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px;
+}
+
+.authority-lane {
+  display: grid;
+  gap: 5px;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+}
+
+.authority-node {
+  background: var(--surface-2);
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  padding: 7px 8px;
+}
+
+.authority-node span {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.authority-node strong {
+  color: var(--text);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.authority-arrow {
+  align-self: center;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.safety-list {
+  display: grid;
+  gap: 5px;
+}
+
+.safety-row {
+  align-items: center;
+  background: var(--surface-2);
+  border: 1px solid var(--line-soft);
+  border-radius: 5px;
+  display: grid;
+  gap: 6px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  min-width: 0;
+  padding: 6px 7px;
+}
+
+.safety-row span {
+  color: var(--muted);
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.safety-row strong {
+  color: var(--rose);
+  font-size: 11px;
 }
 
 .dataset-grid {
@@ -785,6 +861,11 @@ body.capture-mode .inspector {
 
 body.capture-mode .mode-view {
   min-height: 126px;
+}
+
+body.capture-mode .mode-tab {
+  font-size: 13px;
+  padding: 0 4px;
 }
 
 body.capture-mode .dataset-report-preview {
