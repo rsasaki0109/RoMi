@@ -9,7 +9,7 @@ romi/
   README.md
   docs/
     assets/
-      romi-nav-manip-demo.gif
+      romi-demo-pipeline.svg
     vision.md
     requirements.md
     architecture.md
@@ -74,8 +74,11 @@ romi/
       capture-guide.md
       romi_native_sim_source.py
       ros2_demo_sim_publisher.py
-      render_sim_video.py
       run_smoke_demo.sh
+      turtlesim_demo/
+        index.html
+        styles.css
+        sim.js
       stream-map.example.json
       runtime-graph.example.json
       episode-metadata.example.json

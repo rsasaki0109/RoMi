@@ -2,7 +2,7 @@
 
 This guide describes how to capture the first README-oriented navigation + manipulation demo using the current prototype pipeline.
 
-The current demo is a smoke-level contract demo. It proves the RoMi path from a ROS2-free native simulation source to episode recording, replay, mock policy output, dataset inspection, and README animation rendering from the generated artifacts. A richer simulator scene or ROS2 bridge can later replace the native source without changing the RoMi-side pipeline.
+The current visual demo is a turtlesim-style browser simulator. It shows a ROS2-free mobile manipulation scene while exposing RoMi-shaped stream counts, runtime stages, policy proposals, and recent events. The smoke pipeline remains available for episode recording, replay, mock policy output, and dataset inspection.
 
 ## Capture Goal
 
@@ -10,7 +10,7 @@ Show that RoMi can connect:
 
 ```text
 RoMi-native simulation camera / depth / joints / odom / TF / goal
-  -> episode -> replay -> mock policy -> dataset report -> README GIF
+  -> episode -> replay -> mock policy -> dataset report
 ```
 
 The video should communicate:
@@ -25,6 +25,7 @@ The video should communicate:
 ## Prerequisites
 
 - Python 3.
+- A modern browser for the visual simulator.
 
 The default smoke script starts a RoMi-native source that emits synthetic camera, depth, camera info, joint state, odometry, TF, and goal stream samples. A richer simulator can be connected later if available, but it is not required for this contract capture.
 
@@ -59,28 +60,23 @@ Important output files:
 - `dataset-report/report.md`
 - `dataset-report/report.json`
 
-## Rendered README Animation
+## Browser Simulator
 
-The README animation is generated from the RoMi smoke run artifacts:
+Open the visual demo locally:
 
 ```bash
-python3 examples/navigation_manipulation_demo/render_sim_video.py
+xdg-open examples/navigation_manipulation_demo/turtlesim_demo/index.html
 ```
 
-Outputs:
-
-- `docs/assets/romi-nav-manip-demo.gif`
-- `examples/navigation_manipulation_demo/artifacts/smoke/<run-id>/romi-nav-manip-demo.mp4`
-
-The GIF can be committed for README display. The MP4 is ignored by git and can be uploaded as a GitHub asset when a true video URL is needed.
+The simulator runs in the browser and does not need ROS2, a web server, or a build step. Use the `Export JSONL` control to export RoMi-shaped stream events from the browser session.
 
 ## Suggested Recording Layout
 
 Use three terminal panes or windows:
 
-1. Run the smoke script.
-2. Open `dataset-report/report.md`.
-3. Show `episode/README.md` or `episode/streams.json`.
+1. Open `turtlesim_demo/index.html`.
+2. Run the smoke script in a terminal.
+3. Open `dataset-report/report.md` or `episode/streams.json`.
 
 Optional fourth pane:
 
@@ -95,19 +91,19 @@ python3 -m json.tool examples/navigation_manipulation_demo/artifacts/smoke/<run-
 Keep the video short, around 60 to 90 seconds.
 
 ```text
-0:00 - 0:10  README title and planned graph
-0:10 - 0:25  Run smoke script and show native source status
-0:25 - 0:40  Show generated episode directory and stream summary
-0:40 - 0:55  Show replay and mock policy output
-0:55 - 1:15  Show dataset report with diagnostics and observation window
-1:15 - 1:30  Close on ROS2-free / replay-first / inspectable summary
+0:00 - 0:15  Start the browser simulator and show navigation
+0:15 - 0:35  Show manipulation reach, grasp, and place
+0:35 - 0:50  Show stream counters and policy proposals
+0:50 - 1:10  Run smoke script and show generated episode/report
+1:10 - 1:30  Close on ROS2-free / replay-first / inspectable summary
 ```
 
 ## What To Highlight
 
 During capture, show these concrete details:
 
-- Camera, depth, joint, odometry, TF, and `task.goal` samples arrive as RoMi streams without requiring ROS2.
+- Camera, depth, joint, odometry, TF, and `task.goal` samples arrive as RoMi-shaped streams without requiring ROS2.
+- The browser simulator shows navigation, manipulation, runtime graph stages, and recent events.
 - The same downstream pipeline can be exercised through `ROMI_DEMO_SOURCE=ros2`.
 - `episode.json` records the episode metadata.
 - `replay-events.jsonl` re-emits the stream with `source_system: replay`.

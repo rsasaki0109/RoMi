@@ -17,8 +17,8 @@ Current prototype files:
 - `romi_native_sim_source.py`: ROS2-free RoMi-native navigation + manipulation source
 - `ros2_demo_sim_publisher.py`: scripted ROS2 navigation + manipulation source for the smoke demo
 - `run_smoke_demo.sh`: one-shot smoke run for source, record, replay, policy, and dataset report
+- `turtlesim_demo/`: browser-based turtlesim-style navigation + manipulation simulator
 - `capture-guide.md`: README video capture guide
-- `render_sim_video.py`: renders the README GIF and local MP4 from RoMi run artifacts
 
 ## Demo Goal
 
@@ -32,8 +32,19 @@ Demonstrate RoMi's intended contract layer across:
 - Mock policy inference
 - Dataset-style inspection
 - Diagnostics
+- A simple visual simulator that is not tied to ROS2
 
 The demo should be useful even if the first robot behavior is scripted and the first policy is a stub.
+
+## Visual Simulator
+
+Open the turtlesim-style browser simulator locally:
+
+```bash
+xdg-open examples/navigation_manipulation_demo/turtlesim_demo/index.html
+```
+
+The simulator shows a small mobile manipulator navigating to a work area, reaching for an object, placing it in a bin, and exposing RoMi-shaped stream counters, runtime graph state, policy proposals, and recent events. It runs without ROS2, a web server, or a build step.
 
 ## Planned Flow
 
@@ -115,26 +126,13 @@ From the repository root:
 examples/navigation_manipulation_demo/run_smoke_demo.sh
 ```
 
-By default the script does not require ROS2. It generates camera, depth, joint state, odometry, TF, and goal streams with the RoMi-native source, runs episode recording, replay, mock policy, and dataset inspection, then renders the README animation from the generated RoMi artifacts. See [capture-guide.md](capture-guide.md) for video capture steps.
+By default the script does not require ROS2. It generates camera, depth, joint state, odometry, TF, and goal streams with the RoMi-native source, then runs episode recording, replay, mock policy, and dataset inspection. See [capture-guide.md](capture-guide.md) for capture steps.
 
 To run the same contract through the ROS2 bridge:
 
 ```bash
 ROMI_DEMO_SOURCE=ros2 examples/navigation_manipulation_demo/run_smoke_demo.sh
 ```
-
-## Render README Animation
-
-After a smoke run, generate the README animation and local MP4 artifact from the latest RoMi run:
-
-```bash
-python3 examples/navigation_manipulation_demo/render_sim_video.py
-```
-
-Outputs:
-
-- `docs/assets/romi-nav-manip-demo.gif`
-- `examples/navigation_manipulation_demo/artifacts/smoke/<run-id>/romi-nav-manip-demo.mp4`
 
 ## Episode Recording Prototype
 

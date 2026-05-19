@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RoMi Turtlesim-Style Demo</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="sim-surface" aria-label="RoMi turtlesim-style simulator">
+        <header class="topbar">
+          <div>
+            <h1>RoMi Navigation + Manipulation</h1>
+            <p>ROS2-free simulator for RoMi stream, replay, policy, and observability contracts.</p>
+          </div>
+          <div class="controls" aria-label="Simulation controls">
+            <button id="startButton" type="button">Start</button>
+            <button id="pauseButton" type="button">Pause</button>
+            <button id="resetButton" type="button">Reset</button>
+            <button id="exportButton" type="button">Export JSONL</button>
+          </div>
+        </header>
+
+        <div class="workbench">
+          <canvas id="simCanvas" width="960" height="620" aria-label="Navigation and manipulation simulator canvas"></canvas>
+
+          <aside class="inspector" aria-label="Runtime inspector">
+            <section class="panel">
+              <h2>Runtime</h2>
+              <dl class="metrics">
+                <div>
+                  <dt>Stage</dt>
+                  <dd id="stageValue">idle</dd>
+                </div>
+                <div>
+                  <dt>Clock</dt>
+                  <dd id="clockValue">0.00s</dd>
+                </div>
+                <div>
+                  <dt>Policy</dt>
+                  <dd id="policyValue">waiting</dd>
+                </div>
+                <div>
+                  <dt>Authority</dt>
+                  <dd>proposed_only</dd>
+                </div>
+              </dl>
+            </section>
+
+            <section class="panel">
+              <h2>Streams</h2>
+              <div id="streamList" class="stream-list"></div>
+            </section>
+
+            <section class="panel">
+              <h2>Graph</h2>
+              <ol class="graph-list">
+                <li id="graphSource">native simulator</li>
+                <li id="graphRecord">episode recorder</li>
+                <li id="graphReplay">replay source</li>
+                <li id="graphPolicy">mock policy</li>
+                <li id="graphReport">dataset report</li>
+              </ol>
+            </section>
+
+            <section class="panel event-panel">
+              <h2>Recent Events</h2>
+              <pre id="eventLog"></pre>
+            </section>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <script src="sim.js"></script>
+  </body>
+</html>
