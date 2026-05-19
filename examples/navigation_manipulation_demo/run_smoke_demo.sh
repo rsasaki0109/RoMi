@@ -9,11 +9,10 @@ ARTIFACT_ROOT="${ROMI_DEMO_ARTIFACT_ROOT:-${SCRIPT_DIR}/artifacts/smoke}"
 RUN_DIR="${ARTIFACT_ROOT}/${RUN_ID}"
 
 EPISODE_ID="${ROMI_DEMO_EPISODE_ID:-nav_manip_demo_${RUN_ID}}"
-DURATION_SEC="${ROMI_DEMO_DURATION_SEC:-3}"
+BRIDGE_DURATION_SEC="${ROMI_DEMO_BRIDGE_DURATION_SEC:-7}"
+SIM_DURATION_SEC="${ROMI_DEMO_SIM_DURATION_SEC:-5.5}"
+SIM_RATE_HZ="${ROMI_DEMO_SIM_RATE_HZ:-12}"
 DIAGNOSTICS_PERIOD_SEC="${ROMI_DEMO_DIAGNOSTICS_PERIOD_SEC:-0.5}"
-GOAL_X="${ROMI_DEMO_GOAL_X:-1.0}"
-GOAL_Y="${ROMI_DEMO_GOAL_Y:-2.0}"
-GOAL_Z="${ROMI_DEMO_GOAL_Z:-0.0}"
 
 STREAM_MAP="${SCRIPT_DIR}/stream-map.example.json"
 RUNTIME_GRAPH="${SCRIPT_DIR}/runtime-graph.example.json"
@@ -40,24 +39,26 @@ except Exception as exc:
     raise SystemExit(f"error: rclpy is not available: {exc}")
 PY
 
+rm -rf "${RUN_DIR}"
 mkdir -p "${RUN_DIR}"
 
 echo "[romi demo] run id: ${RUN_ID}"
 echo "[romi demo] output: ${RUN_DIR}"
-echo "[romi demo] starting ROS2 bridge for ${DURATION_SEC}s"
+echo "[romi demo] starting ROS2 bridge for ${BRIDGE_DURATION_SEC}s"
 
 python3 "${REPO_ROOT}/bridges/ros2/rclpy_bridge/romi_ros2_bridge.py" \
   --stream-map "${STREAM_MAP}" \
   --output "${BRIDGE_EVENTS}" \
   --diagnostics-period-sec "${DIAGNOSTICS_PERIOD_SEC}" \
-  --duration-sec "${DURATION_SEC}" &
+  --duration-sec "${BRIDGE_DURATION_SEC}" &
 BRIDGE_PID=$!
 
-sleep 1
+sleep 0.8
 
-echo "[romi demo] publishing /goal_pose"
-ros2 topic pub --once /goal_pose geometry_msgs/msg/PoseStamped \
-  "{header: {frame_id: map}, pose: {position: {x: ${GOAL_X}, y: ${GOAL_Y}, z: ${GOAL_Z}}, orientation: {w: 1.0}}}"
+echo "[romi demo] publishing scripted ROS2 navigation + manipulation simulation"
+python3 "${SCRIPT_DIR}/ros2_demo_sim_publisher.py" \
+  --duration-sec "${SIM_DURATION_SEC}" \
+  --rate-hz "${SIM_RATE_HZ}"
 
 wait "${BRIDGE_PID}"
 
@@ -88,6 +89,12 @@ python3 "${REPO_ROOT}/tools/dataset_inspector/romi_inspect_dataset.py" \
   --episode "${EPISODE_DIR}" \
   --policy-events "${POLICY_EVENTS}" \
   --output-dir "${REPORT_DIR}"
+
+echo "[romi demo] rendering README animation from RoMi artifacts"
+python3 "${SCRIPT_DIR}/render_sim_video.py" \
+  --run-dir "${RUN_DIR}" \
+  --gif "${REPO_ROOT}/docs/assets/romi-nav-manip-demo.gif" \
+  --mp4 "${RUN_DIR}/romi-nav-manip-demo.mp4"
 
 python3 - "${REPORT_DIR}/report.json" <<'PY'
 import json

@@ -6,7 +6,7 @@ This example is the target for RoMi's first README demo video. It should show a 
 
 This directory contains a prototype pipeline for the first README demo. No simulator, transport, or ML framework is selected as a permanent architectural choice.
 
-Current static artifacts:
+Current prototype files:
 
 - `stream-map.example.json`: planned source topic to RoMi stream mapping
 - `runtime-graph.example.json`: planned graph shape
@@ -14,9 +14,10 @@ Current static artifacts:
 - `diagnostics.example.json`: planned diagnostics report shape
 - `ros2-bridge-plan.md`: planned ROS2 bridge path for the demo
 - `ros2-qos-diagnostics.example.json`: planned QoS diagnostics shape
+- `ros2_demo_sim_publisher.py`: scripted ROS2 navigation + manipulation source for the smoke demo
 - `run_smoke_demo.sh`: one-shot smoke run for bridge, record, replay, policy, and dataset report
 - `capture-guide.md`: README video capture guide
-- `render_sim_video.py`: renders the animated README simulation GIF and local MP4 artifact
+- `render_sim_video.py`: renders the README GIF and local MP4 from RoMi run artifacts
 
 ## Demo Goal
 
@@ -112,11 +113,11 @@ From the repository root:
 examples/navigation_manipulation_demo/run_smoke_demo.sh
 ```
 
-The script publishes one `/goal_pose` message, runs bridge, episode recording, replay, mock policy, and dataset inspection, then prints the generated `report.md` path. See [capture-guide.md](capture-guide.md) for video capture steps.
+The script publishes camera, depth, joint state, odometry, TF, and goal messages through ROS2, runs the RoMi bridge, episode recording, replay, mock policy, and dataset inspection, then renders the README animation from the generated RoMi artifacts. See [capture-guide.md](capture-guide.md) for video capture steps.
 
 ## Render README Animation
 
-Generate the README animation and local MP4 artifact:
+After a smoke run, generate the README animation and local MP4 artifact from the latest RoMi run:
 
 ```bash
 python3 examples/navigation_manipulation_demo/render_sim_video.py
@@ -125,7 +126,7 @@ python3 examples/navigation_manipulation_demo/render_sim_video.py
 Outputs:
 
 - `docs/assets/romi-nav-manip-demo.gif`
-- `examples/navigation_manipulation_demo/artifacts/simulation/romi-nav-manip-demo.mp4`
+- `examples/navigation_manipulation_demo/artifacts/smoke/<run-id>/romi-nav-manip-demo.mp4`
 
 ## Episode Recording Prototype
 

@@ -211,6 +211,7 @@ def summarize_message(msg: Any, message_type: str) -> dict[str, Any]:
         return {
             "joint_count": len(names),
             "joint_names_sample": names[:12],
+            "position_sample": [float(value) for value in list(getattr(msg, "position", []))[:12]],
             "position_count": len(getattr(msg, "position", [])),
             "velocity_count": len(getattr(msg, "velocity", [])),
             "effort_count": len(getattr(msg, "effort", [])),
