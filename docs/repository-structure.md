@@ -102,6 +102,7 @@ romi/
     manipulation_replay_demo/
     policy_runtime_demo/
   tests/
+    check_browser_native_contract.py
     check_demo_contract.py
     fixtures/
     replay/

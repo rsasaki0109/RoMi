@@ -218,6 +218,7 @@ The workflow in [.github/workflows/ci.yml](../.github/workflows/ci.yml) currentl
 - JSON syntax for schemas and example JSON files
 - RoMi-native smoke demo execution
 - demo contract invariants in [tests/check_demo_contract.py](../tests/check_demo_contract.py)
+- browser/native stream contract alignment in [tests/check_browser_native_contract.py](../tests/check_browser_native_contract.py)
 
 The contract checker verifies:
 
@@ -230,6 +231,16 @@ The contract checker verifies:
 - policy authority remains `proposed_only`
 - dataset report includes the required streams
 - observation window streams are `ok`
+
+The browser/native checker verifies:
+
+- browser simulator and native source expose the same required stream names
+- semantic types, frame IDs, and source message types align
+- scenario and morphology metadata align
+- image/depth dimensions and `data_len` match
+- RoMi-H joint counts and names match
+- TF frame pairs and stamped transform summaries match
+- browser policy proposals remain `proposed_only`
 
 ## Bridge Relationship
 

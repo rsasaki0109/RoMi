@@ -29,6 +29,9 @@ jobs:
         with:
           node-version: "22"
 
+      - name: Install browser contract dependencies
+        run: python3 -m pip install websocket-client
+
       - name: Python syntax check
         run: |
           find bridges examples tools tests -name '*.py' -not -path '*/artifacts/*' -print0 \
@@ -50,3 +53,6 @@ jobs:
 
       - name: Check demo contract
         run: python3 tests/check_demo_contract.py "${{ runner.temp }}/romi-smoke/ci"
+
+      - name: Check browser/native contract
+        run: python3 tests/check_browser_native_contract.py
