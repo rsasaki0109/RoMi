@@ -176,11 +176,17 @@ button:hover {
 }
 
 .timeline-step {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
   color: var(--muted);
+  cursor: pointer;
   display: grid;
   font-size: 10px;
   gap: 5px;
+  min-height: 0;
   min-width: 0;
+  padding: 0;
   text-align: center;
 }
 
@@ -205,6 +211,34 @@ button:hover {
 .timeline-step.active::before {
   background: var(--cyan);
   border-color: var(--cyan);
+}
+
+.timeline-step:hover {
+  color: var(--text);
+}
+
+.seek-panel {
+  display: grid;
+  gap: 7px;
+  margin-top: 2px;
+}
+
+.seek-heading {
+  align-items: center;
+  color: var(--muted);
+  display: flex;
+  font-size: 11px;
+  justify-content: space-between;
+}
+
+.seek-heading strong {
+  color: var(--text);
+  font-size: 12px;
+}
+
+#seekControl {
+  accent-color: var(--cyan);
+  width: 100%;
 }
 
 .freshness-list,
@@ -426,7 +460,8 @@ body.capture-mode .topbar {
 
 body.capture-mode .controls,
 body.capture-mode .event-panel,
-body.capture-mode .graph-panel {
+body.capture-mode .graph-panel,
+body.capture-mode .seek-panel {
   display: none;
 }
 
