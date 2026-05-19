@@ -28,7 +28,7 @@ python3 -m http.server 8000 --bind 127.0.0.1 --directory examples/navigation_man
 xdg-open http://127.0.0.1:8000/romi_2d_sim/
 ```
 
-The visual simulator shows a semi-humanoid mobile manipulator navigating to a work area, reaching for an object, placing it in a bin, and exposing RoMi-shaped stream counts, runtime stages, policy proposals, and event envelopes. The RoMi Studio mini inspector can switch between live stream freshness, replay graph state, proposed policy actions, and dataset summary views, with seek controls and event-envelope inspection for replay debugging.
+The visual simulator shows a semi-humanoid mobile manipulator navigating to a work area, reaching for an object, placing it in a bin, and exposing RoMi-shaped stream counts, runtime stages, policy proposals, and event envelopes. The RoMi Studio mini inspector can switch between live stream freshness, replay graph state, proposed policy actions, and dataset report views, with seek controls and event-envelope inspection for replay debugging.
 
 The browser simulator and the smoke pipeline both read [scenario.json](examples/navigation_manipulation_demo/scenario.json), so the visual motion and generated RoMi artifacts share the same scenario.
 

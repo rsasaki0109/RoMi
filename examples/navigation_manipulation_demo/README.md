@@ -50,7 +50,7 @@ python3 -m http.server 8000 --bind 127.0.0.1 --directory examples/navigation_man
 xdg-open http://127.0.0.1:8000/romi_2d_sim/
 ```
 
-The simulator shows a semi-humanoid mobile manipulator navigating to a work area, reaching for an object, placing it in a bin, and exposing RoMi-shaped stream counters, runtime graph state, policy proposals, and event envelopes. Its RoMi Studio mini inspector adds switchable live, replay, policy, and dataset views plus replay seek controls and event-envelope inspection. It runs without ROS2 or a build step.
+The simulator shows a semi-humanoid mobile manipulator navigating to a work area, reaching for an object, placing it in a bin, and exposing RoMi-shaped stream counters, runtime graph state, policy proposals, and event envelopes. Its RoMi Studio mini inspector adds switchable live, replay, policy, and dataset report views plus replay seek controls and event-envelope inspection. It runs without ROS2 or a build step.
 
 The visual direction follows the [RoMi-H mascot concept](../../docs/assets/romi-h-mascot.png): a semi-humanoid mobile manipulator, not a ROS2-only simulator mascot.
 
