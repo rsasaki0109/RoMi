@@ -43,6 +43,9 @@ class JointSample:
 class DemoData:
     run_dir: Path
     episode_id: str
+    source_label: str
+    pipeline_label: str
+    live_status: str
     episode_events: list[dict[str, Any]]
     replay_events: list[dict[str, Any]]
     policy_events: list[dict[str, Any]]
@@ -299,6 +302,9 @@ def load_demo_data(run_dir: Path) -> DemoData:
     if not episode_events:
         bridge_events = load_jsonl(run_dir / "ros2-bridge-events.jsonl")
         episode_events = bridge_events
+    if not episode_events:
+        source_events = load_jsonl(run_dir / "source-events.jsonl")
+        episode_events = source_events
 
     if not episode_events:
         raise FileNotFoundError(f"No RoMi episode or bridge events found under {run_dir}")
@@ -323,9 +329,30 @@ def load_demo_data(run_dir: Path) -> DemoData:
         if isinstance(streams, list):
             observation_stream_count = len(streams)
 
+    source_systems = {
+        str(event.get("source_system"))
+        for event in stream_samples(episode_events)
+        if event.get("source_system") is not None
+    }
+    if "romi_native_sim" in source_systems:
+        source_label = "RoMi-native simulation"
+        pipeline_label = "native simulation -> episode -> replay -> policy -> dataset"
+        live_status = "NATIVE SIM SOURCE"
+    elif "ros2" in source_systems:
+        source_label = "ROS2 bridge"
+        pipeline_label = "ROS2 bridge -> episode -> replay -> policy -> dataset"
+        live_status = "LIVE ROS2 BRIDGE"
+    else:
+        source_label = "RoMi source"
+        pipeline_label = "source -> episode -> replay -> policy -> dataset"
+        live_status = "LIVE SOURCE"
+
     return DemoData(
         run_dir=run_dir,
         episode_id=episode_id,
+        source_label=source_label,
+        pipeline_label=pipeline_label,
+        live_status=live_status,
         episode_events=episode_events,
         replay_events=replay_events,
         policy_events=policy_events,
@@ -417,7 +444,12 @@ def policy_count(data: DemoData) -> int:
 def draw_world(draw: ImageDraw.ImageDraw, data: DemoData, progress: float) -> None:
     x0, y0, x1, y1 = WORLD_BOX
     draw_round(draw, WORLD_BOX, 18, "#121A20", "#2B3B46", 2)
-    draw.text((x0 + 20, y0 + 16), "ROS2 observations recorded as RoMi streams", fill="#E8F5FA", font=FONT_16)
+    draw.text(
+        (x0 + 20, y0 + 16),
+        f"{data.source_label} observations recorded as RoMi streams",
+        fill="#E8F5FA",
+        font=FONT_16,
+    )
 
     for x in range(x0 + 32, x1, 32):
         draw.line((x, y0 + 46, x, y1 - 18), fill="#1E2A32", width=1)
@@ -574,7 +606,7 @@ def draw_timeline(draw: ImageDraw.ImageDraw, progress: float) -> None:
     fill_x = int(tx0 + 876 * progress)
     draw_round(draw, (tx0, ty, fill_x, ty + 26), 13, "#233D46")
     for label, pos in [
-        ("bridge", 0.10),
+        ("source", 0.10),
         ("record", 0.30),
         ("replay", 0.50),
         ("policy", 0.68),
@@ -594,13 +626,13 @@ def draw_frame(data: DemoData, frame_index: int) -> Image.Image:
     draw.text((42, 48), "RoMi navigation + manipulation replay", fill="#F3F7FA", font=FONT_28_BOLD)
     draw.text(
         (42, 84),
-        "Rendered from RoMi artifacts: ROS2 bridge -> episode -> replay -> policy -> dataset",
+        f"Rendered from RoMi artifacts: {data.pipeline_label}",
         fill="#A7B6C2",
         font=FONT_16,
     )
 
     if progress < 0.36:
-        status = "LIVE ROS2 BRIDGE"
+        status = data.live_status
     elif progress < 0.64:
         status = "REPLAY"
     else:

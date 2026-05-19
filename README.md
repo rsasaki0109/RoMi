@@ -23,8 +23,7 @@ https://github.com/<owner>/<repo>/assets/<asset-id>
 Current smoke demo:
 
 ```text
-ROS2 camera / depth / joints / odom / TF / goal
-  -> RoMi ROS2 bridge JSONL
+RoMi-native simulation: camera / depth / joints / odom / TF / goal
   -> episode recorder
   -> replay source
   -> mock policy
@@ -32,13 +31,30 @@ ROS2 camera / depth / joints / odom / TF / goal
   -> README animation rendered from RoMi artifacts
 ```
 
-Run it from the repository root inside a sourced ROS2 environment:
+Optional ROS2 interop mode:
+
+```text
+ROS2 camera / depth / joints / odom / TF / goal
+  -> RoMi ROS2 bridge
+  -> episode recorder
+  -> replay source
+  -> mock policy
+  -> dataset inspection report
+```
+
+Run the default ROS2-free demo from the repository root:
 
 ```bash
 examples/navigation_manipulation_demo/run_smoke_demo.sh
 ```
 
-The script runs a small ROS2 navigation + manipulation publisher, records a prototype RoMi episode, replays it, emits non-authoritative `policy.proposed_action` samples, generates `dataset-report/report.md`, and re-renders the README GIF from those artifacts.
+The script generates a RoMi-native navigation + manipulation simulation, records a prototype episode, replays it, emits non-authoritative `policy.proposed_action` samples, generates `dataset-report/report.md`, and re-renders the README GIF from those artifacts.
+
+To exercise the ROS2 bridge instead:
+
+```bash
+ROMI_DEMO_SOURCE=ros2 examples/navigation_manipulation_demo/run_smoke_demo.sh
+```
 
 ## What RoMi Is
 
