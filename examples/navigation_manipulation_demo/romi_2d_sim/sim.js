@@ -211,7 +211,8 @@ function displayMode(progress) {
   if (!captureMode) return state.mode;
   if (progress < 0.34) return "live";
   if (progress < 0.58) return "replay";
-  if (progress < 0.82) return "policy";
+  if (progress < 0.70) return "policy";
+  if (progress < 0.84) return "compare";
   if (progress < 0.92) return "safety";
   return "dataset";
 }
@@ -1043,6 +1044,123 @@ function renderSafetyBoundary() {
   ])}`;
 }
 
+function policyActionSummary(actions) {
+  return Object.fromEntries(actions.map((action) => [action.target, action.action_type]));
+}
+
+function guardedActionFor(target, stage, freshInputs, requiredInputs) {
+  const degraded = freshInputs < requiredInputs;
+  if (target === "base") {
+    if (degraded) return "hold_position";
+    return stage === "navigate" ? "reduce_speed_to_goal" : "hold_position";
+  }
+  if (target === "end_effector") {
+    if (degraded) return "hold_until_inputs_fresh";
+    if (stage === "place") return "guarded_place";
+    if (stage === "grasp") return "guarded_carry";
+    return "guarded_reach";
+  }
+  if (target === "gripper") {
+    if (degraded) return "hold_last_safe";
+    return objectState(clamp(state.elapsedSec / state.durationSec)) === "held" ? "hold_closed_guarded" : "prepare_grasp_guarded";
+  }
+  return "hold_position";
+}
+
+function policyCompareReport() {
+  const policyEvent = latestEvent("policy.proposed_action");
+  const payload = policyEvent?.payload_summary || {};
+  const observationWindow = latestPolicyObservationWindow();
+  const freshInputs = observationWindow.filter((input) => input.status === "fresh").length;
+  const requiredInputs = observationWindow.length;
+  const stage = currentStage(clamp(state.elapsedSec / state.durationSec));
+  const baselineActions = Array.isArray(payload.proposed_actions) && payload.proposed_actions.length
+    ? payload.proposed_actions
+    : [
+        { target: "base", action_type: "waiting_for_observation", authority: "proposed_only" },
+        { target: "end_effector", action_type: "waiting_for_target", authority: "proposed_only" },
+        { target: "gripper", action_type: "waiting_for_grasp", authority: "proposed_only" },
+      ];
+  const baselineLatency = Number(payload.inference_latency_ms ?? 0);
+  const guardedActions = baselineActions.map((action) => ({
+    target: action.target,
+    action_type: guardedActionFor(action.target, stage, freshInputs, requiredInputs),
+    authority: "proposed_only",
+  }));
+  const guardedLatency = baselineLatency + 0.75 + Math.max(0, requiredInputs - freshInputs) * 0.2;
+  const baselineSummary = policyActionSummary(baselineActions);
+  const guardedSummary = policyActionSummary(guardedActions);
+  const diffs = baselineActions.map((action) => ({
+    target: action.target,
+    baseline: baselineSummary[action.target],
+    counterfactual: guardedSummary[action.target],
+    changed: baselineSummary[action.target] !== guardedSummary[action.target],
+  }));
+
+  return {
+    schema_version: "0.1.0",
+    report_kind: "romi.counterfactual_policy_compare",
+    replay_source: state.scenario?.scenario_id || "romi_2d_sim_episode",
+    stage,
+    clock_domain: "sim_time",
+    evaluation_time_sec: Number(state.elapsedSec.toFixed(3)),
+    observation_window: {
+      fresh_inputs: freshInputs,
+      required_inputs: requiredInputs,
+      streams: observationWindow,
+    },
+    policies: [
+      {
+        policy_id: "mock_policy_v1",
+        role: "baseline",
+        latency_ms: Number(baselineLatency.toFixed(2)),
+        authority: "proposed_only",
+        actuator_authority: "none",
+        command_stream_emitted: false,
+        actions: baselineActions,
+      },
+      {
+        policy_id: "mock_policy_v2_guarded",
+        role: "counterfactual",
+        latency_ms: Number(guardedLatency.toFixed(2)),
+        authority: "proposed_only",
+        actuator_authority: "none",
+        command_stream_emitted: false,
+        actions: guardedActions,
+      },
+    ],
+    diffs,
+    safety_boundary: {
+      actuator_authority: "none",
+      promotion_required: "external_supervisor",
+      command_stream_emitted: false,
+    },
+  };
+}
+
+function renderPolicyCompare() {
+  const report = policyCompareReport();
+  const [baseline, guarded] = report.policies;
+  const renderCard = (policy) => `<div class="compare-card">
+    <h3>${escapeHtml(policy.policy_id)}</h3>
+    <dl>
+      <div><dt>role</dt><dd>${escapeHtml(policy.role)}</dd></div>
+      <div><dt>latency</dt><dd>${escapeHtml(policy.latency_ms)}ms</dd></div>
+      <div><dt>authority</dt><dd>${escapeHtml(policy.authority)}</dd></div>
+      <div><dt>actuator</dt><dd>${escapeHtml(policy.actuator_authority)}</dd></div>
+    </dl>
+  </div>`;
+  return `${renderKeyValues([
+    ["replay", report.replay_source],
+    ["stage", report.stage],
+    ["inputs fresh", `${report.observation_window.fresh_inputs}/${report.observation_window.required_inputs}`],
+    ["command stream", report.safety_boundary.command_stream_emitted ? "emitted" : "not_emitted"],
+  ])}<div class="compare-grid">${renderCard(baseline)}${renderCard(guarded)}</div>
+  <div class="diff-list">${report.diffs.map((diff) => (
+    `<div class="diff-row ${diff.changed ? "changed" : ""}"><span>${escapeHtml(diff.target)}</span><strong>${escapeHtml(diff.baseline)} -> ${escapeHtml(diff.counterfactual)}</strong></div>`
+  )).join("")}</div>`;
+}
+
 function datasetStreamCounts() {
   return Object.fromEntries(streams.map((stream) => [stream, state.streamCounts[stream] || 0]));
 }
@@ -1094,6 +1212,7 @@ function datasetReport() {
       actuator_authority: "none",
     },
     safety: safetyReport(),
+    policy_compare: policyCompareReport(),
     replay: {
       seekable: true,
       buffered_events: state.events.length,
@@ -1174,6 +1293,7 @@ function renderModeView(progress) {
     live: "Live Sim",
     replay: "Replay",
     policy: "Policy",
+    compare: "Compare",
     safety: "Safety",
     dataset: "Dataset",
   };
@@ -1216,6 +1336,11 @@ function renderModeView(progress) {
 
   if (mode === "safety") {
     modeView.innerHTML = renderSafetyBoundary();
+    return;
+  }
+
+  if (mode === "compare") {
+    modeView.innerHTML = renderPolicyCompare();
     return;
   }
 
@@ -1445,6 +1570,7 @@ window.romiCapture = {
   setMode,
   datasetReport,
   datasetReportMarkdown,
+  policyCompareReport,
   safetyReport,
   selectGraphNode,
   selectLatestStreamEvent,
