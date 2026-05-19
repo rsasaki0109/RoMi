@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke-contract:
+    name: Smoke Contract
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Python syntax check
+        run: |
+          find bridges examples tools tests -name '*.py' -not -path '*/artifacts/*' -print0 \
+            | xargs -0 python3 -m py_compile
+
+      - name: JavaScript syntax check
+        run: node --check examples/navigation_manipulation_demo/romi_2d_sim/sim.js
+
+      - name: JSON syntax check
+        run: |
+          find schemas examples -name '*.json' -not -path '*/artifacts/*' -print0 \
+            | xargs -0 -n 1 python3 -m json.tool >/dev/null
+
+      - name: Run RoMi-native smoke demo
+        env:
+          ROMI_DEMO_RUN_ID: ci
+          ROMI_DEMO_ARTIFACT_ROOT: ${{ runner.temp }}/romi-smoke
+        run: examples/navigation_manipulation_demo/run_smoke_demo.sh
+
+      - name: Check demo contract
+        run: python3 tests/check_demo_contract.py "${{ runner.temp }}/romi-smoke/ci"

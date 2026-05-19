@@ -7,6 +7,9 @@ This document proposes a repository structure for RoMi. It is a planning documen
 ```text
 romi/
   README.md
+  .github/
+    workflows/
+      ci.yml
   docs/
     assets/
       romi-demo-pipeline.svg
@@ -98,6 +101,7 @@ romi/
     manipulation_replay_demo/
     policy_runtime_demo/
   tests/
+    check_demo_contract.py
     fixtures/
     replay/
     integration/
