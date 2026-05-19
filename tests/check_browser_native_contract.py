@@ -306,6 +306,47 @@ def check_studio_seek_controls(cdp: Any, session_id: str) -> None:
     require(payload["after_slider"]["range"] == 930, "Studio slider range did not preserve requested value")
 
 
+def check_studio_event_inspector(cdp: Any, session_id: str) -> None:
+    expression = """
+      (() => {
+        document.body.classList.remove('capture-mode');
+        window.romiCapture.seekToSeconds(13.2);
+        window.romiCapture.selectLatestStreamEvent('policy.proposed_action');
+        const preview = document.getElementById('eventLog').textContent;
+        const summary = document.getElementById('eventSummary').textContent;
+        const status = document.getElementById('eventInspectorStatus').textContent;
+        const selectedChip = document.querySelector('.event-chip.active');
+        const firstChip = document.querySelector('[data-event-index]');
+        if (firstChip) {
+          firstChip.click();
+        }
+        return JSON.stringify({
+          status,
+          summary,
+          preview,
+          chip_count: document.querySelectorAll('[data-event-index]').length,
+          selected_chip: selectedChip ? selectedChip.textContent : '',
+          after_chip_preview: document.getElementById('eventLog').textContent,
+          scroll_width: document.documentElement.scrollWidth,
+          window_width: window.innerWidth,
+        });
+      })();
+    """
+    result = cdp.send(
+        "Runtime.evaluate",
+        {"expression": expression, "returnByValue": True},
+        session_id=session_id,
+    )
+    payload = json.loads(result["result"]["value"])
+    require(payload["chip_count"] > 0, "Studio event timeline did not render event chips")
+    require(payload["status"] == "policy.proposed_action", "Studio event inspector did not select policy stream")
+    require('"stream_id": "policy.proposed_action"' in payload["preview"], "Studio event inspector preview missing policy stream id")
+    require('"authority": "proposed_only"' in payload["preview"], "Studio event inspector preview missing policy authority")
+    require("policy.proposed_action" in payload["summary"], "Studio event inspector summary missing policy stream")
+    require('"kind":' in payload["after_chip_preview"], "Studio event chip click did not show an event envelope")
+    require(payload["scroll_width"] <= payload["window_width"], "Studio event inspector introduced horizontal page overflow")
+
+
 def check_browser_native_contract(repo_root: Path, chrome_bin: str, contract: dict[str, Any]) -> None:
     helpers = load_capture_helpers(repo_root)
 
@@ -332,6 +373,7 @@ def check_browser_native_contract(repo_root: Path, chrome_bin: str, contract: di
         policy_snapshot = max(snapshots)
         check_policy_event(snapshots[policy_snapshot][contract["policy"]["stream_id"]], contract)
         check_studio_seek_controls(cdp, session_id)
+        check_studio_event_inspector(cdp, session_id)
         print(
             json.dumps(
                 {

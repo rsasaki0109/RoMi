@@ -86,7 +86,12 @@
             </section>
 
             <section class="panel event-panel">
-              <h2>Recent Events</h2>
+              <div class="panel-heading">
+                <h2>Event Inspector</h2>
+                <span id="eventInspectorStatus" class="status-pill">waiting</span>
+              </div>
+              <div id="eventTimeline" class="event-timeline" aria-label="Recent event timeline"></div>
+              <div id="eventSummary" class="event-summary"></div>
               <pre id="eventLog"></pre>
             </section>
           </aside>

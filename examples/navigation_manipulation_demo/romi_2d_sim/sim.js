@@ -14,6 +14,9 @@ const clockValue = document.getElementById("clockValue");
 const policyValue = document.getElementById("policyValue");
 const streamList = document.getElementById("streamList");
 const eventLog = document.getElementById("eventLog");
+const eventInspectorStatus = document.getElementById("eventInspectorStatus");
+const eventTimeline = document.getElementById("eventTimeline");
+const eventSummary = document.getElementById("eventSummary");
 const modeStatus = document.getElementById("modeStatus");
 const modeView = document.getElementById("modeView");
 const modeButtons = Array.from(document.querySelectorAll(".mode-tab"));
@@ -62,6 +65,7 @@ const state = {
   ready: false,
   error: null,
   mode: "live",
+  selectedEventIndex: null,
   lastFrameMs: 0,
   elapsedSec: 0,
   durationSec: 0,
@@ -171,6 +175,17 @@ function seekToSeconds(elapsedSec, mode = "replay") {
   if (!state.ready || state.error) return;
   if (!captureMode && mode) state.mode = mode;
   seekCapture(elapsedSec);
+}
+
+function selectEventIndex(index) {
+  if (index < 0 || index >= state.events.length) return;
+  state.selectedEventIndex = index;
+  render();
+}
+
+function selectLatestStreamEvent(streamId) {
+  const index = latestEventIndex(streamId);
+  if (index >= 0) selectEventIndex(index);
 }
 
 function objectState(progress) {
@@ -649,6 +664,91 @@ function renderKeyValues(rows) {
   )).join("")}</div>`;
 }
 
+function eventName(event) {
+  if (event?.stream_id === "robot.camera.rgb") return "RGB";
+  if (event?.stream_id === "robot.camera.depth") return "DEP";
+  if (event?.stream_id === "robot.camera.info") return "CAM";
+  if (event?.stream_id === "robot.joints.state") return "JNT";
+  if (event?.stream_id === "robot.base.odom") return "ODM";
+  if (event?.stream_id === "robot.frames.tf") return "TF";
+  if (event?.stream_id === "task.goal") return "GOAL";
+  if (event?.stream_id === "policy.proposed_action") return "POL";
+  if (event?.stream_id === "runtime.diagnostics" || event?.kind === "diagnostic_event") return "DIAG";
+  return "EVT";
+}
+
+function compactEvent(event) {
+  if (!event) return null;
+  const base = {
+    kind: event.kind,
+    schema_id: event.schema_id,
+    stream_id: event.stream_id,
+    event_id: event.event_id,
+    semantic_type: event.semantic_type,
+    source_system: event.source_system || event.source,
+    event_time_ns: event.event_time_ns ?? event.time?.event_time_ns,
+    clock_domain: event.clock_domain || event.time?.clock_domain,
+    frame_id: event.frame_id,
+    payload_summary: event.payload_summary,
+    metadata: event.metadata,
+    attributes: event.attributes,
+  };
+  return Object.fromEntries(Object.entries(base).filter(([, value]) => value !== undefined));
+}
+
+function latestEventIndex(streamId) {
+  for (let index = state.events.length - 1; index >= 0; index -= 1) {
+    const event = state.events[index];
+    if (!streamId || event.stream_id === streamId || (streamId === "runtime.diagnostics" && event.kind === "diagnostic_event")) {
+      return index;
+    }
+  }
+  return -1;
+}
+
+function selectedEventEntry() {
+  const selected = Number.isInteger(state.selectedEventIndex) ? state.selectedEventIndex : -1;
+  const index = selected >= 0 && selected < state.events.length ? selected : latestEventIndex();
+  return index >= 0 ? { index, event: state.events[index] } : { index: -1, event: null };
+}
+
+function renderEventSummaryCell(label, value) {
+  return `<div class="event-summary-cell"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`;
+}
+
+function renderEventInspector() {
+  if (!eventTimeline || !eventSummary || !eventLog || !eventInspectorStatus) return;
+  const selected = selectedEventEntry();
+  const recent = state.events.slice(-14).map((event, offset) => ({
+    event,
+    index: state.events.length - Math.min(14, state.events.length) + offset,
+  }));
+
+  eventTimeline.innerHTML = recent.map(({ event, index }) => {
+    const active = index === selected.index ? " active" : "";
+    const time = eventTimeSec(event).toFixed(2);
+    const name = eventName(event);
+    return `<button class="event-chip${active}" type="button" data-event-index="${index}" aria-label="Inspect ${name} at ${time}s"><strong>${escapeHtml(name)}</strong><span>${time}s</span></button>`;
+  }).join("");
+
+  if (!selected.event) {
+    eventInspectorStatus.textContent = "waiting";
+    eventSummary.innerHTML = "";
+    eventLog.textContent = "No RoMi events emitted yet.";
+    return;
+  }
+
+  const stream = selected.event.stream_id || selected.event.event_id || "diagnostic_event";
+  eventInspectorStatus.textContent = stream;
+  eventSummary.innerHTML = [
+    renderEventSummaryCell("kind", selected.event.kind),
+    renderEventSummaryCell("stream", stream),
+    renderEventSummaryCell("time", `${eventTimeSec(selected.event).toFixed(2)}s`),
+    renderEventSummaryCell("frame", selected.event.frame_id || selected.event.attributes?.stage || "n/a"),
+  ].join("");
+  eventLog.textContent = JSON.stringify(compactEvent(selected.event), null, 2);
+}
+
 function renderFrameMini() {
   const tf = latestEvent("robot.frames.tf");
   const frames = Array.isArray(tf?.payload_summary?.frames_sample)
@@ -776,8 +876,12 @@ function updateInspector(progress) {
   const maxCount = Math.max(1, ...Object.values(state.streamCounts));
   streamList.innerHTML = "";
   for (const stream of streams) {
-    const row = document.createElement("div");
+    const row = document.createElement("button");
     row.className = "stream-row";
+    row.type = "button";
+    row.dataset.inspectStream = stream;
+    row.setAttribute("aria-label", `Inspect latest ${stream} event`);
+    row.classList.toggle("active", selectedEventEntry().event?.stream_id === stream);
     const label = document.createElement("span");
     label.textContent = stream.replace("robot.", "").replace("policy.", "policy.");
     const bar = document.createElement("div");
@@ -799,11 +903,7 @@ function updateInspector(progress) {
 
   renderModeView(progress);
   updateSeekUi(progress);
-
-  const recent = state.error
-    ? [`error ${state.error}`]
-    : state.events.slice(-6).map((event) => `${event.kind} ${event.stream_id || event.event_id}`);
-  eventLog.textContent = recent.join("\n");
+  renderEventInspector();
 }
 
 function tick(frameMs) {
@@ -833,6 +933,7 @@ function reset() {
   state.events = [];
   state.streamCounts = Object.fromEntries(streams.map((stream) => [stream, 0]));
   state.trace = [];
+  state.selectedEventIndex = null;
   render();
 }
 
@@ -852,6 +953,9 @@ function seekCapture(elapsedSec) {
   }
 
   state.elapsedSec = targetSec;
+  if (state.selectedEventIndex !== null && state.selectedEventIndex >= state.events.length) {
+    state.selectedEventIndex = null;
+  }
   render();
   return {
     ready: true,
@@ -909,6 +1013,11 @@ exportButton.addEventListener("click", exportJsonl);
 for (const button of modeButtons) {
   button.addEventListener("click", () => setMode(button.dataset.mode));
 }
+streamList.addEventListener("click", (event) => {
+  const target = event.target.closest("[data-inspect-stream]");
+  if (!target) return;
+  selectLatestStreamEvent(target.dataset.inspectStream);
+});
 seekControl.addEventListener("input", () => {
   const progress = clamp(Number(seekControl.value) / 1000);
   seekToSeconds(progress * state.durationSec, "replay");
@@ -919,6 +1028,11 @@ modeView.addEventListener("click", (event) => {
   const progress = clamp(Number(target.dataset.seekProgress));
   seekToSeconds(progress * state.durationSec, "replay");
 });
+eventTimeline.addEventListener("click", (event) => {
+  const target = event.target.closest("[data-event-index]");
+  if (!target) return;
+  selectEventIndex(Number(target.dataset.eventIndex));
+});
 
 window.romiCapture = {
   ready: () => Boolean(state.ready && !state.error),
@@ -927,6 +1041,7 @@ window.romiCapture = {
   seek: seekCapture,
   seekToSeconds,
   setMode,
+  selectLatestStreamEvent,
   latestEvent,
 };
 
