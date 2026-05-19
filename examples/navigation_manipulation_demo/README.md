@@ -49,6 +49,8 @@ xdg-open http://127.0.0.1:8000/romi_2d_sim/
 
 The simulator shows a semi-humanoid mobile manipulator navigating to a work area, reaching for an object, placing it in a bin, and exposing RoMi-shaped stream counters, runtime graph state, policy proposals, and recent events. It runs without ROS2 or a build step.
 
+The visual direction follows the [RoMi-H mascot concept](../../docs/assets/romi-h-mascot.png): a semi-humanoid mobile manipulator, not a ROS2-only simulator mascot.
+
 The browser simulator and `romi_native_sim_source.py` both read `scenario.json`, so the motion shown on screen and the RoMi JSONL artifact stream are generated from the same scenario definition.
 
 ## Planned Flow

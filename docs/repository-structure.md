@@ -10,6 +10,7 @@ romi/
   docs/
     assets/
       romi-demo-pipeline.svg
+      romi-h-mascot.png
     vision.md
     requirements.md
     architecture.md
