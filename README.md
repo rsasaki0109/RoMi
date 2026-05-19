@@ -11,10 +11,14 @@ Current visual target: **RoMi 2D navigation + manipulation simulator**.
 Open the ROS2-free browser demo locally:
 
 ```bash
-xdg-open examples/navigation_manipulation_demo/romi_2d_sim/index.html
+python3 -m http.server 8000 --bind 127.0.0.1 --directory examples/navigation_manipulation_demo
+# in another terminal:
+xdg-open http://127.0.0.1:8000/romi_2d_sim/
 ```
 
 The visual simulator shows a small mobile manipulator navigating to a work area, reaching for an object, placing it in a bin, and exposing RoMi-shaped stream counts, runtime stages, policy proposals, and event logs.
+
+The browser simulator and the smoke pipeline both read [scenario.json](examples/navigation_manipulation_demo/scenario.json), so the visual motion and generated RoMi artifacts share the same scenario.
 
 Current smoke demo:
 

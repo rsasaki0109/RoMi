@@ -1,0 +1,144 @@
+{
+  "schema_version": "0.1.0",
+  "scenario_id": "romi_2d_nav_manip_demo",
+  "name": "RoMi 2D navigation and manipulation demo",
+  "timing": {
+    "duration_sec": 16.0,
+    "rate_hz": 12.0,
+    "diagnostics_period_sec": 0.5,
+    "nav_end": 0.58,
+    "reach_start": 0.56,
+    "reach_end": 0.72,
+    "grasp_start": 0.70,
+    "place_start": 0.78,
+    "place_end": 0.92,
+    "placed_after": 0.88,
+    "stages": [
+      {
+        "name": "initialize",
+        "start": 0.0,
+        "end": 0.05
+      },
+      {
+        "name": "navigate",
+        "start": 0.05,
+        "end": 0.58
+      },
+      {
+        "name": "reach",
+        "start": 0.58,
+        "end": 0.72
+      },
+      {
+        "name": "grasp",
+        "start": 0.72,
+        "end": 0.8
+      },
+      {
+        "name": "place",
+        "start": 0.8,
+        "end": 0.92
+      },
+      {
+        "name": "report",
+        "start": 0.92,
+        "end": 1.0
+      }
+    ]
+  },
+  "visual": {
+    "canvas_width": 960,
+    "canvas_height": 620,
+    "grid_px": 32
+  },
+  "world": {
+    "origin_px": [
+      140,
+      392
+    ],
+    "scale_px_per_m": 300.0
+  },
+  "robot": {
+    "label": "RoMi",
+    "start_px": [
+      140,
+      392
+    ],
+    "goal_px": [
+      625,
+      392
+    ],
+    "path_arc_height_px": 120,
+    "yaw_start_rad": -0.05,
+    "yaw_goal_rad": -0.65,
+    "base_size_px": [
+      68,
+      46
+    ],
+    "shoulder_offset_px": [
+      28,
+      -9
+    ]
+  },
+  "arm": {
+    "home_elbow_offset_px": [
+      42,
+      -28
+    ],
+    "home_wrist_offset_px": [
+      80,
+      -38
+    ],
+    "target_elbow_px": [
+      694,
+      278
+    ],
+    "target_wrist_px": [
+      722,
+      288
+    ],
+    "tool_carry_offset_px": [
+      72,
+      -34
+    ]
+  },
+  "workspace": {
+    "zone_px": {
+      "x": 650,
+      "y": 240,
+      "width": 215,
+      "height": 160
+    },
+    "object_start_px": [
+      712,
+      292
+    ],
+    "bin_px": [
+      768,
+      320
+    ],
+    "target_object": "orange_cube"
+  },
+  "camera": {
+    "width": 160,
+    "height": 90,
+    "target_depth_mm": 620,
+    "held_depth_mm": 410,
+    "background_depth_start_mm": 1800,
+    "background_depth_end_mm": 900
+  },
+  "goal": {
+    "frame_id": "map",
+    "position_m": {
+      "x": 1.6,
+      "y": 0.0,
+      "z": 0.0
+    },
+    "orientation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    }
+  }
+}

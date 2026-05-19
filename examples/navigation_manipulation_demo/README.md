@@ -9,6 +9,7 @@ This directory contains a prototype pipeline for the first README demo. No simul
 Current prototype files:
 
 - `stream-map.example.json`: planned source topic to RoMi stream mapping
+- `scenario.json`: shared navigation + manipulation scenario for the browser simulator and native source
 - `runtime-graph.example.json`: planned graph shape
 - `episode-metadata.example.json`: planned episode metadata
 - `diagnostics.example.json`: planned diagnostics report shape
@@ -41,10 +42,14 @@ The demo should be useful even if the first robot behavior is scripted and the f
 Open the RoMi 2D browser simulator locally:
 
 ```bash
-xdg-open examples/navigation_manipulation_demo/romi_2d_sim/index.html
+python3 -m http.server 8000 --bind 127.0.0.1 --directory examples/navigation_manipulation_demo
+# in another terminal:
+xdg-open http://127.0.0.1:8000/romi_2d_sim/
 ```
 
-The simulator shows a small mobile manipulator navigating to a work area, reaching for an object, placing it in a bin, and exposing RoMi-shaped stream counters, runtime graph state, policy proposals, and recent events. It runs without ROS2, a web server, or a build step.
+The simulator shows a small mobile manipulator navigating to a work area, reaching for an object, placing it in a bin, and exposing RoMi-shaped stream counters, runtime graph state, policy proposals, and recent events. It runs without ROS2 or a build step.
+
+The browser simulator and `romi_native_sim_source.py` both read `scenario.json`, so the motion shown on screen and the RoMi JSONL artifact stream are generated from the same scenario definition.
 
 ## Planned Flow
 
