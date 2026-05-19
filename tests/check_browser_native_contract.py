@@ -387,6 +387,49 @@ def check_studio_dataset_report(cdp: Any, session_id: str) -> None:
     require(payload["scroll_width"] <= payload["window_width"], "Studio dataset report introduced horizontal page overflow")
 
 
+def check_studio_runtime_graph(cdp: Any, session_id: str) -> None:
+    expression = """
+      (() => {
+        document.body.classList.remove('capture-mode');
+        window.romiCapture.seekToSeconds(13.2);
+        window.romiCapture.selectGraphNode('policy');
+        const policyDetail = document.getElementById('graphDetail').textContent;
+        const selectedPolicy = document.querySelector('#graphPolicy.selected button')?.getAttribute('aria-pressed');
+        const policyOutput = document.querySelector('#graphDetail [data-inspect-stream="policy.proposed_action"]');
+        if (policyOutput) {
+          policyOutput.click();
+        }
+        const selectedEvent = document.getElementById('eventInspectorStatus').textContent;
+        window.romiCapture.selectGraphNode('report');
+        const reportDetail = document.getElementById('graphDetail').textContent;
+        return JSON.stringify({
+          policy_detail: policyDetail,
+          selected_policy: selectedPolicy,
+          selected_event: selectedEvent,
+          report_detail: reportDetail,
+          graph_buttons: document.querySelectorAll('[data-graph-node]').length,
+          scroll_width: document.documentElement.scrollWidth,
+          window_width: window.innerWidth,
+        });
+      })();
+    """
+    result = cdp.send(
+        "Runtime.evaluate",
+        {"expression": expression, "returnByValue": True},
+        session_id=session_id,
+    )
+    payload = json.loads(result["result"]["value"])
+    require(payload["graph_buttons"] == 5, "Studio runtime graph node count mismatch")
+    require(payload["selected_policy"] == "true", "Studio runtime graph did not select policy node")
+    require("policy.proposed_action" in payload["policy_detail"], "Studio runtime graph policy output missing")
+    require("proposed_only" in payload["policy_detail"], "Studio runtime graph policy authority missing")
+    require("observation window" in payload["policy_detail"], "Studio runtime graph policy connection missing")
+    require(payload["selected_event"] == "policy.proposed_action", "Studio runtime graph output did not inspect policy event")
+    require("dataset report" in payload["report_detail"], "Studio runtime graph report node detail missing")
+    require("episode + policy" in payload["report_detail"], "Studio runtime graph dataset connection missing")
+    require(payload["scroll_width"] <= payload["window_width"], "Studio runtime graph introduced horizontal page overflow")
+
+
 def check_browser_native_contract(repo_root: Path, chrome_bin: str, contract: dict[str, Any]) -> None:
     helpers = load_capture_helpers(repo_root)
 
@@ -415,6 +458,7 @@ def check_browser_native_contract(repo_root: Path, chrome_bin: str, contract: di
         check_studio_seek_controls(cdp, session_id)
         check_studio_event_inspector(cdp, session_id)
         check_studio_dataset_report(cdp, session_id)
+        check_studio_runtime_graph(cdp, session_id)
         print(
             json.dumps(
                 {

@@ -494,6 +494,97 @@ button:hover {
   border-color: var(--cyan);
 }
 
+.graph-list button {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  min-height: 22px;
+  min-width: 0;
+  padding: 0;
+  text-align: left;
+  width: 100%;
+}
+
+.graph-list li.selected button {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.graph-list li.selected::before {
+  box-shadow: 0 0 0 3px rgba(56, 217, 239, 0.16);
+}
+
+.graph-detail {
+  border-top: 1px solid var(--line-soft);
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+  min-width: 0;
+  padding-top: 10px;
+}
+
+.graph-detail-heading {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.graph-detail-heading span {
+  color: var(--muted);
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.graph-detail-heading strong {
+  color: var(--green);
+  font-size: 12px;
+}
+
+.graph-io {
+  display: grid;
+  gap: 8px;
+}
+
+.graph-io > div {
+  display: grid;
+  gap: 5px;
+}
+
+.graph-io > div > span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.graph-token-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.graph-token {
+  background: #111c23;
+  border: 1px solid var(--line-soft);
+  border-radius: 5px;
+  color: var(--text);
+  display: inline-flex;
+  font-size: 10px;
+  line-height: 1.2;
+  max-width: 100%;
+  min-height: 24px;
+  overflow: hidden;
+  padding: 5px 6px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+button.graph-token {
+  color: var(--cyan);
+}
+
 .event-panel {
   min-height: 178px;
   min-width: 0;
