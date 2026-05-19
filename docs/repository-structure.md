@@ -10,6 +10,9 @@ romi/
   docs/
     assets/
       romi-demo-pipeline.svg
+      romi-2d-nav-manip-demo.mp4
+      romi-2d-nav-manip-demo.webp
+      romi-2d-nav-manip-demo-poster.png
       romi-h-mascot.png
     vision.md
     requirements.md
@@ -74,6 +77,7 @@ romi/
       README.md
       capture-guide.md
       scenario.json
+      capture_readme_video.py
       romi_native_sim_source.py
       ros2_demo_sim_publisher.py
       run_smoke_demo.sh
