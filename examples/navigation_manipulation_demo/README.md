@@ -54,6 +54,8 @@ The visual direction follows the [RoMi-H mascot concept](../../docs/assets/romi-
 
 The browser simulator and `romi_native_sim_source.py` both read `scenario.json`, so the motion shown on screen and the RoMi JSONL artifact stream are generated from the same scenario definition.
 
+The browser export and native smoke source intentionally use the same RoMi stream names and closely aligned payload summaries for RGB, depth, camera info, joint state, odometry, TF, task goal, diagnostics, and non-authoritative policy proposals.
+
 Generate the README media assets:
 
 ```bash

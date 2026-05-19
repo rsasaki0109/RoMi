@@ -187,9 +187,10 @@ function worldToRomi(pose) {
 
 function createEvent(streamId, payloadSummary, frameId, semanticType, sourceMessageType) {
   state.streamCounts[streamId] += 1;
+  const isPolicy = streamId === "policy.proposed_action";
   return {
     schema_version: "0.1.0",
-    schema_id: streamId === "policy.proposed_action" ? "romi.ml.policy_io/0.1.0" : "romi.robotics.stream_metadata/0.1.0",
+    schema_id: isPolicy ? "romi.ml.policy_io/0.1.0" : "romi.robotics.stream_metadata/0.1.0",
     kind: "stream_sample",
     stream_id: streamId,
     semantic_type: semanticType,
@@ -197,13 +198,16 @@ function createEvent(streamId, payloadSummary, frameId, semanticType, sourceMess
     source_topic: null,
     source_message_type: sourceMessageType,
     event_time_ns: Math.round(state.elapsedSec * 1_000_000_000),
+    source_emit_wall_time_ns: Date.now() * 1_000_000,
     clock_domain: "sim_time",
     frame_id: frameId,
     payload_summary: payloadSummary,
     metadata: {
       source: "romi_2d_sim",
       scenario_id: state.scenario?.scenario_id,
+      robot_morphology: robotConfig().morphology,
       sample_index: state.streamCounts[streamId],
+      authority: isPolicy ? "proposed_only" : "observation_only",
     },
   };
 }
@@ -220,33 +224,46 @@ function emitEvents(progress) {
   const cameraWidth = Number(camera.width ?? 160);
   const cameraHeight = Number(camera.height ?? 90);
   const visual = visualConfig();
-  const objectCameraX = Math.round(clamp(object.x / Number(visual.canvas_width ?? 960)) * cameraWidth);
-  const objectCameraY = Math.round(clamp(object.y / Number(visual.canvas_height ?? 620)) * cameraHeight);
+  const eventTimeNs = Math.round(state.elapsedSec * 1_000_000_000);
+  const objectCameraX = Math.round(clamp(object.x / Number(visual.canvas_width ?? 960)) * (cameraWidth - 1));
+  const objectCameraY = Math.round(clamp(object.y / Number(visual.canvas_height ?? 620)) * (cameraHeight - 1));
+  const backgroundDepthStart = Number(camera.background_depth_start_mm ?? 1800);
+  const backgroundDepthEnd = Number(camera.background_depth_end_mm ?? 900);
 
   const events = [
     createEvent("robot.camera.rgb", {
-      width: cameraWidth,
       height: cameraHeight,
+      width: cameraWidth,
       encoding: "rgb8",
+      is_bigendian: 0,
+      step: cameraWidth * 3,
+      data_len: cameraHeight * cameraWidth * 3,
       synthetic_scene: {
         target_centroid_px: { x: objectCameraX, y: objectCameraY },
         target_visible: objectStatus !== "placed",
         object_state: objectStatus,
+        progress_bar: progress,
       },
     }, "camera_color_optical_frame", "rgb_image", "romi.robotics.ImageSummary"),
     createEvent("robot.camera.depth", {
-      width: cameraWidth,
       height: cameraHeight,
+      width: cameraWidth,
       encoding: "16UC1",
+      is_bigendian: 0,
+      step: cameraWidth * 2,
+      data_len: cameraHeight * cameraWidth * 2,
       synthetic_scene: {
+        target_centroid_px: { x: objectCameraX, y: objectCameraY },
         target_depth_mm: Number(camera[holding ? "held_depth_mm" : "target_depth_mm"] ?? 620),
+        background_depth_mm: Math.round(lerp(backgroundDepthStart, backgroundDepthEnd, ease(progress))),
         object_state: objectStatus,
       },
     }, "camera_depth_optical_frame", "depth_image", "romi.robotics.ImageSummary"),
     createEvent("robot.camera.info", {
-      width: cameraWidth,
       height: cameraHeight,
+      width: cameraWidth,
       distortion_model: "plumb_bob",
+      d_len: 0,
       k_len: 9,
       p_len: 12,
     }, "camera_color_optical_frame", "camera_info", "romi.robotics.CameraInfoSummary"),
@@ -263,6 +280,8 @@ function emitEvents(progress) {
         holding ? 0.0 : 0.04,
       ],
       position_count: 7,
+      velocity_count: 7,
+      effort_count: 7,
     }, "base_link", "joint_state", "romi.robotics.JointStateSummary"),
     createEvent("robot.base.odom", {
       child_frame_id: "base_link",
@@ -275,13 +294,14 @@ function emitEvents(progress) {
     createEvent("robot.frames.tf", {
       transform_count: 6,
       frames_sample: [
-        { parent_frame_id: "map", child_frame_id: "odom" },
-        { parent_frame_id: "odom", child_frame_id: "base_link" },
-        { parent_frame_id: "base_link", child_frame_id: "camera_color_optical_frame" },
-        { parent_frame_id: "base_link", child_frame_id: "camera_depth_optical_frame" },
-        { parent_frame_id: "base_link", child_frame_id: "arm_base_link" },
-        { parent_frame_id: "arm_base_link", child_frame_id: "tool0" },
+        { parent_frame_id: "map", child_frame_id: "odom", stamp_ns: eventTimeNs },
+        { parent_frame_id: "odom", child_frame_id: "base_link", stamp_ns: eventTimeNs },
+        { parent_frame_id: "base_link", child_frame_id: "camera_color_optical_frame", stamp_ns: eventTimeNs },
+        { parent_frame_id: "base_link", child_frame_id: "camera_depth_optical_frame", stamp_ns: eventTimeNs },
+        { parent_frame_id: "base_link", child_frame_id: "arm_base_link", stamp_ns: eventTimeNs },
+        { parent_frame_id: "arm_base_link", child_frame_id: "tool0", stamp_ns: eventTimeNs },
       ],
+      synthetic_base_translation: worldPose,
       synthetic_object_position: worldToRomi(object),
     }, "map->odom", "transform_tree", "romi.robotics.TransformTreeSummary"),
   ];
@@ -316,15 +336,24 @@ function emitEvents(progress) {
       schema_id: "romi.core.diagnostic_event/0.1.0",
       kind: "diagnostic_event",
       event_id: `romi_2d_sim_runtime_${state.streamCounts["runtime.diagnostics"]}`,
-      time: { event_time_ns: Math.round(state.elapsedSec * 1_000_000_000), clock_domain: "sim_time" },
+      time: { event_time_ns: eventTimeNs, clock_domain: "sim_time" },
       severity: "info",
       source: "romi_2d_sim",
       category: "runtime",
       message: "Simulator emitted synchronized navigation/manipulation step.",
       attributes: {
         scenario_id: state.scenario?.scenario_id,
+        sample_index: state.sampleIndex + 1,
+        progress,
         stage,
-        stream_count: streams.length,
+        streams: [
+          "robot.camera.rgb",
+          "robot.camera.depth",
+          "robot.camera.info",
+          "robot.joints.state",
+          "robot.base.odom",
+          "robot.frames.tf",
+        ],
       },
     });
   }
@@ -652,6 +681,14 @@ function exportJsonl() {
   URL.revokeObjectURL(url);
 }
 
+function latestEvent(streamId) {
+  for (let index = state.events.length - 1; index >= 0; index -= 1) {
+    const event = state.events[index];
+    if (!streamId || event.stream_id === streamId) return event;
+  }
+  return null;
+}
+
 async function loadScenario() {
   const response = await fetch("../scenario.json", { cache: "no-store" });
   if (!response.ok) {
@@ -683,6 +720,7 @@ window.romiCapture = {
   error: () => state.error,
   duration: () => state.durationSec,
   seek: seekCapture,
+  latestEvent,
 };
 
 loadScenario()

@@ -30,6 +30,13 @@ The visual simulator shows a semi-humanoid mobile manipulator navigating to a wo
 
 The browser simulator and the smoke pipeline both read [scenario.json](examples/navigation_manipulation_demo/scenario.json), so the visual motion and generated RoMi artifacts share the same scenario.
 
+This demo currently proves:
+
+- The navigation + manipulation scenario can run without ROS2.
+- The browser simulator and native smoke source share the same scenario contract.
+- The pipeline records an episode, replays it, runs a mock policy, and generates a dataset report.
+- Policy output is `proposed_only`; it is not actuator authority.
+
 Current smoke demo:
 
 ```text
