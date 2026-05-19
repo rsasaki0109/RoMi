@@ -8,6 +8,8 @@ This document proposes a repository structure for RoMi. It is a planning documen
 romi/
   README.md
   docs/
+    assets/
+      romi-nav-manip-demo.gif
     vision.md
     requirements.md
     architecture.md
@@ -70,6 +72,7 @@ romi/
     navigation_manipulation_demo/
       README.md
       capture-guide.md
+      render_sim_video.py
       run_smoke_demo.sh
       stream-map.example.json
       runtime-graph.example.json

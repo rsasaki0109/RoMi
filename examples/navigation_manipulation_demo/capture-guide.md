@@ -54,6 +54,21 @@ Important output files:
 - `dataset-report/report.md`
 - `dataset-report/report.json`
 
+## Rendered README Animation
+
+The README animation is generated from a lightweight visual simulation:
+
+```bash
+python3 examples/navigation_manipulation_demo/render_sim_video.py
+```
+
+Outputs:
+
+- `docs/assets/romi-nav-manip-demo.gif`
+- `examples/navigation_manipulation_demo/artifacts/simulation/romi-nav-manip-demo.mp4`
+
+The GIF can be committed for README display. The MP4 is ignored by git and can be uploaded as a GitHub asset when a true video URL is needed.
+
 ## Suggested Recording Layout
 
 Use three terminal panes or windows:

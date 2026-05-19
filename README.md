@@ -6,7 +6,7 @@ RoMi stands for **Robotics Middleware**. It is an early pre-MVP project explorin
 
 <p align="center">
   <a href="examples/navigation_manipulation_demo/capture-guide.md">
-    <img src="docs/assets/romi-demo-pipeline.svg" alt="RoMi demo pipeline: ROS2 input to bridge, episode recording, replay, mock policy, and dataset inspection" width="900">
+    <img src="docs/assets/romi-nav-manip-demo.gif" alt="Animated RoMi navigation and manipulation simulation demo" width="900">
   </a>
 </p>
 
