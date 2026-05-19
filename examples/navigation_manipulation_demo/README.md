@@ -17,7 +17,7 @@ Current prototype files:
 - `romi_native_sim_source.py`: ROS2-free RoMi-native navigation + manipulation source
 - `ros2_demo_sim_publisher.py`: scripted ROS2 navigation + manipulation source for the smoke demo
 - `run_smoke_demo.sh`: one-shot smoke run for source, record, replay, policy, and dataset report
-- `turtlesim_demo/`: browser-based turtlesim-style navigation + manipulation simulator
+- `romi_2d_sim/`: browser-based RoMi 2D navigation + manipulation simulator
 - `capture-guide.md`: README video capture guide
 
 ## Demo Goal
@@ -38,10 +38,10 @@ The demo should be useful even if the first robot behavior is scripted and the f
 
 ## Visual Simulator
 
-Open the turtlesim-style browser simulator locally:
+Open the RoMi 2D browser simulator locally:
 
 ```bash
-xdg-open examples/navigation_manipulation_demo/turtlesim_demo/index.html
+xdg-open examples/navigation_manipulation_demo/romi_2d_sim/index.html
 ```
 
 The simulator shows a small mobile manipulator navigating to a work area, reaching for an object, placing it in a bin, and exposing RoMi-shaped stream counters, runtime graph state, policy proposals, and recent events. It runs without ROS2, a web server, or a build step.

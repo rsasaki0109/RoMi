@@ -6,12 +6,12 @@ RoMi stands for **Robotics Middleware**. It is an early pre-MVP project explorin
 
 ## Demo
 
-Current visual target: **turtlesim-style navigation + manipulation simulator**.
+Current visual target: **RoMi 2D navigation + manipulation simulator**.
 
 Open the ROS2-free browser demo locally:
 
 ```bash
-xdg-open examples/navigation_manipulation_demo/turtlesim_demo/index.html
+xdg-open examples/navigation_manipulation_demo/romi_2d_sim/index.html
 ```
 
 The visual simulator shows a small mobile manipulator navigating to a work area, reaching for an object, placing it in a bin, and exposing RoMi-shaped stream counts, runtime stages, policy proposals, and event logs.

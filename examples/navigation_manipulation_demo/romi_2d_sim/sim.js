@@ -114,7 +114,7 @@ function createEvent(streamId, payloadSummary, frameId, semanticType, sourceMess
     kind: "stream_sample",
     stream_id: streamId,
     semantic_type: semanticType,
-    source_system: "romi_turtlesim_demo",
+    source_system: "romi_2d_sim",
     source_topic: null,
     source_message_type: sourceMessageType,
     event_time_ns: Math.round(state.elapsedSec * 1_000_000_000),
@@ -122,7 +122,7 @@ function createEvent(streamId, payloadSummary, frameId, semanticType, sourceMess
     frame_id: frameId,
     payload_summary: payloadSummary,
     metadata: {
-      source: "turtlesim_demo",
+      source: "romi_2d_sim",
       sample_index: state.streamCounts[streamId],
     },
   };
@@ -209,10 +209,10 @@ function emitEvents(progress) {
       schema_version: "0.1.0",
       schema_id: "romi.core.diagnostic_event/0.1.0",
       kind: "diagnostic_event",
-      event_id: `turtlesim_runtime_${state.streamCounts["runtime.diagnostics"]}`,
+      event_id: `romi_2d_sim_runtime_${state.streamCounts["runtime.diagnostics"]}`,
       time: { event_time_ns: Math.round(state.elapsedSec * 1_000_000_000), clock_domain: "sim_time" },
       severity: "info",
-      source: "romi_turtlesim_demo",
+      source: "romi_2d_sim",
       category: "runtime",
       message: "Simulator emitted synchronized navigation/manipulation step.",
       attributes: { stage: currentStage(progress), stream_count: streams.length },
@@ -359,7 +359,7 @@ function drawHud(progress) {
   roundRect(24, 22, 360, 86, 8, true, true);
   ctx.fillStyle = colors.text;
   ctx.font = "20px sans-serif";
-  ctx.fillText("turtlesim-style RoMi source", 44, 55);
+  ctx.fillText("RoMi 2D sim source", 44, 55);
   ctx.fillStyle = colors.muted;
   ctx.font = "13px sans-serif";
   ctx.fillText("navigation + manipulation, ROS2-free", 44, 80);
@@ -458,7 +458,7 @@ function exportJsonl() {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = "romi-turtlesim-demo-events.jsonl";
+  link.download = "romi-2d-sim-events.jsonl";
   link.click();
   URL.revokeObjectURL(url);
 }
