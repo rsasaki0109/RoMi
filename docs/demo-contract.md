@@ -37,6 +37,8 @@ Out of scope:
 
 The demo scenario is defined in [scenario.json](../examples/navigation_manipulation_demo/scenario.json).
 
+The machine-readable demo contract is defined in [contract.example.json](../examples/navigation_manipulation_demo/contract.example.json). CI checkers read this file instead of duplicating stream invariants in test code.
+
 The scenario represents a semi-humanoid mobile manipulator, `RoMi-H`, that:
 
 1. Starts in a known map.
@@ -219,6 +221,8 @@ The workflow in [.github/workflows/ci.yml](../.github/workflows/ci.yml) currentl
 - RoMi-native smoke demo execution
 - demo contract invariants in [tests/check_demo_contract.py](../tests/check_demo_contract.py)
 - browser/native stream contract alignment in [tests/check_browser_native_contract.py](../tests/check_browser_native_contract.py)
+
+Both contract checkers load [contract.example.json](../examples/navigation_manipulation_demo/contract.example.json).
 
 The contract checker verifies:
 

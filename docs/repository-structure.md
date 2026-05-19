@@ -81,6 +81,7 @@ romi/
       README.md
       capture-guide.md
       scenario.json
+      contract.example.json
       capture_readme_video.py
       romi_native_sim_source.py
       ros2_demo_sim_publisher.py

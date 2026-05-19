@@ -15,22 +15,28 @@ from pathlib import Path
 from typing import Any
 
 
-REQUIRED_STREAMS = [
-    "robot.camera.rgb",
-    "robot.camera.depth",
-    "robot.camera.info",
-    "robot.joints.state",
-    "robot.base.odom",
-    "robot.frames.tf",
-    "task.goal",
-]
-
-POLICY_STREAM = "policy.proposed_action"
-
-
 def require(condition: bool, message: str) -> None:
     if not condition:
         raise AssertionError(message)
+
+
+def load_json(path: Path) -> dict[str, Any]:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def default_contract_path(repo_root: Path) -> Path:
+    return repo_root / "examples" / "navigation_manipulation_demo" / "contract.example.json"
+
+
+def required_stream_ids(contract: dict[str, Any]) -> list[str]:
+    return [stream["stream_id"] for stream in contract["required_streams"]]
+
+
+def stream_contract(contract: dict[str, Any], stream_id: str) -> dict[str, Any]:
+    for stream in contract["required_streams"]:
+        if stream["stream_id"] == stream_id:
+            return stream
+    raise AssertionError(f"missing stream contract: {stream_id}")
 
 
 def load_capture_helpers(repo_root: Path) -> Any:
@@ -153,8 +159,8 @@ def start_browser(repo_root: Path, chrome_bin: str, helpers: Any) -> tuple[Any, 
         raise
 
 
-def browser_snapshot(cdp: Any, session_id: str, sim_time_sec: float) -> dict[str, dict[str, Any]]:
-    streams_js = json.dumps([*REQUIRED_STREAMS, POLICY_STREAM])
+def browser_snapshot(cdp: Any, session_id: str, sim_time_sec: float, contract: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    streams_js = json.dumps([*required_stream_ids(contract), contract["policy"]["stream_id"]])
     expression = f"""
       window.romiCapture.seek({sim_time_sec:.6f});
       JSON.stringify(Object.fromEntries({streams_js}.map((streamId) => [
@@ -170,20 +176,24 @@ def browser_snapshot(cdp: Any, session_id: str, sim_time_sec: float) -> dict[str
     return json.loads(result["result"]["value"])
 
 
-def check_common_event_contract(browser_event: dict[str, Any], native_event: dict[str, Any], stream_id: str) -> None:
+def check_common_event_contract(browser_event: dict[str, Any], native_event: dict[str, Any], stream_id: str, contract: dict[str, Any]) -> None:
+    stream = stream_contract(contract, stream_id)
     require(browser_event is not None, f"browser missing {stream_id}")
     require(browser_event.get("kind") == "stream_sample", f"browser {stream_id} must be a stream_sample")
     require(browser_event.get("stream_id") == stream_id, f"browser stream id mismatch: {stream_id}")
-    require(browser_event.get("semantic_type") == native_event.get("semantic_type"), f"semantic_type mismatch for {stream_id}")
-    require(browser_event.get("frame_id") == native_event.get("frame_id"), f"frame_id mismatch for {stream_id}")
-    require(browser_event.get("source_message_type") == native_event.get("source_message_type"), f"source_message_type mismatch for {stream_id}")
-    require(browser_event.get("metadata", {}).get("scenario_id") == native_event.get("metadata", {}).get("scenario_id"), f"scenario_id mismatch for {stream_id}")
+    require(browser_event.get("semantic_type") == native_event.get("semantic_type") == stream["semantic_type"], f"semantic_type mismatch for {stream_id}")
+    require(browser_event.get("frame_id") == native_event.get("frame_id") == stream["frame_id"], f"frame_id mismatch for {stream_id}")
     require(
-        browser_event.get("metadata", {}).get("robot_morphology") == native_event.get("metadata", {}).get("robot_morphology"),
-        f"robot_morphology mismatch for {stream_id}",
+        browser_event.get("source_message_type") == native_event.get("source_message_type") == stream["source_message_type"],
+        f"source_message_type mismatch for {stream_id}",
     )
-    require(browser_event.get("metadata", {}).get("authority") == "observation_only", f"browser authority mismatch for {stream_id}")
-    require(native_event.get("metadata", {}).get("authority") == "observation_only", f"native authority mismatch for {stream_id}")
+    expected_clock = contract["source_invariants"]["clock_domain"]
+    require(browser_event.get("clock_domain") == native_event.get("clock_domain") == expected_clock, f"clock_domain mismatch for {stream_id}")
+    require(browser_event.get("metadata", {}).get("scenario_id") == native_event.get("metadata", {}).get("scenario_id") == contract["scenario_id"], f"scenario_id mismatch for {stream_id}")
+    require(browser_event.get("metadata", {}).get("robot_morphology") == native_event.get("metadata", {}).get("robot_morphology") == contract["robot"]["morphology"], f"robot_morphology mismatch for {stream_id}")
+    expected_authority = contract["source_invariants"]["observation_authority"]
+    require(browser_event.get("metadata", {}).get("authority") == expected_authority, f"browser authority mismatch for {stream_id}")
+    require(native_event.get("metadata", {}).get("authority") == expected_authority, f"native authority mismatch for {stream_id}")
 
 
 def check_image_payload(browser_payload: dict[str, Any], native_payload: dict[str, Any], channels: int, stream_id: str) -> None:
@@ -193,56 +203,68 @@ def check_image_payload(browser_payload: dict[str, Any], native_payload: dict[st
     require("synthetic_scene" in browser_payload, f"{stream_id} missing synthetic_scene")
 
 
-def check_stream_payload(browser_event: dict[str, Any], native_event: dict[str, Any], stream_id: str) -> None:
+def check_stream_payload(browser_event: dict[str, Any], native_event: dict[str, Any], stream_id: str, contract: dict[str, Any]) -> None:
+    stream = stream_contract(contract, stream_id)
+    invariants = stream.get("payload_invariants", {})
     browser_payload = browser_event.get("payload_summary") or {}
     native_payload = native_event.get("payload_summary") or {}
 
     if stream_id == "robot.camera.rgb":
-        check_image_payload(browser_payload, native_payload, 3, stream_id)
-        require("target_visible" in browser_payload.get("synthetic_scene", {}), "browser RGB missing target_visible")
+        check_image_payload(browser_payload, native_payload, invariants["channels"], stream_id)
+        require(browser_payload.get("encoding") == invariants["encoding"], "browser RGB encoding mismatch")
+        for field in invariants["required_synthetic_scene_fields"]:
+            require(field in browser_payload.get("synthetic_scene", {}), f"browser RGB missing {field}")
     elif stream_id == "robot.camera.depth":
-        check_image_payload(browser_payload, native_payload, 2, stream_id)
-        require("target_depth_mm" in browser_payload.get("synthetic_scene", {}), "browser depth missing target_depth_mm")
+        check_image_payload(browser_payload, native_payload, invariants["channels"], stream_id)
+        require(browser_payload.get("encoding") == invariants["encoding"], "browser depth encoding mismatch")
+        for field in invariants["required_synthetic_scene_fields"]:
+            require(field in browser_payload.get("synthetic_scene", {}), f"browser depth missing {field}")
     elif stream_id == "robot.camera.info":
         for key in ["height", "width", "distortion_model", "d_len", "k_len", "p_len"]:
             require(browser_payload.get(key) == native_payload.get(key), f"camera.info {key} mismatch")
+        for key, expected in invariants.items():
+            require(browser_payload.get(key) == expected, f"camera.info {key} contract mismatch")
     elif stream_id == "robot.joints.state":
-        require(browser_payload.get("joint_count") == native_payload.get("joint_count") == 7, "joint_count mismatch")
-        require(browser_payload.get("joint_names_sample") == native_payload.get("joint_names_sample"), "joint names mismatch")
+        joint_contract = contract["robot"]["joint_state"]
+        require(browser_payload.get("joint_count") == native_payload.get("joint_count") == joint_contract["joint_count"], "joint_count mismatch")
+        require(browser_payload.get("joint_names_sample") == native_payload.get("joint_names_sample") == joint_contract["joint_names"], "joint names mismatch")
         for key in ["position_count", "velocity_count", "effort_count"]:
-            require(browser_payload.get(key) == native_payload.get(key) == 7, f"joint {key} mismatch")
-        require(len(browser_payload.get("position_sample", [])) == 7, "browser position_sample length mismatch")
+            require(browser_payload.get(key) == native_payload.get(key) == joint_contract[key], f"joint {key} mismatch")
+        require(len(browser_payload.get("position_sample", [])) == joint_contract["position_count"], "browser position_sample length mismatch")
     elif stream_id == "robot.base.odom":
-        require(browser_payload.get("child_frame_id") == native_payload.get("child_frame_id") == "base_link", "odom child_frame_id mismatch")
+        require(browser_payload.get("child_frame_id") == native_payload.get("child_frame_id") == invariants["child_frame_id"], "odom child_frame_id mismatch")
         require("position" in browser_payload, "browser odom missing position")
         require("orientation" in browser_payload, "browser odom missing orientation")
     elif stream_id == "robot.frames.tf":
-        require(browser_payload.get("transform_count") == native_payload.get("transform_count") == 6, "TF transform_count mismatch")
+        require(browser_payload.get("transform_count") == native_payload.get("transform_count") == invariants["transform_count"], "TF transform_count mismatch")
         browser_frames = browser_payload.get("frames_sample", [])
         native_frames = native_payload.get("frames_sample", [])
         browser_pairs = [(frame.get("parent_frame_id"), frame.get("child_frame_id")) for frame in browser_frames]
         native_pairs = [(frame.get("parent_frame_id"), frame.get("child_frame_id")) for frame in native_frames]
-        require(browser_pairs == native_pairs, "TF frame pairs mismatch")
+        expected_pairs = [tuple(pair) for pair in invariants["frame_pairs"]]
+        require(browser_pairs == native_pairs == expected_pairs, "TF frame pairs mismatch")
         require(all("stamp_ns" in frame for frame in browser_frames), "browser TF frames missing stamp_ns")
-        require("synthetic_base_translation" in browser_payload, "browser TF missing synthetic_base_translation")
-        require("synthetic_object_position" in browser_payload, "browser TF missing synthetic_object_position")
+        for field in invariants["required_fields"]:
+            require(field in browser_payload, f"browser TF missing {field}")
     elif stream_id == "task.goal":
         require(browser_payload.get("scenario_id") == native_payload.get("scenario_id"), "task.goal scenario_id mismatch")
-        require(browser_payload.get("target_object") == native_payload.get("target_object"), "task.goal target_object mismatch")
+        require(browser_payload.get("target_object") == native_payload.get("target_object") == invariants["target_object"], "task.goal target_object mismatch")
 
 
-def check_policy_event(browser_event: dict[str, Any]) -> None:
+def check_policy_event(browser_event: dict[str, Any], contract: dict[str, Any]) -> None:
+    policy_contract = contract["policy"]
     require(browser_event is not None, "browser missing policy.proposed_action")
-    require(browser_event.get("stream_id") == POLICY_STREAM, "browser policy stream mismatch")
-    require(browser_event.get("metadata", {}).get("authority") == "proposed_only", "browser policy metadata authority mismatch")
+    require(browser_event.get("stream_id") == policy_contract["stream_id"], "browser policy stream mismatch")
+    require(browser_event.get("semantic_type") == policy_contract["semantic_type"], "browser policy semantic_type mismatch")
+    require(browser_event.get("metadata", {}).get("authority") == policy_contract["authority"], "browser policy metadata authority mismatch")
     payload = browser_event.get("payload_summary") or {}
-    require(payload.get("metadata", {}).get("authority") == "proposed_only", "browser policy payload authority mismatch")
+    require(payload.get("metadata", {}).get("authority") == policy_contract["authority"], "browser policy payload authority mismatch")
     actions = payload.get("proposed_actions", [])
-    require(len(actions) == 3, "browser policy should expose three proposed actions")
-    require(all(action.get("authority") == "proposed_only" for action in actions), "browser policy action authority mismatch")
+    require(len(actions) == policy_contract["proposed_action_count"], "browser policy proposed action count mismatch")
+    require(all(action.get("authority") == policy_contract["authority"] for action in actions), "browser policy action authority mismatch")
 
 
-def check_browser_native_contract(repo_root: Path, chrome_bin: str) -> None:
+def check_browser_native_contract(repo_root: Path, chrome_bin: str, contract: dict[str, Any]) -> None:
     helpers = load_capture_helpers(repo_root)
 
     with tempfile.TemporaryDirectory(prefix="romi-native-contract-") as tmp:
@@ -254,26 +276,26 @@ def check_browser_native_contract(repo_root: Path, chrome_bin: str) -> None:
     chrome_profile = None
     try:
         cdp, session_id, server, chrome, chrome_profile = start_browser(repo_root, chrome_bin, helpers)
-        snapshots = {
-            0.0: browser_snapshot(cdp, session_id, 0.0),
-            11.5: browser_snapshot(cdp, session_id, 11.5),
-        }
+        snapshot_times = contract["browser_native_compare"]["snapshot_times_sec"]
+        snapshots = {sim_time_sec: browser_snapshot(cdp, session_id, sim_time_sec, contract) for sim_time_sec in snapshot_times}
 
         for sim_time_sec, snapshot in snapshots.items():
             event_time_ns = int(sim_time_sec * 1_000_000_000)
-            for stream_id in REQUIRED_STREAMS:
+            for stream_id in required_stream_ids(contract):
                 native_event = latest_stream_at_or_before(native_events, stream_id, event_time_ns)
                 browser_event = snapshot[stream_id]
-                check_common_event_contract(browser_event, native_event, stream_id)
-                check_stream_payload(browser_event, native_event, stream_id)
+                check_common_event_contract(browser_event, native_event, stream_id, contract)
+                check_stream_payload(browser_event, native_event, stream_id, contract)
 
-        check_policy_event(snapshots[11.5][POLICY_STREAM])
+        policy_snapshot = max(snapshots)
+        check_policy_event(snapshots[policy_snapshot][contract["policy"]["stream_id"]], contract)
         print(
             json.dumps(
                 {
-                    "required_streams": len(REQUIRED_STREAMS),
+                    "contract_id": contract["contract_id"],
+                    "required_streams": len(required_stream_ids(contract)),
                     "snapshots": list(snapshots),
-                    "policy_authority": "proposed_only",
+                    "policy_authority": contract["policy"]["authority"],
                     "source_systems": ["romi_2d_sim", "romi_native_sim"],
                 },
                 sort_keys=True,
@@ -301,13 +323,14 @@ def parse_args() -> argparse.Namespace:
     )
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", type=Path, default=repo_root)
+    parser.add_argument("--contract", type=Path, default=default_contract_path(repo_root))
     parser.add_argument("--chrome-bin", default=default_chrome)
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
-    check_browser_native_contract(args.repo_root.resolve(), args.chrome_bin)
+    check_browser_native_contract(args.repo_root.resolve(), args.chrome_bin, load_json(args.contract))
     return 0
 
 
