@@ -13,7 +13,7 @@ RoMi stands for **Robotics Middleware**. It is an early pre-MVP project explorin
 </p>
 
 <p align="center">
-  <sub>Actual RoMi 2D simulator capture: ROS2-free navigation, manipulation, stream counters, policy proposal state, and runtime graph diagnostics.</sub>
+  <sub>Actual RoMi 2D simulator capture: ROS2-free navigation/manipulation with a RoMi Studio mini inspector for live, replay, policy, and dataset state.</sub>
 </p>
 
 ## Demo
@@ -28,7 +28,7 @@ python3 -m http.server 8000 --bind 127.0.0.1 --directory examples/navigation_man
 xdg-open http://127.0.0.1:8000/romi_2d_sim/
 ```
 
-The visual simulator shows a semi-humanoid mobile manipulator navigating to a work area, reaching for an object, placing it in a bin, and exposing RoMi-shaped stream counts, runtime stages, policy proposals, and event logs.
+The visual simulator shows a semi-humanoid mobile manipulator navigating to a work area, reaching for an object, placing it in a bin, and exposing RoMi-shaped stream counts, runtime stages, policy proposals, and event logs. The RoMi Studio mini inspector can switch between live stream freshness, replay graph state, proposed policy actions, and dataset summary views.
 
 The browser simulator and the smoke pipeline both read [scenario.json](examples/navigation_manipulation_demo/scenario.json), so the visual motion and generated RoMi artifacts share the same scenario.
 
@@ -100,6 +100,7 @@ The current repository contains a small end-to-end prototype path:
 - [Mock policy](tools/mock_policy)
 - [Dataset inspector](tools/dataset_inspector)
 - [Navigation + manipulation demo](examples/navigation_manipulation_demo)
+- [RoMi Studio mini browser simulator](examples/navigation_manipulation_demo/romi_2d_sim)
 - [Capture guide](examples/navigation_manipulation_demo/capture-guide.md)
 
 This is a prototype contract demo, not a production robot runtime.

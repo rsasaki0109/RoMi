@@ -26,7 +26,21 @@
           <canvas id="simCanvas" width="960" height="620" aria-label="Navigation and manipulation simulator canvas"></canvas>
 
           <aside class="inspector" aria-label="Runtime inspector">
-            <section class="panel">
+            <section class="panel studio-panel">
+              <div class="panel-heading">
+                <h2>RoMi Studio</h2>
+                <span id="modeStatus" class="status-pill">Live Sim</span>
+              </div>
+              <div class="mode-tabs" role="tablist" aria-label="Studio modes">
+                <button class="mode-tab active" id="modeLive" type="button" data-mode="live" role="tab" aria-selected="true">Live</button>
+                <button class="mode-tab" id="modeReplay" type="button" data-mode="replay" role="tab" aria-selected="false">Replay</button>
+                <button class="mode-tab" id="modePolicy" type="button" data-mode="policy" role="tab" aria-selected="false">Policy</button>
+                <button class="mode-tab" id="modeDataset" type="button" data-mode="dataset" role="tab" aria-selected="false">Dataset</button>
+              </div>
+              <div id="modeView" class="mode-view" aria-live="polite"></div>
+            </section>
+
+            <section class="panel runtime-panel">
               <h2>Runtime</h2>
               <dl class="metrics">
                 <div>
@@ -48,12 +62,12 @@
               </dl>
             </section>
 
-            <section class="panel">
+            <section class="panel streams-panel">
               <h2>Streams</h2>
               <div id="streamList" class="stream-list"></div>
             </section>
 
-            <section class="panel">
+            <section class="panel graph-panel">
               <h2>Graph</h2>
               <ol class="graph-list">
                 <li id="graphSource">native simulator</li>
