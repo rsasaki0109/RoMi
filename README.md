@@ -111,6 +111,7 @@ This is a prototype contract demo, not a production robot runtime.
 - [Architecture](docs/architecture.md)
 - [ROS2 interop](docs/ros2-interop.md)
 - [MVP proposal](docs/mvp.md)
+- [Demo contract](docs/demo-contract.md)
 - [Demo spec](docs/demo-spec.md)
 - [Demo backlog](docs/demo-backlog.md)
 - [Roadmap](docs/roadmap.md)

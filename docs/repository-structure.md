@@ -22,6 +22,7 @@ romi/
     architecture.md
     ros2-interop.md
     mvp.md
+    demo-contract.md
     demo-video.md
     demo-spec.md
     demo-backlog.md
