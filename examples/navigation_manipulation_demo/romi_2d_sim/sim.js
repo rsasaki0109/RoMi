@@ -22,6 +22,7 @@ const modeView = document.getElementById("modeView");
 const modeButtons = Array.from(document.querySelectorAll(".mode-tab"));
 const seekControl = document.getElementById("seekControl");
 const seekValue = document.getElementById("seekValue");
+const graphDetail = document.getElementById("graphDetail");
 
 const startButton = document.getElementById("startButton");
 const pauseButton = document.getElementById("pauseButton");
@@ -48,6 +49,44 @@ const streams = [
   "runtime.diagnostics",
 ];
 
+const graphNodeDefinitions = [
+  {
+    id: "source",
+    label: "native simulator",
+    role: "source",
+    inputs: ["scenario.json"],
+    outputs: ["robot.camera.rgb", "robot.camera.depth", "robot.camera.info", "robot.joints.state", "robot.base.odom", "robot.frames.tf", "task.goal", "runtime.diagnostics"],
+  },
+  {
+    id: "record",
+    label: "episode recorder",
+    role: "log/dataset plane",
+    inputs: ["robot.*", "task.goal", "runtime.diagnostics"],
+    outputs: ["episode.jsonl", "episode_metadata"],
+  },
+  {
+    id: "replay",
+    label: "replay source",
+    role: "replay plane",
+    inputs: ["episode.jsonl"],
+    outputs: ["robot.*", "task.goal", "runtime.diagnostics"],
+  },
+  {
+    id: "policy",
+    label: "mock policy",
+    role: "policy runtime",
+    inputs: ["robot.camera.rgb", "robot.camera.depth", "robot.joints.state", "robot.base.odom", "robot.frames.tf", "task.goal"],
+    outputs: ["policy.proposed_action"],
+  },
+  {
+    id: "report",
+    label: "dataset report",
+    role: "dataset/report plane",
+    inputs: ["episode.jsonl", "policy.proposed_action"],
+    outputs: ["dataset-report.md", "observation_window"],
+  },
+];
+
 const colors = {
   grid: "#20303a",
   field: "#132028",
@@ -66,6 +105,7 @@ const state = {
   error: null,
   mode: "live",
   selectedEventIndex: null,
+  selectedGraphNode: "source",
   lastFrameMs: 0,
   elapsedSec: 0,
   durationSec: 0,
@@ -664,6 +704,88 @@ function renderKeyValues(rows) {
   )).join("")}</div>`;
 }
 
+function graphNodeDefinition(nodeId) {
+  return graphNodeDefinitions.find((node) => node.id === nodeId) || graphNodeDefinitions[0];
+}
+
+function graphNodeRuntime(nodeId, progress) {
+  const policyEvent = latestEvent("policy.proposed_action");
+  const policyLatency = Number(policyEvent?.payload_summary?.inference_latency_ms ?? 0);
+  const samplePeriodMs = state.rateHz > 0 ? 1000 / state.rateHz : 0;
+  const report = datasetReport();
+  const runtime = {
+    source: {
+      status: progress >= 0.01 || state.events.length > 0 ? "streaming" : "priming",
+      latency: samplePeriodMs ? `${samplePeriodMs.toFixed(1)}ms period` : "waiting",
+      contract: "observation_only",
+      connection: "live sim -> record/replay/policy",
+    },
+    record: {
+      status: state.events.length > 0 ? "recording" : "waiting",
+      latency: "append-only",
+      contract: `${state.events.length} buffered events`,
+      connection: "stream samples -> episode.jsonl",
+    },
+    replay: {
+      status: progress > 0.42 ? "seekable" : state.events.length > 0 ? "buffered" : "waiting",
+      latency: "deterministic seek",
+      contract: "online/offline symmetry",
+      connection: "episode.jsonl -> same graph shape",
+    },
+    policy: {
+      status: policyEvent ? "proposing" : "waiting",
+      latency: policyLatency > 0 ? `${policyLatency.toFixed(2)}ms` : "waiting",
+      contract: "proposed_only",
+      connection: "observation window -> policy.proposed_action",
+    },
+    report: {
+      status: report.samples > 0 ? "available" : "waiting",
+      latency: "browser-generated",
+      contract: `${report.observation_window.available_streams}/${report.observation_window.required_streams} window streams`,
+      connection: "episode + policy -> dataset report",
+    },
+  };
+  return runtime[nodeId] || runtime.source;
+}
+
+function renderGraphToken(value) {
+  const isStream = streams.includes(value);
+  const tag = isStream ? "button" : "span";
+  const attr = isStream ? ` type="button" data-inspect-stream="${escapeHtml(value)}"` : "";
+  return `<${tag} class="graph-token"${attr}>${escapeHtml(value)}</${tag}>`;
+}
+
+function renderGraphDetail(progress) {
+  if (!graphDetail) return;
+  const node = graphNodeDefinition(state.selectedGraphNode);
+  const runtime = graphNodeRuntime(node.id, progress);
+  graphDetail.innerHTML = `<div class="graph-detail-heading">
+      <span>${escapeHtml(node.role)}</span>
+      <strong>${escapeHtml(runtime.status)}</strong>
+    </div>
+    ${renderKeyValues([
+      ["latency", runtime.latency],
+      ["contract", runtime.contract],
+      ["path", runtime.connection],
+    ])}
+    <div class="graph-io">
+      <div>
+        <span>inputs</span>
+        <div class="graph-token-list">${node.inputs.map(renderGraphToken).join("")}</div>
+      </div>
+      <div>
+        <span>outputs</span>
+        <div class="graph-token-list">${node.outputs.map(renderGraphToken).join("")}</div>
+      </div>
+    </div>`;
+}
+
+function selectGraphNode(nodeId) {
+  if (!graphNodeDefinitions.some((node) => node.id === nodeId)) return;
+  state.selectedGraphNode = nodeId;
+  render();
+}
+
 function eventName(event) {
   if (event?.stream_id === "robot.camera.rgb") return "RGB";
   if (event?.stream_id === "robot.camera.depth") return "DEP";
@@ -1013,9 +1135,15 @@ function updateInspector(progress) {
   graphNodes.replay.classList.toggle("active", progress > 0.42);
   graphNodes.policy.classList.toggle("active", state.streamCounts["policy.proposed_action"] > 0);
   graphNodes.report.classList.toggle("active", progress > 0.9);
+  for (const [nodeId, node] of Object.entries(graphNodes)) {
+    const selected = nodeId === state.selectedGraphNode;
+    node.classList.toggle("selected", selected);
+    node.querySelector("button")?.setAttribute("aria-pressed", selected ? "true" : "false");
+  }
 
   renderModeView(progress);
   updateSeekUi(progress);
+  renderGraphDetail(progress);
   renderEventInspector();
 }
 
@@ -1131,6 +1259,16 @@ streamList.addEventListener("click", (event) => {
   if (!target) return;
   selectLatestStreamEvent(target.dataset.inspectStream);
 });
+document.querySelector(".graph-list")?.addEventListener("click", (event) => {
+  const target = event.target.closest("[data-graph-node]");
+  if (!target) return;
+  selectGraphNode(target.dataset.graphNode);
+});
+graphDetail?.addEventListener("click", (event) => {
+  const target = event.target.closest("[data-inspect-stream]");
+  if (!target) return;
+  selectLatestStreamEvent(target.dataset.inspectStream);
+});
 seekControl.addEventListener("input", () => {
   const progress = clamp(Number(seekControl.value) / 1000);
   seekToSeconds(progress * state.durationSec, "replay");
@@ -1161,6 +1299,7 @@ window.romiCapture = {
   setMode,
   datasetReport,
   datasetReportMarkdown,
+  selectGraphNode,
   selectLatestStreamEvent,
   latestEvent,
 };

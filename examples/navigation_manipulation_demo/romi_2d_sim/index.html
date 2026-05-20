@@ -77,12 +77,13 @@
             <section class="panel graph-panel">
               <h2>Graph</h2>
               <ol class="graph-list">
-                <li id="graphSource">native simulator</li>
-                <li id="graphRecord">episode recorder</li>
-                <li id="graphReplay">replay source</li>
-                <li id="graphPolicy">mock policy</li>
-                <li id="graphReport">dataset report</li>
+                <li id="graphSource"><button type="button" data-graph-node="source">native simulator</button></li>
+                <li id="graphRecord"><button type="button" data-graph-node="record">episode recorder</button></li>
+                <li id="graphReplay"><button type="button" data-graph-node="replay">replay source</button></li>
+                <li id="graphPolicy"><button type="button" data-graph-node="policy">mock policy</button></li>
+                <li id="graphReport"><button type="button" data-graph-node="report">dataset report</button></li>
               </ol>
+              <div id="graphDetail" class="graph-detail"></div>
             </section>
 
             <section class="panel event-panel">
