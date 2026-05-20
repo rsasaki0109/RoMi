@@ -14,8 +14,9 @@ Current prototype files:
 - `diagnostics.example.json`: planned diagnostics report shape
 - `ros2-bridge-plan.md`: planned ROS2 bridge path for the demo
 - `ros2-qos-diagnostics.example.json`: planned QoS diagnostics shape
+- `romi_native_sim_source.py`: ROS2-free RoMi-native navigation + manipulation source
 - `ros2_demo_sim_publisher.py`: scripted ROS2 navigation + manipulation source for the smoke demo
-- `run_smoke_demo.sh`: one-shot smoke run for bridge, record, replay, policy, and dataset report
+- `run_smoke_demo.sh`: one-shot smoke run for source, record, replay, policy, and dataset report
 - `capture-guide.md`: README video capture guide
 - `render_sim_video.py`: renders the README GIF and local MP4 from RoMi run artifacts
 
@@ -23,7 +24,7 @@ Current prototype files:
 
 Demonstrate RoMi's intended contract layer across:
 
-- ROS2 or simulator data
+- RoMi-native, ROS2, or simulator data
 - Navigation and manipulation observations
 - Runtime graph inspection
 - Episode recording
@@ -37,12 +38,13 @@ The demo should be useful even if the first robot behavior is scripted and the f
 ## Planned Flow
 
 ```text
-ROS2 robot or simulator
+RoMi-native sim source or external simulator bridge
         |
         | RGB / depth / joint state / odometry / TF / task goal
         v
-RoMi bridge
+RoMi stream events
         |
+        +---> optional ROS2 bridge diagnostics
         +---> runtime graph diagnostics
         +---> episode recorder
         +---> observation synchronizer
@@ -61,7 +63,7 @@ replay source -> same graph shape -> mock policy -> diagnostics
 
 ## Minimum Source Signals
 
-The first implementation should map robot or simulator topics into these RoMi stream names:
+The first implementation maps native simulation output or robot/simulator topics into these RoMi stream names:
 
 | RoMi stream | Meaning |
 | --- | --- |
@@ -88,7 +90,7 @@ It should:
 - Report input freshness.
 - Report inference latency.
 - Avoid direct actuator authority.
-- Run against live bridged streams and replayed streams.
+- Run against live source or bridged streams and replayed streams.
 
 It does not need to be a learned model.
 
@@ -113,7 +115,13 @@ From the repository root:
 examples/navigation_manipulation_demo/run_smoke_demo.sh
 ```
 
-The script publishes camera, depth, joint state, odometry, TF, and goal messages through ROS2, runs the RoMi bridge, episode recording, replay, mock policy, and dataset inspection, then renders the README animation from the generated RoMi artifacts. See [capture-guide.md](capture-guide.md) for video capture steps.
+By default the script does not require ROS2. It generates camera, depth, joint state, odometry, TF, and goal streams with the RoMi-native source, runs episode recording, replay, mock policy, and dataset inspection, then renders the README animation from the generated RoMi artifacts. See [capture-guide.md](capture-guide.md) for video capture steps.
+
+To run the same contract through the ROS2 bridge:
+
+```bash
+ROMI_DEMO_SOURCE=ros2 examples/navigation_manipulation_demo/run_smoke_demo.sh
+```
 
 ## Render README Animation
 
@@ -130,11 +138,11 @@ Outputs:
 
 ## Episode Recording Prototype
 
-After collecting bridge JSONL output, create a prototype episode directory:
+After collecting source JSONL output, create a prototype episode directory:
 
 ```bash
 python3 ../../tools/episode_recorder/romi_record_episode.py \
-  --input artifacts/ros2-bridge-events.jsonl \
+  --input artifacts/source-events.jsonl \
   --output artifacts/episodes/nav_manip_demo_001 \
   --episode-id nav_manip_demo_001 \
   --scenario-name navigation_to_table_and_mock_pick \
@@ -161,7 +169,7 @@ The replay output preserves stream IDs and recorded event time, sets `source_sys
 
 ## Mock Policy Prototype
 
-Run the mock policy over live bridge output or replay output:
+Run the mock policy over live source, bridge, or replay output:
 
 ```bash
 python3 ../../tools/mock_policy/romi_mock_policy.py \
@@ -192,7 +200,7 @@ The recorded episode should eventually include:
 - Stream metadata
 - Schema versions
 - Frame graph metadata
-- ROS2 bridge metadata
+- Source or bridge metadata
 - QoS metadata where available
 - Runtime graph metadata
 - Mock policy metadata

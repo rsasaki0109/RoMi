@@ -2,20 +2,21 @@
 
 This guide describes how to capture the first README-oriented navigation + manipulation demo using the current prototype pipeline.
 
-The current demo is a smoke-level contract demo. It proves the RoMi path from ROS2 input to bridge, episode recording, replay, mock policy output, dataset inspection, and README animation rendering from the generated artifacts. A richer simulator scene can later replace the scripted ROS2 publisher without changing the RoMi-side pipeline.
+The current demo is a smoke-level contract demo. It proves the RoMi path from a ROS2-free native simulation source to episode recording, replay, mock policy output, dataset inspection, and README animation rendering from the generated artifacts. A richer simulator scene or ROS2 bridge can later replace the native source without changing the RoMi-side pipeline.
 
 ## Capture Goal
 
 Show that RoMi can connect:
 
 ```text
-ROS2 camera / depth / joints / odom / TF / goal
-  -> bridge -> episode -> replay -> mock policy -> dataset report -> README GIF
+RoMi-native simulation camera / depth / joints / odom / TF / goal
+  -> episode -> replay -> mock policy -> dataset report -> README GIF
 ```
 
 The video should communicate:
 
-- ROS2 interop is bridge-first.
+- RoMi can run the demo contract without ROS2.
+- ROS2 interop remains bridge-first.
 - Recorded data can be replayed.
 - Policy output is non-authoritative.
 - Runtime data remains inspectable.
@@ -23,12 +24,15 @@ The video should communicate:
 
 ## Prerequisites
 
-- ROS2 environment sourced.
 - Python 3.
-- `rclpy` available.
-- `ros2` CLI available.
 
-The smoke script starts a small ROS2 publisher that emits synthetic camera, depth, camera info, joint state, odometry, TF, and goal messages. A richer simulator can be running at the same time if available, but it is not required for this contract capture.
+The default smoke script starts a RoMi-native source that emits synthetic camera, depth, camera info, joint state, odometry, TF, and goal stream samples. A richer simulator can be connected later if available, but it is not required for this contract capture.
+
+Optional ROS2 bridge mode requires a sourced ROS2 environment, `rclpy`, and the `ros2` CLI:
+
+```bash
+ROMI_DEMO_SOURCE=ros2 examples/navigation_manipulation_demo/run_smoke_demo.sh
+```
 
 ## One-Shot Smoke Run
 
@@ -46,7 +50,7 @@ examples/navigation_manipulation_demo/artifacts/smoke/<run-id>/
 
 Important output files:
 
-- `ros2-bridge-events.jsonl`
+- `source-events.jsonl`
 - `episode/episode.json`
 - `episode/streams.json`
 - `episode/diagnostics.json`
@@ -92,18 +96,19 @@ Keep the video short, around 60 to 90 seconds.
 
 ```text
 0:00 - 0:10  README title and planned graph
-0:10 - 0:25  Run smoke script and show ROS2 bridge status
+0:10 - 0:25  Run smoke script and show native source status
 0:25 - 0:40  Show generated episode directory and stream summary
 0:40 - 0:55  Show replay and mock policy output
 0:55 - 1:15  Show dataset report with diagnostics and observation window
-1:15 - 1:30  Close on bridge-first / replay-first / inspectable summary
+1:15 - 1:30  Close on ROS2-free / replay-first / inspectable summary
 ```
 
 ## What To Highlight
 
 During capture, show these concrete details:
 
-- Camera, depth, joint, odometry, TF, and `task.goal` samples arrive from ROS2 as RoMi streams.
+- Camera, depth, joint, odometry, TF, and `task.goal` samples arrive as RoMi streams without requiring ROS2.
+- The same downstream pipeline can be exercised through `ROMI_DEMO_SOURCE=ros2`.
 - `episode.json` records the episode metadata.
 - `replay-events.jsonl` re-emits the stream with `source_system: replay`.
 - `policy-events.jsonl` emits `policy.proposed_action`.

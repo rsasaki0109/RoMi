@@ -3,12 +3,12 @@
   "graph_id": "nav_manip_demo_graph",
   "nodes": [
     {
-      "node_id": "ros2_bridge",
-      "kind": "bridge",
+      "node_id": "simulation_source",
+      "kind": "source",
       "lifecycle_state": "active",
       "metadata": {
-        "source_system": "ros2",
-        "bridge_mode": "selected_topics"
+        "source_system": "romi_native_sim",
+        "bridge_mode": "optional_ros2_interop"
       }
     },
     {
@@ -60,27 +60,27 @@
   ],
   "edges": [
     {
-      "from": "ros2_bridge",
+      "from": "simulation_source",
       "to": "episode_recorder",
       "stream_id": "robot.camera.rgb"
     },
     {
-      "from": "ros2_bridge",
+      "from": "simulation_source",
       "to": "episode_recorder",
       "stream_id": "robot.camera.depth"
     },
     {
-      "from": "ros2_bridge",
+      "from": "simulation_source",
       "to": "observation_synchronizer",
       "stream_id": "robot.camera.rgb"
     },
     {
-      "from": "ros2_bridge",
+      "from": "simulation_source",
       "to": "observation_synchronizer",
       "stream_id": "robot.joints.state"
     },
     {
-      "from": "ros2_bridge",
+      "from": "simulation_source",
       "to": "observation_synchronizer",
       "stream_id": "robot.base.odom"
     },

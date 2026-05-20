@@ -9,6 +9,7 @@ ARTIFACT_ROOT="${ROMI_DEMO_ARTIFACT_ROOT:-${SCRIPT_DIR}/artifacts/smoke}"
 RUN_DIR="${ARTIFACT_ROOT}/${RUN_ID}"
 
 EPISODE_ID="${ROMI_DEMO_EPISODE_ID:-nav_manip_demo_${RUN_ID}}"
+DEMO_SOURCE="${ROMI_DEMO_SOURCE:-native}"
 BRIDGE_DURATION_SEC="${ROMI_DEMO_BRIDGE_DURATION_SEC:-7}"
 SIM_DURATION_SEC="${ROMI_DEMO_SIM_DURATION_SEC:-5.5}"
 SIM_RATE_HZ="${ROMI_DEMO_SIM_RATE_HZ:-12}"
@@ -16,7 +17,7 @@ DIAGNOSTICS_PERIOD_SEC="${ROMI_DEMO_DIAGNOSTICS_PERIOD_SEC:-0.5}"
 
 STREAM_MAP="${SCRIPT_DIR}/stream-map.example.json"
 RUNTIME_GRAPH="${SCRIPT_DIR}/runtime-graph.example.json"
-BRIDGE_EVENTS="${RUN_DIR}/ros2-bridge-events.jsonl"
+SOURCE_EVENTS="${RUN_DIR}/source-events.jsonl"
 EPISODE_DIR="${RUN_DIR}/episode"
 REPLAY_EVENTS="${RUN_DIR}/replay-events.jsonl"
 POLICY_EVENTS="${RUN_DIR}/policy-events.jsonl"
@@ -30,41 +31,58 @@ require_command() {
 }
 
 require_command python3
-require_command ros2
-
-python3 - <<'PY'
-try:
-    import rclpy  # noqa: F401
-except Exception as exc:
-    raise SystemExit(f"error: rclpy is not available: {exc}")
-PY
 
 rm -rf "${RUN_DIR}"
 mkdir -p "${RUN_DIR}"
 
 echo "[romi demo] run id: ${RUN_ID}"
 echo "[romi demo] output: ${RUN_DIR}"
-echo "[romi demo] starting ROS2 bridge for ${BRIDGE_DURATION_SEC}s"
+echo "[romi demo] source: ${DEMO_SOURCE}"
 
-python3 "${REPO_ROOT}/bridges/ros2/rclpy_bridge/romi_ros2_bridge.py" \
-  --stream-map "${STREAM_MAP}" \
-  --output "${BRIDGE_EVENTS}" \
-  --diagnostics-period-sec "${DIAGNOSTICS_PERIOD_SEC}" \
-  --duration-sec "${BRIDGE_DURATION_SEC}" &
-BRIDGE_PID=$!
+case "${DEMO_SOURCE}" in
+  native)
+    echo "[romi demo] generating RoMi-native navigation + manipulation simulation"
+    python3 "${SCRIPT_DIR}/romi_native_sim_source.py" \
+      --output "${SOURCE_EVENTS}" \
+      --duration-sec "${SIM_DURATION_SEC}" \
+      --rate-hz "${SIM_RATE_HZ}" \
+      --diagnostics-period-sec "${DIAGNOSTICS_PERIOD_SEC}"
+    ;;
+  ros2)
+    require_command ros2
+    python3 - <<'PY'
+try:
+    import rclpy  # noqa: F401
+except Exception as exc:
+    raise SystemExit(f"error: rclpy is not available: {exc}")
+PY
 
-sleep 0.8
+    echo "[romi demo] starting ROS2 bridge for ${BRIDGE_DURATION_SEC}s"
+    python3 "${REPO_ROOT}/bridges/ros2/rclpy_bridge/romi_ros2_bridge.py" \
+      --stream-map "${STREAM_MAP}" \
+      --output "${SOURCE_EVENTS}" \
+      --diagnostics-period-sec "${DIAGNOSTICS_PERIOD_SEC}" \
+      --duration-sec "${BRIDGE_DURATION_SEC}" &
+    BRIDGE_PID=$!
 
-echo "[romi demo] publishing scripted ROS2 navigation + manipulation simulation"
-python3 "${SCRIPT_DIR}/ros2_demo_sim_publisher.py" \
-  --duration-sec "${SIM_DURATION_SEC}" \
-  --rate-hz "${SIM_RATE_HZ}"
+    sleep 0.8
 
-wait "${BRIDGE_PID}"
+    echo "[romi demo] publishing scripted ROS2 navigation + manipulation simulation"
+    python3 "${SCRIPT_DIR}/ros2_demo_sim_publisher.py" \
+      --duration-sec "${SIM_DURATION_SEC}" \
+      --rate-hz "${SIM_RATE_HZ}"
+
+    wait "${BRIDGE_PID}"
+    ;;
+  *)
+    echo "error: ROMI_DEMO_SOURCE must be 'native' or 'ros2'." >&2
+    exit 1
+    ;;
+esac
 
 echo "[romi demo] recording episode"
 python3 "${REPO_ROOT}/tools/episode_recorder/romi_record_episode.py" \
-  --input "${BRIDGE_EVENTS}" \
+  --input "${SOURCE_EVENTS}" \
   --output "${EPISODE_DIR}" \
   --episode-id "${EPISODE_ID}" \
   --scenario-name navigation_to_table_and_mock_pick \
