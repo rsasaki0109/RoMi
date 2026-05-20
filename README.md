@@ -66,6 +66,8 @@ examples/navigation_manipulation_demo/run_smoke_demo.sh
 
 The script generates a RoMi-native navigation + manipulation simulation, records a prototype episode, replays it, emits non-authoritative `policy.proposed_action` samples, and generates `dataset-report/report.md`.
 
+Example generated report: [sample dataset report](examples/navigation_manipulation_demo/sample_output/dataset-report/report.md).
+
 To exercise the ROS2 bridge instead:
 
 ```bash

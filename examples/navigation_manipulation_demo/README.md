@@ -20,6 +20,7 @@ Current prototype files:
 - `run_smoke_demo.sh`: one-shot smoke run for source, record, replay, policy, and dataset report
 - `romi_2d_sim/`: browser-based RoMi 2D navigation + manipulation simulator
 - `capture_readme_video.py`: headless Chrome capture script for README MP4, WebP, and poster assets
+- `sample_output/dataset-report/report.md`: committed example of the generated dataset report
 - `capture-guide.md`: README video capture guide
 
 ## Demo Goal
@@ -143,6 +144,8 @@ examples/navigation_manipulation_demo/run_smoke_demo.sh
 ```
 
 By default the script does not require ROS2. It generates camera, depth, joint state, odometry, TF, and goal streams with the RoMi-native source, then runs episode recording, replay, mock policy, and dataset inspection. See [capture-guide.md](capture-guide.md) for capture steps.
+
+For a GitHub-viewable example of the generated dataset view, open [sample_output/dataset-report/report.md](sample_output/dataset-report/report.md).
 
 To run the same contract through the ROS2 bridge:
 

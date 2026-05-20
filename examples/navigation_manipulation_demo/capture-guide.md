@@ -60,6 +60,12 @@ Important output files:
 - `dataset-report/report.md`
 - `dataset-report/report.json`
 
+For GitHub review without running the demo, see the committed reference report:
+
+```text
+examples/navigation_manipulation_demo/sample_output/dataset-report/report.md
+```
+
 ## Browser Simulator
 
 Open the visual demo locally:

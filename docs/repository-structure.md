@@ -91,6 +91,9 @@ romi/
       diagnostics.example.json
       ros2-bridge-plan.md
       ros2-qos-diagnostics.example.json
+      sample_output/
+        dataset-report/
+          report.md
     ros2_bridge_demo/
     manipulation_replay_demo/
     policy_runtime_demo/
