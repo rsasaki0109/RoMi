@@ -212,6 +212,7 @@ function displayMode(progress) {
   if (progress < 0.34) return "live";
   if (progress < 0.58) return "replay";
   if (progress < 0.82) return "policy";
+  if (progress < 0.92) return "safety";
   return "dataset";
 }
 
@@ -443,6 +444,13 @@ function emitEvents(progress) {
         stale: observationWindow.filter((input) => input.status === "stale").length,
         missing: observationWindow.filter((input) => input.status === "missing").length,
         required: observationWindow.length,
+      },
+      safety_boundary: {
+        policy_authority: "proposed_only",
+        actuator_authority: "none",
+        command_stream_emitted: false,
+        promotion_required: "external_supervisor",
+        blocked_reason: "proposal_not_actuator_authority",
       },
       proposed_actions: [
         { target: "base", action_type: stage === "navigate" ? "navigate_to_goal" : "hold_position", authority: "proposed_only" },
@@ -979,6 +987,62 @@ function renderPolicyObservationWindow(maxRows = 3) {
   </div>`;
 }
 
+function safetyReport() {
+  const policyEvent = latestEvent("policy.proposed_action");
+  const payload = policyEvent?.payload_summary || {};
+  const actions = Array.isArray(payload.proposed_actions) ? payload.proposed_actions : [];
+  const boundary = payload.safety_boundary || {};
+  return {
+    schema_version: "0.1.0",
+    report_kind: "romi.safety_authority_report",
+    stage: currentStage(clamp(state.elapsedSec / state.durationSec)),
+    clock_domain: "sim_time",
+    policy_stream: "policy.proposed_action",
+    policy_authority: boundary.policy_authority || "proposed_only",
+    actuator_authority: boundary.actuator_authority || "none",
+    command_stream_emitted: Boolean(boundary.command_stream_emitted),
+    promotion_required: boundary.promotion_required || "external_supervisor",
+    blocked_reason: boundary.blocked_reason || "proposal_not_actuator_authority",
+    policy_samples: state.streamCounts["policy.proposed_action"] || 0,
+    proposed_actions: actions.map((action) => ({
+      target: action.target,
+      action_type: action.action_type,
+      authority: action.authority,
+      blocked: true,
+      reason: boundary.blocked_reason || "proposal_not_actuator_authority",
+    })),
+  };
+}
+
+function renderSafetyBoundary() {
+  const report = safetyReport();
+  const actions = report.proposed_actions.length
+    ? report.proposed_actions
+    : [
+        { target: "base", action_type: "waiting_for_policy", reason: "no_policy_sample" },
+        { target: "end_effector", action_type: "waiting_for_policy", reason: "no_policy_sample" },
+        { target: "gripper", action_type: "waiting_for_policy", reason: "no_policy_sample" },
+      ];
+  return `${renderKeyValues([
+    ["policy stream", report.policy_stream],
+    ["policy authority", report.policy_authority],
+    ["actuator authority", report.actuator_authority],
+    ["command stream", report.command_stream_emitted ? "emitted" : "not_emitted"],
+  ])}<div class="safety-boundary">
+    <div class="authority-lane">
+      <div class="authority-node"><span>proposal</span><strong>${escapeHtml(report.policy_authority)}</strong></div>
+      <span class="authority-arrow">blocked</span>
+      <div class="authority-node"><span>actuator</span><strong>${escapeHtml(report.actuator_authority)}</strong></div>
+    </div>
+    <div class="safety-list">${actions.map((action) => (
+      `<div class="safety-row"><span>${escapeHtml(action.target)}.${escapeHtml(action.action_type)}</span><strong>${escapeHtml(action.reason)}</strong></div>`
+    )).join("")}</div>
+  </div>${renderKeyValues([
+    ["promotion", report.promotion_required],
+    ["samples", report.policy_samples],
+  ])}`;
+}
+
 function datasetStreamCounts() {
   return Object.fromEntries(streams.map((stream) => [stream, state.streamCounts[stream] || 0]));
 }
@@ -1029,6 +1093,7 @@ function datasetReport() {
       authority: "proposed_only",
       actuator_authority: "none",
     },
+    safety: safetyReport(),
     replay: {
       seekable: true,
       buffered_events: state.events.length,
@@ -1109,6 +1174,7 @@ function renderModeView(progress) {
     live: "Live Sim",
     replay: "Replay",
     policy: "Policy",
+    safety: "Safety",
     dataset: "Dataset",
   };
 
@@ -1145,6 +1211,11 @@ function renderModeView(progress) {
       ["authority", "proposed_only"],
       ["latency", latency > 0 ? `${latency.toFixed(2)}ms` : "waiting"],
     ])}`;
+    return;
+  }
+
+  if (mode === "safety") {
+    modeView.innerHTML = renderSafetyBoundary();
     return;
   }
 
@@ -1374,6 +1445,7 @@ window.romiCapture = {
   setMode,
   datasetReport,
   datasetReportMarkdown,
+  safetyReport,
   selectGraphNode,
   selectLatestStreamEvent,
   latestEvent,

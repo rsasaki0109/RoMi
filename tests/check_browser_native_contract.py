@@ -269,6 +269,11 @@ def check_policy_event(browser_event: dict[str, Any], contract: dict[str, Any]) 
         require(stream_id in observation_streams, f"browser policy observation window missing {stream_id}")
     require(all(entry.get("status") in {"fresh", "stale", "missing"} for entry in observation_window), "browser policy observation status mismatch")
     require(payload.get("input_status", {}).get("required") == 6, "browser policy input_status required count mismatch")
+    safety_boundary = payload.get("safety_boundary", {})
+    require(safety_boundary.get("policy_authority") == policy_contract["authority"], "browser policy safety boundary policy authority mismatch")
+    require(safety_boundary.get("actuator_authority") == "none", "browser policy actuator authority mismatch")
+    require(safety_boundary.get("command_stream_emitted") is False, "browser policy must not emit actuator command stream")
+    require(safety_boundary.get("blocked_reason") == "proposal_not_actuator_authority", "browser policy safety blocked reason mismatch")
 
 
 def check_studio_seek_controls(cdp: Any, session_id: str) -> None:
@@ -434,6 +439,42 @@ def check_studio_policy_observation_window(cdp: Any, session_id: str) -> None:
     require(payload["scroll_width"] <= payload["window_width"], "Studio policy observation window introduced horizontal page overflow")
 
 
+def check_studio_safety_authority(cdp: Any, session_id: str) -> None:
+    expression = """
+      (() => {
+        document.body.classList.remove('capture-mode');
+        window.romiCapture.seekToSeconds(13.6);
+        window.romiCapture.setMode('safety');
+        const report = window.romiCapture.safetyReport();
+        return JSON.stringify({
+          report,
+          safety_text: document.getElementById('modeView').textContent,
+          active_tab: document.querySelector('.mode-tab.active')?.dataset.mode,
+          scroll_width: document.documentElement.scrollWidth,
+          window_width: window.innerWidth,
+        });
+      })();
+    """
+    result = cdp.send(
+        "Runtime.evaluate",
+        {"expression": expression, "returnByValue": True},
+        session_id=session_id,
+    )
+    payload = json.loads(result["result"]["value"])
+    report = payload["report"]
+    require(payload["active_tab"] == "safety", "Studio safety tab did not activate")
+    require(report["report_kind"] == "romi.safety_authority_report", "Studio safety report kind mismatch")
+    require(report["policy_authority"] == "proposed_only", "Studio safety policy authority mismatch")
+    require(report["actuator_authority"] == "none", "Studio safety actuator authority mismatch")
+    require(report["command_stream_emitted"] is False, "Studio safety command stream should not be emitted")
+    require(report["promotion_required"] == "external_supervisor", "Studio safety promotion boundary mismatch")
+    require(report["policy_samples"] > 0, "Studio safety report missing policy samples")
+    require(all(action["blocked"] is True for action in report["proposed_actions"]), "Studio safety report must block proposed actions")
+    require("not_emitted" in payload["safety_text"], "Studio safety UI missing command stream state")
+    require("proposal_not_actuator_authority" in payload["safety_text"], "Studio safety UI missing blocked reason")
+    require(payload["scroll_width"] <= payload["window_width"], "Studio safety view introduced horizontal page overflow")
+
+
 def check_studio_runtime_graph(cdp: Any, session_id: str) -> None:
     expression = """
       (() => {
@@ -506,6 +547,7 @@ def check_browser_native_contract(repo_root: Path, chrome_bin: str, contract: di
         check_studio_event_inspector(cdp, session_id)
         check_studio_dataset_report(cdp, session_id)
         check_studio_policy_observation_window(cdp, session_id)
+        check_studio_safety_authority(cdp, session_id)
         check_studio_runtime_graph(cdp, session_id)
         print(
             json.dumps(
