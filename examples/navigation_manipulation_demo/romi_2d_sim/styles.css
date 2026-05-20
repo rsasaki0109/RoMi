@@ -97,12 +97,14 @@ button:hover {
 .inspector {
   display: grid;
   gap: 12px;
+  min-width: 0;
 }
 
 .panel {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 8px;
+  min-width: 0;
   padding: 14px;
 }
 
@@ -130,7 +132,10 @@ button:hover {
   color: var(--green);
   font-size: 11px;
   line-height: 1;
+  max-width: 170px;
+  overflow: hidden;
   padding: 5px 8px;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -371,9 +376,21 @@ button:hover {
   gap: 8px;
   grid-template-columns: 138px 1fr 34px;
   align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
   color: var(--muted);
   font-size: 12px;
+  min-height: 0;
   min-width: 0;
+  padding: 0;
+  text-align: left;
+  width: 100%;
+}
+
+.stream-row:hover,
+.stream-row.active {
+  color: var(--text);
 }
 
 .stream-row span:first-child {
@@ -434,6 +451,75 @@ button:hover {
 
 .event-panel {
   min-height: 178px;
+  min-width: 0;
+}
+
+.event-timeline {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  margin-bottom: 8px;
+}
+
+.event-chip {
+  background: #111c23;
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+  color: var(--muted);
+  display: grid;
+  font-size: 10px;
+  gap: 2px;
+  min-height: 34px;
+  min-width: 0;
+  padding: 4px 5px;
+}
+
+.event-chip strong {
+  color: var(--text);
+  font-size: 10px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.event-chip span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.event-chip.active {
+  border-color: var(--cyan);
+  color: var(--text);
+}
+
+.event-summary {
+  display: grid;
+  gap: 7px;
+  grid-template-columns: 1fr 1fr;
+  margin-bottom: 8px;
+}
+
+.event-summary-cell {
+  background: var(--surface-2);
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  padding: 7px 8px;
+}
+
+.event-summary-cell span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.event-summary-cell strong {
+  color: var(--text);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 #eventLog {
@@ -441,8 +527,10 @@ button:hover {
   font-size: 11px;
   line-height: 1.45;
   margin: 0;
-  max-height: 165px;
+  max-height: 220px;
+  min-width: 0;
   overflow: auto;
+  overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
 
