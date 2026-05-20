@@ -403,7 +403,7 @@ def check_studio_policy_observation_window(cdp: Any, session_id: str) -> None:
     expression = """
       (() => {
         document.body.classList.remove('capture-mode');
-        window.romiCapture.seekToSeconds(11.5);
+        window.romiCapture.seekToSeconds(11.0);
         window.romiCapture.setMode('policy');
         const policy = window.romiCapture.latestEvent('policy.proposed_action');
         const observationWindow = policy?.payload_summary?.observation_window || [];
@@ -437,6 +437,56 @@ def check_studio_policy_observation_window(cdp: Any, session_id: str) -> None:
     require("camera.rgb" in payload["window_text"], "Studio policy observation window missing RGB input")
     require(payload["selected_event"] in {entry["stream_id"] for entry in observation_window}, "Studio policy observation row did not inspect an input event")
     require(payload["scroll_width"] <= payload["window_width"], "Studio policy observation window introduced horizontal page overflow")
+
+
+def check_studio_policy_compare(cdp: Any, session_id: str) -> None:
+    expression = """
+      (() => {
+        document.body.classList.remove('capture-mode');
+        window.romiCapture.seekToSeconds(11.8);
+        window.romiCapture.setMode('compare');
+        const report = window.romiCapture.policyCompareReport();
+        return JSON.stringify({
+          report,
+          active_tab: document.querySelector('.mode-tab.active')?.dataset.mode,
+          compare_text: document.getElementById('modeView').textContent,
+          card_count: document.querySelectorAll('.compare-card').length,
+          diff_count: document.querySelectorAll('.diff-row').length,
+          changed_count: document.querySelectorAll('.diff-row.changed').length,
+          scroll_width: document.documentElement.scrollWidth,
+          window_width: window.innerWidth,
+        });
+      })();
+    """
+    result = cdp.send(
+        "Runtime.evaluate",
+        {"expression": expression, "returnByValue": True},
+        session_id=session_id,
+    )
+    payload = json.loads(result["result"]["value"])
+    report = payload["report"]
+    policies = report["policies"]
+    policy_ids = {policy["policy_id"] for policy in policies}
+    require(payload["active_tab"] == "compare", "Studio policy compare tab did not activate")
+    require(report["report_kind"] == "romi.counterfactual_policy_compare", "Studio policy compare report kind mismatch")
+    require(report["clock_domain"] == "sim_time", "Studio policy compare clock domain mismatch")
+    require(report["observation_window"]["required_inputs"] == 6, "Studio policy compare required input count mismatch")
+    require(report["observation_window"]["fresh_inputs"] >= 5, "Studio policy compare should use mostly fresh inputs")
+    require(len(policies) == 2, "Studio policy compare should render two policies")
+    require(policy_ids == {"mock_policy_v1", "mock_policy_v2_guarded"}, "Studio policy compare policy ids mismatch")
+    require(all(policy["authority"] == "proposed_only" for policy in policies), "Studio policy compare authority mismatch")
+    require(all(policy["actuator_authority"] == "none" for policy in policies), "Studio policy compare actuator authority mismatch")
+    require(all(policy["command_stream_emitted"] is False for policy in policies), "Studio policy compare command stream boundary mismatch")
+    require(report["safety_boundary"]["command_stream_emitted"] is False, "Studio policy compare safety boundary should not emit commands")
+    require(len(report["diffs"]) >= 3, "Studio policy compare diff count mismatch")
+    require(payload["card_count"] == 2, "Studio policy compare card count mismatch")
+    require(payload["diff_count"] >= 3, "Studio policy compare UI diff rows missing")
+    require(payload["changed_count"] >= 1, "Studio policy compare UI should show at least one changed action")
+    require("mock_policy_v1" in payload["compare_text"], "Studio policy compare UI missing baseline policy")
+    require("mock_policy_v2_guarded" in payload["compare_text"], "Studio policy compare UI missing guarded policy")
+    require("not_emitted" in payload["compare_text"], "Studio policy compare UI missing command stream boundary")
+    require("->" in payload["compare_text"], "Studio policy compare UI missing action diff arrow")
+    require(payload["scroll_width"] <= payload["window_width"], "Studio policy compare introduced horizontal page overflow")
 
 
 def check_studio_safety_authority(cdp: Any, session_id: str) -> None:
@@ -547,6 +597,7 @@ def check_browser_native_contract(repo_root: Path, chrome_bin: str, contract: di
         check_studio_event_inspector(cdp, session_id)
         check_studio_dataset_report(cdp, session_id)
         check_studio_policy_observation_window(cdp, session_id)
+        check_studio_policy_compare(cdp, session_id)
         check_studio_safety_authority(cdp, session_id)
         check_studio_runtime_graph(cdp, session_id)
         print(

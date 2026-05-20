@@ -145,7 +145,7 @@ button:hover {
   border-radius: 7px;
   display: grid;
   gap: 3px;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   margin-bottom: 10px;
   padding: 3px;
 }
@@ -155,9 +155,9 @@ button:hover {
   border: 0;
   border-radius: 5px;
   color: var(--muted);
-  font-size: 14px;
+  font-size: 12px;
   min-height: 30px;
-  padding: 0 6px;
+  padding: 0 4px;
 }
 
 .mode-tab:hover {
@@ -474,6 +474,89 @@ button:hover {
 .safety-row strong {
   color: var(--rose);
   font-size: 11px;
+}
+
+.compare-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 1fr 1fr;
+}
+
+.compare-card {
+  background: #101920;
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding: 8px;
+}
+
+.compare-card h3 {
+  font-size: 11px;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compare-card dl {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+}
+
+.compare-card div {
+  align-items: center;
+  display: grid;
+  gap: 6px;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.compare-card dt {
+  color: var(--muted);
+  font-size: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compare-card dd {
+  color: var(--text);
+  font-size: 10px;
+  margin: 0;
+}
+
+.diff-list {
+  display: grid;
+  gap: 5px;
+}
+
+.diff-row {
+  background: var(--surface-2);
+  border: 1px solid var(--line-soft);
+  border-radius: 5px;
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  padding: 6px 7px;
+}
+
+.diff-row span {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.diff-row strong {
+  color: var(--text);
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diff-row.changed strong {
+  color: var(--amber);
 }
 
 .dataset-grid {
@@ -864,8 +947,8 @@ body.capture-mode .mode-view {
 }
 
 body.capture-mode .mode-tab {
-  font-size: 13px;
-  padding: 0 4px;
+  font-size: 11px;
+  padding: 0 2px;
 }
 
 body.capture-mode .dataset-report-preview {
