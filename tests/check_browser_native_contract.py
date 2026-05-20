@@ -262,6 +262,13 @@ def check_policy_event(browser_event: dict[str, Any], contract: dict[str, Any]) 
     actions = payload.get("proposed_actions", [])
     require(len(actions) == policy_contract["proposed_action_count"], "browser policy proposed action count mismatch")
     require(all(action.get("authority") == policy_contract["authority"] for action in actions), "browser policy action authority mismatch")
+    observation_window = payload.get("observation_window", [])
+    require(len(observation_window) == 6, "browser policy observation window count mismatch")
+    observation_streams = {entry.get("stream_id") for entry in observation_window}
+    for stream_id in ["robot.camera.rgb", "robot.camera.depth", "robot.joints.state", "robot.base.odom", "robot.frames.tf", "task.goal"]:
+        require(stream_id in observation_streams, f"browser policy observation window missing {stream_id}")
+    require(all(entry.get("status") in {"fresh", "stale", "missing"} for entry in observation_window), "browser policy observation status mismatch")
+    require(payload.get("input_status", {}).get("required") == 6, "browser policy input_status required count mismatch")
 
 
 def check_studio_seek_controls(cdp: Any, session_id: str) -> None:
@@ -310,7 +317,7 @@ def check_studio_event_inspector(cdp: Any, session_id: str) -> None:
     expression = """
       (() => {
         document.body.classList.remove('capture-mode');
-        window.romiCapture.seekToSeconds(13.2);
+        window.romiCapture.seekToSeconds(11.5);
         window.romiCapture.selectLatestStreamEvent('policy.proposed_action');
         const preview = document.getElementById('eventLog').textContent;
         const summary = document.getElementById('eventSummary').textContent;
@@ -387,6 +394,46 @@ def check_studio_dataset_report(cdp: Any, session_id: str) -> None:
     require(payload["scroll_width"] <= payload["window_width"], "Studio dataset report introduced horizontal page overflow")
 
 
+def check_studio_policy_observation_window(cdp: Any, session_id: str) -> None:
+    expression = """
+      (() => {
+        document.body.classList.remove('capture-mode');
+        window.romiCapture.seekToSeconds(11.5);
+        window.romiCapture.setMode('policy');
+        const policy = window.romiCapture.latestEvent('policy.proposed_action');
+        const observationWindow = policy?.payload_summary?.observation_window || [];
+        const firstInput = document.querySelector('.policy-window-row[data-inspect-stream]');
+        if (firstInput) {
+          firstInput.click();
+        }
+        return JSON.stringify({
+          observation_window: observationWindow,
+          input_status: policy?.payload_summary?.input_status || {},
+          window_text: document.querySelector('.policy-window')?.textContent || '',
+          row_count: document.querySelectorAll('.policy-window-row[data-inspect-stream]').length,
+          selected_event: document.getElementById('eventInspectorStatus').textContent,
+          scroll_width: document.documentElement.scrollWidth,
+          window_width: window.innerWidth,
+        });
+      })();
+    """
+    result = cdp.send(
+        "Runtime.evaluate",
+        {"expression": expression, "returnByValue": True},
+        session_id=session_id,
+    )
+    payload = json.loads(result["result"]["value"])
+    observation_window = payload["observation_window"]
+    require(len(observation_window) == 6, "Studio policy observation window count mismatch")
+    require(payload["input_status"].get("required") == 6, "Studio policy input_status required count mismatch")
+    require(payload["input_status"].get("fresh", 0) >= 5, "Studio policy observation window should be mostly fresh")
+    require(payload["row_count"] >= 3, "Studio policy observation window did not render rows")
+    require("observation window" in payload["window_text"], "Studio policy observation window heading missing")
+    require("camera.rgb" in payload["window_text"], "Studio policy observation window missing RGB input")
+    require(payload["selected_event"] in {entry["stream_id"] for entry in observation_window}, "Studio policy observation row did not inspect an input event")
+    require(payload["scroll_width"] <= payload["window_width"], "Studio policy observation window introduced horizontal page overflow")
+
+
 def check_studio_runtime_graph(cdp: Any, session_id: str) -> None:
     expression = """
       (() => {
@@ -422,7 +469,7 @@ def check_studio_runtime_graph(cdp: Any, session_id: str) -> None:
     require(payload["graph_buttons"] == 5, "Studio runtime graph node count mismatch")
     require(payload["selected_policy"] == "true", "Studio runtime graph did not select policy node")
     require("policy.proposed_action" in payload["policy_detail"], "Studio runtime graph policy output missing")
-    require("proposed_only" in payload["policy_detail"], "Studio runtime graph policy authority missing")
+    require("inputs fresh" in payload["policy_detail"], "Studio runtime graph policy freshness missing")
     require("observation window" in payload["policy_detail"], "Studio runtime graph policy connection missing")
     require(payload["selected_event"] == "policy.proposed_action", "Studio runtime graph output did not inspect policy event")
     require("dataset report" in payload["report_detail"], "Studio runtime graph report node detail missing")
@@ -458,6 +505,7 @@ def check_browser_native_contract(repo_root: Path, chrome_bin: str, contract: di
         check_studio_seek_controls(cdp, session_id)
         check_studio_event_inspector(cdp, session_id)
         check_studio_dataset_report(cdp, session_id)
+        check_studio_policy_observation_window(cdp, session_id)
         check_studio_runtime_graph(cdp, session_id)
         print(
             json.dumps(

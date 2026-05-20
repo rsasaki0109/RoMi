@@ -49,6 +49,15 @@ const streams = [
   "runtime.diagnostics",
 ];
 
+const policyInputStreams = [
+  "robot.camera.rgb",
+  "robot.camera.depth",
+  "robot.joints.state",
+  "robot.base.odom",
+  "robot.frames.tf",
+  "task.goal",
+];
+
 const graphNodeDefinitions = [
   {
     id: "source",
@@ -75,7 +84,7 @@ const graphNodeDefinitions = [
     id: "policy",
     label: "mock policy",
     role: "policy runtime",
-    inputs: ["robot.camera.rgb", "robot.camera.depth", "robot.joints.state", "robot.base.odom", "robot.frames.tf", "task.goal"],
+    inputs: policyInputStreams,
     outputs: ["policy.proposed_action"],
   },
   {
@@ -293,6 +302,33 @@ function createEvent(streamId, payloadSummary, frameId, semanticType, sourceMess
   };
 }
 
+function latestEventFrom(events, streamId) {
+  for (let index = events.length - 1; index >= 0; index -= 1) {
+    const event = events[index];
+    if (event.stream_id === streamId || (streamId === "runtime.diagnostics" && event.kind === "diagnostic_event")) {
+      return event;
+    }
+  }
+  return null;
+}
+
+function policyObservationWindow(sourceEvents, eventTimeNs) {
+  return policyInputStreams.map((streamId) => {
+    const event = latestEventFrom(sourceEvents, streamId);
+    const observedTimeNs = Number(event?.event_time_ns ?? event?.time?.event_time_ns ?? 0);
+    const ageMs = event ? Math.max(0, (eventTimeNs - observedTimeNs) / 1_000_000) : null;
+    const status = event ? (ageMs <= 350 ? "fresh" : "stale") : "missing";
+    return {
+      stream_id: streamId,
+      status,
+      age_ms: ageMs === null ? null : Number(ageMs.toFixed(1)),
+      frame_id: event?.frame_id || null,
+      semantic_type: event?.semantic_type || null,
+      sample_index: event?.metadata?.sample_index ?? null,
+    };
+  });
+}
+
 function emitEvents(progress) {
   const pose = robotPose(progress);
   const worldPose = worldToRomi(pose);
@@ -398,8 +434,16 @@ function emitEvents(progress) {
   }
 
   if (state.sampleIndex % Math.max(1, Math.round(state.rateHz * 1.5)) === 0 || progress > 0.68) {
+    const observationWindow = policyObservationWindow([...state.events, ...events], eventTimeNs);
     events.push(createEvent("policy.proposed_action", {
       policy_id: "mock_nav_manip_policy",
+      observation_window: observationWindow,
+      input_status: {
+        fresh: observationWindow.filter((input) => input.status === "fresh").length,
+        stale: observationWindow.filter((input) => input.status === "stale").length,
+        missing: observationWindow.filter((input) => input.status === "missing").length,
+        required: observationWindow.length,
+      },
       proposed_actions: [
         { target: "base", action_type: stage === "navigate" ? "navigate_to_goal" : "hold_position", authority: "proposed_only" },
         { target: "end_effector", action_type: holding ? "carry_object" : "reach_target", authority: "proposed_only" },
@@ -711,6 +755,8 @@ function graphNodeDefinition(nodeId) {
 function graphNodeRuntime(nodeId, progress) {
   const policyEvent = latestEvent("policy.proposed_action");
   const policyLatency = Number(policyEvent?.payload_summary?.inference_latency_ms ?? 0);
+  const policyInputs = latestPolicyObservationWindow();
+  const freshPolicyInputs = policyInputs.filter((input) => input.status === "fresh").length;
   const samplePeriodMs = state.rateHz > 0 ? 1000 / state.rateHz : 0;
   const report = datasetReport();
   const runtime = {
@@ -735,7 +781,7 @@ function graphNodeRuntime(nodeId, progress) {
     policy: {
       status: policyEvent ? "proposing" : "waiting",
       latency: policyLatency > 0 ? `${policyLatency.toFixed(2)}ms` : "waiting",
-      contract: "proposed_only",
+      contract: `${freshPolicyInputs}/${policyInputs.length} inputs fresh`,
       connection: "observation window -> policy.proposed_action",
     },
     report: {
@@ -777,7 +823,8 @@ function renderGraphDetail(progress) {
         <span>outputs</span>
         <div class="graph-token-list">${node.outputs.map(renderGraphToken).join("")}</div>
       </div>
-    </div>`;
+    </div>
+    ${node.id === "policy" ? renderPolicyObservationWindow(6) : ""}`;
 }
 
 function selectGraphNode(nodeId) {
@@ -902,19 +949,42 @@ function renderPolicyActions() {
   )).join("")}</div>`;
 }
 
+function latestPolicyObservationWindow() {
+  const policyEvent = latestEvent("policy.proposed_action");
+  const payloadWindow = policyEvent?.payload_summary?.observation_window;
+  if (Array.isArray(payloadWindow) && payloadWindow.length) {
+    return payloadWindow;
+  }
+  return policyObservationWindow(state.events, Math.round(state.elapsedSec * 1_000_000_000));
+}
+
+function renderPolicyObservationWindow(maxRows = 3) {
+  const inputs = latestPolicyObservationWindow();
+  const rows = inputs.slice(0, maxRows);
+  const fresh = inputs.filter((input) => input.status === "fresh").length;
+  return `<div class="policy-window">
+    <div class="policy-window-heading">
+      <span>observation window</span>
+      <strong>${fresh}/${inputs.length} fresh</strong>
+    </div>
+    <div class="policy-window-list">${rows.map((input) => {
+      const label = input.stream_id.replace("robot.", "").replace("policy.", "policy.");
+      const age = input.age_ms === null || input.age_ms === undefined ? "missing" : `${Number(input.age_ms).toFixed(0)}ms`;
+      return `<button class="policy-window-row ${escapeHtml(input.status)}" type="button" data-inspect-stream="${escapeHtml(input.stream_id)}">
+        <span>${escapeHtml(label)}</span>
+        <strong>${escapeHtml(input.status)}</strong>
+        <em>${escapeHtml(input.frame_id || age)}</em>
+      </button>`;
+    }).join("")}</div>
+  </div>`;
+}
+
 function datasetStreamCounts() {
   return Object.fromEntries(streams.map((stream) => [stream, state.streamCounts[stream] || 0]));
 }
 
 function datasetObservationWindow() {
-  return [
-    "robot.camera.rgb",
-    "robot.camera.depth",
-    "robot.joints.state",
-    "robot.base.odom",
-    "robot.frames.tf",
-    "policy.proposed_action",
-  ].map((streamId) => {
+  return [...policyInputStreams, "policy.proposed_action"].map((streamId) => {
     const event = latestEvent(streamId);
     const freshness = streamFreshness(streamId);
     return {
@@ -1071,7 +1141,7 @@ function renderModeView(progress) {
   if (mode === "policy") {
     const policyEvent = latestEvent("policy.proposed_action");
     const latency = Number(policyEvent?.payload_summary?.inference_latency_ms ?? 0);
-    modeView.innerHTML = `${renderPolicyActions()}${renderKeyValues([
+    modeView.innerHTML = `${renderPolicyActions()}${renderPolicyObservationWindow()}${renderKeyValues([
       ["authority", "proposed_only"],
       ["latency", latency > 0 ? `${latency.toFixed(2)}ms` : "waiting"],
     ])}`;
@@ -1277,6 +1347,11 @@ modeView.addEventListener("click", (event) => {
   const exportTarget = event.target.closest("[data-export-dataset-report]");
   if (exportTarget) {
     exportDatasetReport();
+    return;
+  }
+  const inspectTarget = event.target.closest("[data-inspect-stream]");
+  if (inspectTarget) {
+    selectLatestStreamEvent(inspectTarget.dataset.inspectStream);
     return;
   }
   const target = event.target.closest("[data-seek-progress]");
