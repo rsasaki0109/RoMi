@@ -11,10 +11,11 @@ RUN_DIR="${ARTIFACT_ROOT}/${RUN_ID}"
 EPISODE_ID="${ROMI_DEMO_EPISODE_ID:-nav_manip_demo_${RUN_ID}}"
 DEMO_SOURCE="${ROMI_DEMO_SOURCE:-native}"
 BRIDGE_DURATION_SEC="${ROMI_DEMO_BRIDGE_DURATION_SEC:-7}"
-SIM_DURATION_SEC="${ROMI_DEMO_SIM_DURATION_SEC:-5.5}"
-SIM_RATE_HZ="${ROMI_DEMO_SIM_RATE_HZ:-12}"
-DIAGNOSTICS_PERIOD_SEC="${ROMI_DEMO_DIAGNOSTICS_PERIOD_SEC:-0.5}"
+SIM_DURATION_SEC="${ROMI_DEMO_SIM_DURATION_SEC:-}"
+SIM_RATE_HZ="${ROMI_DEMO_SIM_RATE_HZ:-}"
+DIAGNOSTICS_PERIOD_SEC="${ROMI_DEMO_DIAGNOSTICS_PERIOD_SEC:-}"
 
+SCENARIO="${ROMI_DEMO_SCENARIO:-${SCRIPT_DIR}/scenario.json}"
 STREAM_MAP="${SCRIPT_DIR}/stream-map.example.json"
 RUNTIME_GRAPH="${SCRIPT_DIR}/runtime-graph.example.json"
 SOURCE_EVENTS="${RUN_DIR}/source-events.jsonl"
@@ -42,11 +43,21 @@ echo "[romi demo] source: ${DEMO_SOURCE}"
 case "${DEMO_SOURCE}" in
   native)
     echo "[romi demo] generating RoMi-native navigation + manipulation simulation"
-    python3 "${SCRIPT_DIR}/romi_native_sim_source.py" \
-      --output "${SOURCE_EVENTS}" \
-      --duration-sec "${SIM_DURATION_SEC}" \
-      --rate-hz "${SIM_RATE_HZ}" \
-      --diagnostics-period-sec "${DIAGNOSTICS_PERIOD_SEC}"
+    NATIVE_ARGS=(
+      "${SCRIPT_DIR}/romi_native_sim_source.py"
+      --output "${SOURCE_EVENTS}"
+      --scenario "${SCENARIO}"
+    )
+    if [[ -n "${SIM_DURATION_SEC}" ]]; then
+      NATIVE_ARGS+=(--duration-sec "${SIM_DURATION_SEC}")
+    fi
+    if [[ -n "${SIM_RATE_HZ}" ]]; then
+      NATIVE_ARGS+=(--rate-hz "${SIM_RATE_HZ}")
+    fi
+    if [[ -n "${DIAGNOSTICS_PERIOD_SEC}" ]]; then
+      NATIVE_ARGS+=(--diagnostics-period-sec "${DIAGNOSTICS_PERIOD_SEC}")
+    fi
+    python3 "${NATIVE_ARGS[@]}"
     ;;
   ros2)
     require_command ros2
@@ -61,7 +72,7 @@ PY
     python3 "${REPO_ROOT}/bridges/ros2/rclpy_bridge/romi_ros2_bridge.py" \
       --stream-map "${STREAM_MAP}" \
       --output "${SOURCE_EVENTS}" \
-      --diagnostics-period-sec "${DIAGNOSTICS_PERIOD_SEC}" \
+      --diagnostics-period-sec "${DIAGNOSTICS_PERIOD_SEC:-0.5}" \
       --duration-sec "${BRIDGE_DURATION_SEC}" &
     BRIDGE_PID=$!
 
@@ -69,8 +80,8 @@ PY
 
     echo "[romi demo] publishing scripted ROS2 navigation + manipulation simulation"
     python3 "${SCRIPT_DIR}/ros2_demo_sim_publisher.py" \
-      --duration-sec "${SIM_DURATION_SEC}" \
-      --rate-hz "${SIM_RATE_HZ}"
+      --duration-sec "${SIM_DURATION_SEC:-5.5}" \
+      --rate-hz "${SIM_RATE_HZ:-12}"
 
     wait "${BRIDGE_PID}"
     ;;
@@ -124,3 +135,4 @@ PY
 echo "[romi demo] done"
 echo "[romi demo] report: ${REPORT_DIR}/report.md"
 echo "[romi demo] visual simulator: ${SCRIPT_DIR}/romi_2d_sim/index.html"
+echo "[romi demo] shared scenario: ${SCENARIO}"

@@ -2,7 +2,7 @@
 
 This guide describes how to capture the first README-oriented navigation + manipulation demo using the current prototype pipeline.
 
-The current visual demo is a RoMi 2D browser simulator. It shows a ROS2-free mobile manipulation scene while exposing RoMi-shaped stream counts, runtime stages, policy proposals, and recent events. The smoke pipeline remains available for episode recording, replay, mock policy output, and dataset inspection.
+The current visual demo is a RoMi 2D browser simulator. It shows a ROS2-free mobile manipulation scene while exposing RoMi-shaped stream counts, runtime stages, policy proposals, and recent events. The browser simulator and smoke pipeline both read `scenario.json`, so the visual motion and generated RoMi artifacts share the same scenario.
 
 ## Capture Goal
 
@@ -65,10 +65,12 @@ Important output files:
 Open the visual demo locally:
 
 ```bash
-xdg-open examples/navigation_manipulation_demo/romi_2d_sim/index.html
+python3 -m http.server 8000 --bind 127.0.0.1 --directory examples/navigation_manipulation_demo
+# in another terminal:
+xdg-open http://127.0.0.1:8000/romi_2d_sim/
 ```
 
-The simulator runs in the browser and does not need ROS2, a web server, or a build step. Use the `Export JSONL` control to export RoMi-shaped stream events from the browser session.
+The simulator runs in the browser and does not need ROS2 or a build step. Use the `Export JSONL` control to export RoMi-shaped stream events from the browser session.
 
 ## Suggested Recording Layout
 
@@ -104,6 +106,7 @@ During capture, show these concrete details:
 
 - Camera, depth, joint, odometry, TF, and `task.goal` samples arrive as RoMi-shaped streams without requiring ROS2.
 - The browser simulator shows navigation, manipulation, runtime graph stages, and recent events.
+- The browser simulator and smoke pipeline share `scenario.json`.
 - The same downstream pipeline can be exercised through `ROMI_DEMO_SOURCE=ros2`.
 - `episode.json` records the episode metadata.
 - `replay-events.jsonl` re-emits the stream with `source_system: replay`.

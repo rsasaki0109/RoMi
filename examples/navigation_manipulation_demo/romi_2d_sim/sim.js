@@ -34,30 +34,31 @@ const streams = [
   "runtime.diagnostics",
 ];
 
-const state = {
-  running: false,
-  lastFrameMs: 0,
-  elapsedSec: 0,
-  durationSec: 16,
-  sampleIndex: 0,
-  events: [],
-  streamCounts: Object.fromEntries(streams.map((stream) => [stream, 0])),
-  trace: [],
-  objectHeld: false,
-  objectPlaced: false,
-};
-
 const colors = {
-  bg: "#10181e",
   grid: "#20303a",
   field: "#132028",
   cyan: "#38d9ef",
   green: "#8bd450",
   amber: "#ffbf6b",
-  purple: "#b7a2ff",
   rose: "#f58aa5",
   text: "#edf5f8",
   muted: "#94a9b5",
+};
+
+const state = {
+  scenario: null,
+  running: false,
+  ready: false,
+  error: null,
+  lastFrameMs: 0,
+  elapsedSec: 0,
+  durationSec: 0,
+  rateHz: 12,
+  diagnosticEvery: 6,
+  sampleIndex: 0,
+  events: [],
+  streamCounts: Object.fromEntries(streams.map((stream) => [stream, 0])),
+  trace: [],
 };
 
 function clamp(value, min = 0, max = 1) {
@@ -73,35 +74,108 @@ function lerp(a, b, t) {
   return a + (b - a) * t;
 }
 
+function pair(value, fallback) {
+  if (Array.isArray(value) && value.length >= 2) {
+    return [Number(value[0]), Number(value[1])];
+  }
+  return fallback;
+}
+
+function scenarioTiming() {
+  return state.scenario?.timing || {};
+}
+
+function robotConfig() {
+  return state.scenario?.robot || {};
+}
+
+function armConfig() {
+  return state.scenario?.arm || {};
+}
+
+function workspaceConfig() {
+  return state.scenario?.workspace || {};
+}
+
+function visualConfig() {
+  return state.scenario?.visual || {};
+}
+
+function cameraConfig() {
+  return state.scenario?.camera || {};
+}
+
 function robotPose(progress) {
-  const nav = ease(clamp(progress / 0.58));
-  const x = lerp(140, 625, nav);
-  const y = 392 - 120 * Math.sin(nav * Math.PI);
-  const yaw = lerp(-0.05, -0.65, nav);
+  const robot = robotConfig();
+  const timing = scenarioTiming();
+  const [startX, startY] = pair(robot.start_px, [140, 392]);
+  const [goalX, goalY] = pair(robot.goal_px, [625, 392]);
+  const navEnd = Number(timing.nav_end ?? 0.58);
+  const nav = ease(navEnd > 0 ? progress / navEnd : progress);
+  const x = lerp(startX, goalX, nav);
+  const y = lerp(startY, goalY, nav) - Number(robot.path_arc_height_px ?? 120) * Math.sin(nav * Math.PI);
+  const yaw = lerp(Number(robot.yaw_start_rad ?? -0.05), Number(robot.yaw_goal_rad ?? -0.65), nav);
   return { x, y, yaw };
 }
 
 function armReach(progress) {
-  return ease(clamp((progress - 0.56) / 0.22));
+  const timing = scenarioTiming();
+  const start = Number(timing.reach_start ?? 0.56);
+  const end = Number(timing.reach_end ?? 0.72);
+  return ease(end > start ? (progress - start) / (end - start) : progress);
 }
 
 function placeReach(progress) {
-  return ease(clamp((progress - 0.78) / 0.14));
+  const timing = scenarioTiming();
+  const start = Number(timing.place_start ?? 0.78);
+  const end = Number(timing.place_end ?? 0.92);
+  return ease(end > start ? (progress - start) / (end - start) : progress);
 }
 
 function currentStage(progress) {
-  if (progress < 0.05) return "initialize";
-  if (progress < 0.58) return "navigate";
-  if (progress < 0.72) return "reach";
-  if (progress < 0.80) return "grasp";
-  if (progress < 0.92) return "place";
+  const stages = Array.isArray(scenarioTiming().stages) ? scenarioTiming().stages : [];
+  for (const stage of stages) {
+    if (Number(stage.start) <= progress && progress < Number(stage.end)) {
+      return String(stage.name || "unknown");
+    }
+  }
   return "report";
 }
 
+function objectState(progress) {
+  const timing = scenarioTiming();
+  if (progress >= Number(timing.placed_after ?? 0.88)) return "placed";
+  if (progress >= Number(timing.grasp_start ?? 0.70)) return "held";
+  return "on_table";
+}
+
+function objectPosition(progress) {
+  const workspace = workspaceConfig();
+  const arm = armConfig();
+  const [tableX, tableY] = pair(workspace.object_start_px, [712, 292]);
+  const [binX, binY] = pair(workspace.bin_px, [768, 320]);
+  const pose = robotPose(progress);
+  const [carryX, carryY] = pair(arm.tool_carry_offset_px, [72, -34]);
+  const carried = { x: pose.x + carryX, y: pose.y + carryY };
+  const stateName = objectState(progress);
+
+  if (stateName === "on_table") return { x: tableX, y: tableY };
+  if (stateName === "held") {
+    const reach = armReach(progress);
+    return { x: lerp(tableX, carried.x, reach), y: lerp(tableY, carried.y, reach) };
+  }
+
+  const place = placeReach(progress);
+  return { x: lerp(carried.x, binX, place), y: lerp(carried.y, binY, place) };
+}
+
 function worldToRomi(pose) {
+  const world = state.scenario?.world || {};
+  const [originX, originY] = pair(world.origin_px, [140, 392]);
+  const scale = Number(world.scale_px_per_m ?? 300);
   return {
-    x: (pose.x - 140) / 300,
-    y: (392 - pose.y) / 300,
+    x: (pose.x - originX) / scale,
+    y: (originY - pose.y) / scale,
     z: 0,
   };
 }
@@ -123,6 +197,7 @@ function createEvent(streamId, payloadSummary, frameId, semanticType, sourceMess
     payload_summary: payloadSummary,
     metadata: {
       source: "romi_2d_sim",
+      scenario_id: state.scenario?.scenario_id,
       sample_index: state.streamCounts[streamId],
     },
   };
@@ -132,26 +207,40 @@ function emitEvents(progress) {
   const pose = robotPose(progress);
   const worldPose = worldToRomi(pose);
   const reach = armReach(progress);
-  const placed = progress > 0.88;
-  const holding = progress > 0.70 && !placed;
+  const stage = currentStage(progress);
+  const object = objectPosition(progress);
+  const objectStatus = objectState(progress);
+  const holding = objectStatus === "held";
+  const camera = cameraConfig();
+  const cameraWidth = Number(camera.width ?? 160);
+  const cameraHeight = Number(camera.height ?? 90);
+  const visual = visualConfig();
+  const objectCameraX = Math.round(clamp(object.x / Number(visual.canvas_width ?? 960)) * cameraWidth);
+  const objectCameraY = Math.round(clamp(object.y / Number(visual.canvas_height ?? 620)) * cameraHeight);
 
   const events = [
     createEvent("robot.camera.rgb", {
-      width: 160,
-      height: 90,
+      width: cameraWidth,
+      height: cameraHeight,
       encoding: "rgb8",
-      target_visible: !placed,
-      object_state: placed ? "placed" : holding ? "held" : "on_table",
+      synthetic_scene: {
+        target_centroid_px: { x: objectCameraX, y: objectCameraY },
+        target_visible: objectStatus !== "placed",
+        object_state: objectStatus,
+      },
     }, "camera_color_optical_frame", "rgb_image", "romi.robotics.ImageSummary"),
     createEvent("robot.camera.depth", {
-      width: 160,
-      height: 90,
+      width: cameraWidth,
+      height: cameraHeight,
       encoding: "16UC1",
-      target_depth_mm: holding ? 410 : 620,
+      synthetic_scene: {
+        target_depth_mm: Number(camera[holding ? "held_depth_mm" : "target_depth_mm"] ?? 620),
+        object_state: objectStatus,
+      },
     }, "camera_depth_optical_frame", "depth_image", "romi.robotics.ImageSummary"),
     createEvent("robot.camera.info", {
-      width: 160,
-      height: 90,
+      width: cameraWidth,
+      height: cameraHeight,
       distortion_model: "plumb_bob",
       k_len: 9,
       p_len: 12,
@@ -166,8 +255,9 @@ function emitEvents(progress) {
       child_frame_id: "base_link",
       position: worldPose,
       orientation: { x: 0, y: 0, z: Math.sin(pose.yaw / 2), w: Math.cos(pose.yaw / 2) },
-      linear: { x: progress < 0.58 ? 0.35 : 0, y: 0, z: 0 },
-      angular: { x: 0, y: 0, z: progress < 0.58 ? -0.15 : 0 },
+      linear: { x: stage === "navigate" ? 0.35 : 0, y: 0, z: 0 },
+      angular: { x: 0, y: 0, z: stage === "navigate" ? -0.15 : 0 },
+      stage,
     }, "odom", "odometry", "romi.robotics.OdometrySummary"),
     createEvent("robot.frames.tf", {
       transform_count: 6,
@@ -179,31 +269,34 @@ function emitEvents(progress) {
         { parent_frame_id: "base_link", child_frame_id: "arm_base_link" },
         { parent_frame_id: "arm_base_link", child_frame_id: "tool0" },
       ],
+      synthetic_object_position: worldToRomi(object),
     }, "map->odom", "transform_tree", "romi.robotics.TransformTreeSummary"),
   ];
 
-  if (state.sampleIndex % 12 === 0) {
+  if (state.sampleIndex % Math.max(1, Math.round(state.rateHz)) === 0) {
+    const goal = state.scenario?.goal || {};
     events.push(createEvent("task.goal", {
-      position: { x: 1.6, y: 0, z: 0 },
-      orientation: { x: 0, y: 0, z: 0, w: 1 },
-      target_object: "orange_cube",
-    }, "map", "task_goal", "romi.robotics.PoseGoalSummary"));
+      position: goal.position_m || { x: 1.6, y: 0, z: 0 },
+      orientation: goal.orientation || { x: 0, y: 0, z: 0, w: 1 },
+      target_object: workspaceConfig().target_object || "orange_cube",
+      scenario_id: state.scenario?.scenario_id,
+    }, goal.frame_id || "map", "task_goal", "romi.robotics.PoseGoalSummary"));
   }
 
-  if (state.sampleIndex % 18 === 0 || progress > 0.68) {
+  if (state.sampleIndex % Math.max(1, Math.round(state.rateHz * 1.5)) === 0 || progress > 0.68) {
     events.push(createEvent("policy.proposed_action", {
       policy_id: "mock_nav_manip_policy",
       proposed_actions: [
-        { target: "base", action_type: "hold_or_navigate", authority: "proposed_only" },
+        { target: "base", action_type: stage === "navigate" ? "navigate_to_goal" : "hold_position", authority: "proposed_only" },
         { target: "end_effector", action_type: holding ? "carry_object" : "reach_target", authority: "proposed_only" },
         { target: "gripper", action_type: holding ? "hold_closed" : "prepare_grasp", authority: "proposed_only" },
       ],
       inference_latency_ms: 1.4 + 0.5 * Math.sin(progress * Math.PI * 2),
-      metadata: { authority: "proposed_only" },
+      metadata: { authority: "proposed_only", scenario_id: state.scenario?.scenario_id },
     }, "base_link", "command", "romi.ml.PolicyProposedAction"));
   }
 
-  if (state.sampleIndex % 24 === 0) {
+  if (state.sampleIndex % state.diagnosticEvery === 0) {
     state.streamCounts["runtime.diagnostics"] += 1;
     events.push({
       schema_version: "0.1.0",
@@ -215,7 +308,11 @@ function emitEvents(progress) {
       source: "romi_2d_sim",
       category: "runtime",
       message: "Simulator emitted synchronized navigation/manipulation step.",
-      attributes: { stage: currentStage(progress), stream_count: streams.length },
+      attributes: {
+        scenario_id: state.scenario?.scenario_id,
+        stage,
+        stream_count: streams.length,
+      },
     });
   }
 
@@ -226,17 +323,19 @@ function emitEvents(progress) {
 }
 
 function drawGrid() {
+  const visual = visualConfig();
+  const grid = Number(visual.grid_px ?? 32);
   ctx.fillStyle = colors.field;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.strokeStyle = colors.grid;
   ctx.lineWidth = 1;
-  for (let x = 0; x < canvas.width; x += 32) {
+  for (let x = 0; x < canvas.width; x += grid) {
     ctx.beginPath();
     ctx.moveTo(x, 0);
     ctx.lineTo(x, canvas.height);
     ctx.stroke();
   }
-  for (let y = 0; y < canvas.height; y += 32) {
+  for (let y = 0; y < canvas.height; y += grid) {
     ctx.beginPath();
     ctx.moveTo(0, y);
     ctx.lineTo(canvas.width, y);
@@ -245,47 +344,29 @@ function drawGrid() {
 }
 
 function drawWorkspace(progress) {
+  const workspace = workspaceConfig();
+  const zone = workspace.zone_px || { x: 650, y: 240, width: 215, height: 160 };
   ctx.fillStyle = "#263923";
   ctx.strokeStyle = colors.green;
-  roundRect(650, 240, 215, 160, 10, true, true);
+  roundRect(zone.x, zone.y, zone.width, zone.height, 10, true, true);
   ctx.fillStyle = colors.green;
   ctx.font = "14px sans-serif";
-  ctx.fillText("manipulation zone", 670, 266);
+  ctx.fillText("manipulation zone", zone.x + 20, zone.y + 26);
 
+  const [binX, binY] = pair(workspace.bin_px, [768, 320]);
   ctx.fillStyle = "#33462f";
   ctx.strokeStyle = "#b2f07b";
-  roundRect(724, 310, 88, 56, 8, true, true);
+  roundRect(binX - 44, binY - 10, 88, 56, 8, true, true);
   ctx.fillStyle = colors.text;
   ctx.font = "12px sans-serif";
-  ctx.fillText("place bin", 744, 342);
+  ctx.fillText("place bin", binX - 24, binY + 22);
 
-  const placed = progress > 0.88;
-  if (!placed) {
+  if (objectState(progress) !== "placed") {
     const object = objectPosition(progress);
     ctx.fillStyle = colors.amber;
     ctx.strokeStyle = "#ffe3b6";
     roundRect(object.x - 13, object.y - 13, 26, 26, 5, true, true);
   }
-}
-
-function objectPosition(progress) {
-  const pose = robotPose(progress);
-  const reach = armReach(progress);
-  const place = placeReach(progress);
-  const table = { x: 712, y: 292 };
-  const carried = { x: pose.x + 72, y: pose.y - 34 };
-  const bin = { x: 768, y: 320 };
-  if (progress < 0.72) return table;
-  if (progress < 0.86) {
-    return {
-      x: lerp(table.x, carried.x, reach),
-      y: lerp(table.y, carried.y, reach),
-    };
-  }
-  return {
-    x: lerp(carried.x, bin.x, place),
-    y: lerp(carried.y, bin.y, place),
-  };
 }
 
 function drawTrace() {
@@ -302,8 +383,11 @@ function drawTrace() {
 
 function drawRobot(progress) {
   const pose = robotPose(progress);
+  const robot = robotConfig();
+  const arm = armConfig();
   const reach = armReach(progress);
-  const holding = progress > 0.70 && progress < 0.88;
+  const holding = objectState(progress) === "held";
+  const [baseW, baseH] = pair(robot.base_size_px, [68, 46]);
 
   ctx.save();
   ctx.translate(pose.x, pose.y);
@@ -311,11 +395,11 @@ function drawRobot(progress) {
   ctx.fillStyle = "#1e323a";
   ctx.strokeStyle = colors.cyan;
   ctx.lineWidth = 3;
-  roundRect(-34, -23, 68, 46, 12, true, true);
+  roundRect(-baseW / 2, -baseH / 2, baseW, baseH, 12, true, true);
 
   ctx.fillStyle = colors.cyan;
   ctx.beginPath();
-  ctx.moveTo(28, 0);
+  ctx.moveTo(baseW / 2 - 6, 0);
   ctx.lineTo(10, -10);
   ctx.lineTo(10, 10);
   ctx.closePath();
@@ -323,12 +407,17 @@ function drawRobot(progress) {
 
   ctx.fillStyle = colors.text;
   ctx.font = "12px sans-serif";
-  ctx.fillText("RoMi", -16, 4);
+  ctx.fillText(robot.label || "RoMi", -16, 4);
   ctx.restore();
 
-  const shoulder = { x: pose.x + 28, y: pose.y - 9 };
-  const elbow = { x: lerp(shoulder.x + 42, 694, reach), y: lerp(shoulder.y - 28, 278, reach) };
-  const wrist = { x: lerp(elbow.x + 38, 722, reach), y: lerp(elbow.y - 10, 288, reach) };
+  const [shoulderX, shoulderY] = pair(robot.shoulder_offset_px, [28, -9]);
+  const shoulder = { x: pose.x + shoulderX, y: pose.y + shoulderY };
+  const [homeElbowX, homeElbowY] = pair(arm.home_elbow_offset_px, [42, -28]);
+  const [homeWristX, homeWristY] = pair(arm.home_wrist_offset_px, [80, -38]);
+  const [targetElbowX, targetElbowY] = pair(arm.target_elbow_px, [694, 278]);
+  const [targetWristX, targetWristY] = pair(arm.target_wrist_px, [722, 288]);
+  const elbow = { x: lerp(shoulder.x + homeElbowX, targetElbowX, reach), y: lerp(shoulder.y + homeElbowY, targetElbowY, reach) };
+  const wrist = { x: lerp(shoulder.x + homeWristX, targetWristX, reach), y: lerp(shoulder.y + homeWristY, targetWristY, reach) };
   const tool = holding ? objectPosition(progress) : { x: wrist.x + 18, y: wrist.y };
 
   ctx.strokeStyle = colors.amber;
@@ -356,14 +445,26 @@ function drawRobot(progress) {
 function drawHud(progress) {
   ctx.fillStyle = "rgba(13, 18, 22, 0.82)";
   ctx.strokeStyle = "#2f4554";
-  roundRect(24, 22, 360, 86, 8, true, true);
+  roundRect(24, 22, 408, 92, 8, true, true);
   ctx.fillStyle = colors.text;
   ctx.font = "20px sans-serif";
   ctx.fillText("RoMi 2D sim source", 44, 55);
   ctx.fillStyle = colors.muted;
   ctx.font = "13px sans-serif";
-  ctx.fillText("navigation + manipulation, ROS2-free", 44, 80);
+  ctx.fillText(`${state.scenario?.scenario_id || "scenario"} / ROS2-free`, 44, 80);
   ctx.fillText(`stage: ${currentStage(progress)}`, 44, 100);
+}
+
+function drawLoadError() {
+  ctx.fillStyle = colors.field;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = colors.text;
+  ctx.font = "22px sans-serif";
+  ctx.fillText("Scenario load failed", 42, 72);
+  ctx.fillStyle = colors.muted;
+  ctx.font = "14px sans-serif";
+  ctx.fillText("Start the static server from examples/navigation_manipulation_demo and open /romi_2d_sim/.", 42, 102);
+  ctx.fillText(String(state.error || ""), 42, 132);
 }
 
 function roundRect(x, y, width, height, radius, fill, stroke) {
@@ -379,6 +480,12 @@ function roundRect(x, y, width, height, radius, fill, stroke) {
 }
 
 function render() {
+  if (state.error) {
+    drawLoadError();
+    updateInspector(0);
+    return;
+  }
+  if (!state.ready) return;
   const progress = clamp(state.elapsedSec / state.durationSec);
   drawGrid();
   drawWorkspace(progress);
@@ -389,7 +496,7 @@ function render() {
 }
 
 function updateInspector(progress) {
-  stageValue.textContent = currentStage(progress);
+  stageValue.textContent = state.error ? "scenario_error" : currentStage(progress);
   clockValue.textContent = `${state.elapsedSec.toFixed(2)}s`;
   policyValue.textContent = state.streamCounts["policy.proposed_action"] > 0 ? "proposing" : "waiting";
 
@@ -417,7 +524,9 @@ function updateInspector(progress) {
   graphNodes.policy.classList.toggle("active", state.streamCounts["policy.proposed_action"] > 0);
   graphNodes.report.classList.toggle("active", progress > 0.9);
 
-  const recent = state.events.slice(-6).map((event) => `${event.kind} ${event.stream_id || event.event_id}`);
+  const recent = state.error
+    ? [`error ${state.error}`]
+    : state.events.slice(-6).map((event) => `${event.kind} ${event.stream_id || event.event_id}`);
   eventLog.textContent = recent.join("\n");
 }
 
@@ -426,9 +535,9 @@ function tick(frameMs) {
   const deltaSec = Math.min(0.05, (frameMs - state.lastFrameMs) / 1000);
   state.lastFrameMs = frameMs;
 
-  if (state.running) {
+  if (state.ready && state.running) {
     state.elapsedSec = Math.min(state.durationSec, state.elapsedSec + deltaSec);
-    if (state.sampleIndex === 0 || state.elapsedSec * 12 >= state.sampleIndex) {
+    if (state.sampleIndex === 0 || state.elapsedSec * state.rateHz >= state.sampleIndex) {
       emitEvents(clamp(state.elapsedSec / state.durationSec));
     }
     if (state.elapsedSec >= state.durationSec) {
@@ -458,12 +567,28 @@ function exportJsonl() {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = "romi-2d-sim-events.jsonl";
+  link.download = `${state.scenario?.scenario_id || "romi-2d-sim"}-events.jsonl`;
   link.click();
   URL.revokeObjectURL(url);
 }
 
+async function loadScenario() {
+  const response = await fetch("../scenario.json", { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(`scenario.json HTTP ${response.status}`);
+  }
+  const scenario = await response.json();
+  state.scenario = scenario;
+  state.durationSec = Number(scenario.timing?.duration_sec ?? 16);
+  state.rateHz = Number(scenario.timing?.rate_hz ?? 12);
+  state.diagnosticEvery = Math.max(1, Math.round(state.rateHz * Number(scenario.timing?.diagnostics_period_sec ?? 0.5)));
+  canvas.width = Number(scenario.visual?.canvas_width ?? 960);
+  canvas.height = Number(scenario.visual?.canvas_height ?? 620);
+  state.ready = true;
+}
+
 startButton.addEventListener("click", () => {
+  if (!state.ready) return;
   if (state.elapsedSec >= state.durationSec) reset();
   state.running = true;
 });
@@ -473,5 +598,10 @@ pauseButton.addEventListener("click", () => {
 resetButton.addEventListener("click", reset);
 exportButton.addEventListener("click", exportJsonl);
 
-reset();
+loadScenario()
+  .then(reset)
+  .catch((error) => {
+    state.error = error.message;
+    render();
+  });
 window.requestAnimationFrame(tick);

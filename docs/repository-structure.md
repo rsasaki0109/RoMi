@@ -72,6 +72,7 @@ romi/
     navigation_manipulation_demo/
       README.md
       capture-guide.md
+      scenario.json
       romi_native_sim_source.py
       ros2_demo_sim_publisher.py
       run_smoke_demo.sh
