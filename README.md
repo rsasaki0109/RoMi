@@ -23,12 +23,13 @@ https://github.com/<owner>/<repo>/assets/<asset-id>
 Current smoke demo:
 
 ```text
-ROS2 /goal_pose
+ROS2 camera / depth / joints / odom / TF / goal
   -> RoMi ROS2 bridge JSONL
   -> episode recorder
   -> replay source
   -> mock policy
   -> dataset inspection report
+  -> README animation rendered from RoMi artifacts
 ```
 
 Run it from the repository root inside a sourced ROS2 environment:
@@ -37,7 +38,7 @@ Run it from the repository root inside a sourced ROS2 environment:
 examples/navigation_manipulation_demo/run_smoke_demo.sh
 ```
 
-The script publishes one ROS2 `geometry_msgs/msg/PoseStamped` goal, records a prototype episode, replays it, emits a non-authoritative `policy.proposed_action`, and generates `dataset-report/report.md` for video capture.
+The script runs a small ROS2 navigation + manipulation publisher, records a prototype RoMi episode, replays it, emits non-authoritative `policy.proposed_action` samples, generates `dataset-report/report.md`, and re-renders the README GIF from those artifacts.
 
 ## What RoMi Is
 
