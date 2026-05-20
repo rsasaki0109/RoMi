@@ -3,8 +3,9 @@
 const canvas = document.getElementById("simCanvas");
 const ctx = canvas.getContext("2d");
 const urlParams = new URLSearchParams(window.location.search);
+const captureMode = urlParams.get("capture") === "readme";
 
-if (urlParams.get("capture") === "readme") {
+if (captureMode) {
   document.body.classList.add("capture-mode");
 }
 
@@ -13,6 +14,9 @@ const clockValue = document.getElementById("clockValue");
 const policyValue = document.getElementById("policyValue");
 const streamList = document.getElementById("streamList");
 const eventLog = document.getElementById("eventLog");
+const modeStatus = document.getElementById("modeStatus");
+const modeView = document.getElementById("modeView");
+const modeButtons = Array.from(document.querySelectorAll(".mode-tab"));
 
 const startButton = document.getElementById("startButton");
 const pauseButton = document.getElementById("pauseButton");
@@ -55,6 +59,7 @@ const state = {
   running: false,
   ready: false,
   error: null,
+  mode: "live",
   lastFrameMs: 0,
   elapsedSec: 0,
   durationSec: 0,
@@ -145,6 +150,19 @@ function currentStage(progress) {
     }
   }
   return "report";
+}
+
+function displayMode(progress) {
+  if (!captureMode) return state.mode;
+  if (progress < 0.34) return "live";
+  if (progress < 0.58) return "replay";
+  if (progress < 0.82) return "policy";
+  return "dataset";
+}
+
+function setMode(mode) {
+  state.mode = mode;
+  render();
 }
 
 function objectState(progress) {
@@ -563,6 +581,161 @@ function roundRect(x, y, width, height, radius, fill, stroke) {
   if (stroke) ctx.stroke();
 }
 
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function stageTimeline(progress) {
+  const stages = Array.isArray(scenarioTiming().stages) && scenarioTiming().stages.length
+    ? scenarioTiming().stages
+    : [
+        { name: "init", start: 0, end: 0.08 },
+        { name: "navigate", start: 0.08, end: 0.58 },
+        { name: "reach", start: 0.58, end: 0.72 },
+        { name: "grasp", start: 0.72, end: 0.78 },
+        { name: "place", start: 0.78, end: 0.92 },
+        { name: "report", start: 0.92, end: 1 },
+      ];
+
+  return `<div class="timeline">${stages.map((stage) => {
+    const start = Number(stage.start ?? 0);
+    const end = Number(stage.end ?? 1);
+    const className = progress >= end ? "done" : progress >= start ? "active" : "";
+    return `<span class="timeline-step ${className}">${escapeHtml(stage.name || "stage")}</span>`;
+  }).join("")}</div>`;
+}
+
+function eventTimeSec(event) {
+  const timeNs = Number(event?.event_time_ns ?? event?.time?.event_time_ns ?? 0);
+  return timeNs > 0 ? timeNs / 1_000_000_000 : 0;
+}
+
+function streamFreshness(streamId) {
+  const event = latestEvent(streamId);
+  if (!event) return { status: "missing", label: "missing" };
+  const age = Math.max(0, state.elapsedSec - eventTimeSec(event));
+  return {
+    status: age <= 0.35 ? "fresh" : "stale",
+    label: age < 1 ? `${age.toFixed(2)}s` : `${age.toFixed(1)}s`,
+  };
+}
+
+function renderFreshness(streamIds) {
+  return `<div class="freshness-list">${streamIds.map((streamId) => {
+    const freshness = streamFreshness(streamId);
+    const label = streamId.replace("robot.", "").replace("policy.", "policy.");
+    return `<div class="freshness-row ${freshness.status}"><span>${escapeHtml(label)}</span><strong>${escapeHtml(freshness.label)}</strong></div>`;
+  }).join("")}</div>`;
+}
+
+function renderKeyValues(rows) {
+  return `<div class="key-value-list">${rows.map(([label, value]) => (
+    `<div class="key-value-row"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`
+  )).join("")}</div>`;
+}
+
+function renderFrameMini() {
+  const tf = latestEvent("robot.frames.tf");
+  const frames = Array.isArray(tf?.payload_summary?.frames_sample)
+    ? tf.payload_summary.frames_sample.slice(0, 4)
+    : [
+        { parent_frame_id: "map", child_frame_id: "odom" },
+        { parent_frame_id: "odom", child_frame_id: "base_link" },
+        { parent_frame_id: "base_link", child_frame_id: "camera" },
+        { parent_frame_id: "base_link", child_frame_id: "tool0" },
+      ];
+
+  return `<div class="frame-mini">${frames.map((frame) => (
+    `<div class="frame-edge"><strong>${escapeHtml(frame.parent_frame_id)}</strong><span>to</span><strong>${escapeHtml(frame.child_frame_id)}</strong></div>`
+  )).join("")}</div>`;
+}
+
+function renderPolicyActions() {
+  const policyEvent = latestEvent("policy.proposed_action");
+  const actions = Array.isArray(policyEvent?.payload_summary?.proposed_actions)
+    ? policyEvent.payload_summary.proposed_actions
+    : [
+        { target: "base", action_type: "waiting_for_observation" },
+        { target: "end_effector", action_type: "waiting_for_target" },
+        { target: "gripper", action_type: "waiting_for_grasp" },
+      ];
+
+  return `<div class="policy-list">${actions.map((action) => (
+    `<div class="policy-row"><span>${escapeHtml(action.target)}</span><strong>${escapeHtml(action.action_type)}</strong></div>`
+  )).join("")}</div>`;
+}
+
+function renderDatasetGrid() {
+  const diagnostics = state.events.filter((event) => event.kind === "diagnostic_event").length;
+  const policySamples = state.streamCounts["policy.proposed_action"] || 0;
+  const observationStreams = streams.filter((stream) => stream.startsWith("robot.")).filter((stream) => state.streamCounts[stream] > 0).length;
+  const latest = latestEvent();
+  const latestStream = latest?.stream_id || latest?.event_id || "none";
+
+  return `<div class="dataset-grid">
+    <div class="dataset-cell"><span>samples</span><strong>${state.events.length}</strong></div>
+    <div class="dataset-cell"><span>robot streams</span><strong>${observationStreams}/6</strong></div>
+    <div class="dataset-cell"><span>policy samples</span><strong>${policySamples}</strong></div>
+    <div class="dataset-cell"><span>diagnostics</span><strong>${diagnostics}</strong></div>
+  </div>${renderKeyValues([
+    ["episode", state.scenario?.scenario_id || "scenario"],
+    ["latest", latestStream],
+  ])}`;
+}
+
+function renderModeView(progress) {
+  const mode = displayMode(progress);
+  const statusLabels = {
+    live: "Live Sim",
+    replay: "Replay",
+    policy: "Policy",
+    dataset: "Dataset",
+  };
+
+  modeStatus.textContent = statusLabels[mode] || "Live Sim";
+  for (const button of modeButtons) {
+    const active = button.dataset.mode === mode;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-selected", active ? "true" : "false");
+  }
+
+  if (mode === "live") {
+    modeView.innerHTML = `${stageTimeline(progress)}${renderFreshness([
+      "robot.camera.rgb",
+      "robot.camera.depth",
+      "robot.joints.state",
+      "robot.base.odom",
+    ])}`;
+    return;
+  }
+
+  if (mode === "replay") {
+    modeView.innerHTML = `${renderKeyValues([
+      ["clock domain", "sim_time"],
+      ["buffered events", state.events.length],
+      ["replay shape", progress > 0.42 ? "active" : "priming"],
+    ])}${renderFrameMini()}`;
+    return;
+  }
+
+  if (mode === "policy") {
+    const policyEvent = latestEvent("policy.proposed_action");
+    const latency = Number(policyEvent?.payload_summary?.inference_latency_ms ?? 0);
+    modeView.innerHTML = `${renderPolicyActions()}${renderKeyValues([
+      ["authority", "proposed_only"],
+      ["latency", latency > 0 ? `${latency.toFixed(2)}ms` : "waiting"],
+    ])}`;
+    return;
+  }
+
+  modeView.innerHTML = renderDatasetGrid();
+}
+
 function render() {
   if (state.error) {
     drawLoadError();
@@ -607,6 +780,8 @@ function updateInspector(progress) {
   graphNodes.replay.classList.toggle("active", progress > 0.42);
   graphNodes.policy.classList.toggle("active", state.streamCounts["policy.proposed_action"] > 0);
   graphNodes.report.classList.toggle("active", progress > 0.9);
+
+  renderModeView(progress);
 
   const recent = state.error
     ? [`error ${state.error}`]
@@ -714,6 +889,9 @@ pauseButton.addEventListener("click", () => {
 });
 resetButton.addEventListener("click", reset);
 exportButton.addEventListener("click", exportJsonl);
+for (const button of modeButtons) {
+  button.addEventListener("click", () => setMode(button.dataset.mode));
+}
 
 window.romiCapture = {
   ready: () => Boolean(state.ready && !state.error),

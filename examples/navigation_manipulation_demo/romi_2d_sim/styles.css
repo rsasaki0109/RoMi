@@ -111,6 +111,196 @@ button:hover {
   margin: 0 0 10px;
 }
 
+.panel-heading {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.panel-heading h2 {
+  margin: 0;
+}
+
+.status-pill {
+  background: #21313a;
+  border: 1px solid var(--line-soft);
+  border-radius: 999px;
+  color: var(--green);
+  font-size: 11px;
+  line-height: 1;
+  padding: 5px 8px;
+  white-space: nowrap;
+}
+
+.mode-tabs {
+  background: #101920;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  display: grid;
+  gap: 3px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 10px;
+  padding: 3px;
+}
+
+.mode-tab {
+  background: transparent;
+  border: 0;
+  border-radius: 5px;
+  color: var(--muted);
+  min-height: 30px;
+  padding: 0 6px;
+}
+
+.mode-tab:hover {
+  color: var(--text);
+}
+
+.mode-tab.active {
+  background: #24343e;
+  color: var(--text);
+}
+
+.mode-view {
+  display: grid;
+  gap: 10px;
+  min-height: 138px;
+}
+
+.timeline {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.timeline-step {
+  color: var(--muted);
+  display: grid;
+  font-size: 10px;
+  gap: 5px;
+  min-width: 0;
+  text-align: center;
+}
+
+.timeline-step::before {
+  background: #26323b;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  content: "";
+  display: block;
+  height: 7px;
+}
+
+.timeline-step.done::before {
+  background: var(--green);
+  border-color: var(--green);
+}
+
+.timeline-step.active {
+  color: var(--text);
+}
+
+.timeline-step.active::before {
+  background: var(--cyan);
+  border-color: var(--cyan);
+}
+
+.freshness-list,
+.policy-list,
+.dataset-grid,
+.frame-mini,
+.key-value-list {
+  display: grid;
+  gap: 7px;
+}
+
+.freshness-row,
+.policy-row,
+.dataset-cell,
+.frame-edge,
+.key-value-row {
+  align-items: center;
+  background: var(--surface-2);
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+  display: grid;
+  min-width: 0;
+  padding: 7px 8px;
+}
+
+.freshness-row,
+.policy-row,
+.key-value-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.freshness-row span:first-child,
+.policy-row span:first-child,
+.key-value-row span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.freshness-row span,
+.policy-row span,
+.dataset-cell span,
+.frame-edge span,
+.key-value-row span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.freshness-row strong,
+.policy-row strong,
+.dataset-cell strong,
+.frame-edge strong,
+.key-value-row strong {
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.freshness-row.fresh strong {
+  color: var(--green);
+}
+
+.freshness-row.stale strong {
+  color: var(--amber);
+}
+
+.freshness-row.missing strong {
+  color: var(--rose);
+}
+
+.policy-row strong {
+  color: var(--purple);
+}
+
+.dataset-grid {
+  grid-template-columns: 1fr 1fr;
+}
+
+.dataset-cell {
+  gap: 3px;
+}
+
+.frame-edge {
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+}
+
+.frame-edge strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.frame-edge span {
+  text-align: center;
+}
+
 .metrics {
   display: grid;
   gap: 10px;
@@ -235,12 +425,33 @@ body.capture-mode .topbar {
 }
 
 body.capture-mode .controls,
-body.capture-mode .event-panel {
+body.capture-mode .event-panel,
+body.capture-mode .graph-panel {
   display: none;
 }
 
 body.capture-mode .workbench {
   grid-template-columns: minmax(0, 1fr) 340px;
+}
+
+body.capture-mode .panel {
+  padding: 12px;
+}
+
+body.capture-mode .inspector {
+  gap: 10px;
+}
+
+body.capture-mode .mode-view {
+  min-height: 126px;
+}
+
+body.capture-mode .stream-list {
+  gap: 6px;
+}
+
+body.capture-mode .stream-row {
+  grid-template-columns: 128px 1fr 30px;
 }
 
 body.capture-mode #simCanvas {

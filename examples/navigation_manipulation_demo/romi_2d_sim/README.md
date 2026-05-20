@@ -18,7 +18,7 @@ python3 -m http.server 8000 --bind 127.0.0.1 --directory examples/navigation_man
 xdg-open http://127.0.0.1:8000/romi_2d_sim/
 ```
 
-The simulator shows a semi-humanoid mobile manipulator navigating to a work area, reaching for an object, grasping it, and placing it in a bin. The right-side panels expose stream counts, runtime stage, policy proposal state, and a recent event log.
+The simulator shows a semi-humanoid mobile manipulator navigating to a work area, reaching for an object, grasping it, and placing it in a bin. The right-side RoMi Studio mini inspector exposes live stream freshness, replay graph state, proposed policy actions, dataset summary, stream counts, runtime stage, and recent events.
 
 The browser JSONL export uses the same RoMi stream names as the native smoke source and keeps payload summaries aligned with the smoke pipeline where practical.
 
