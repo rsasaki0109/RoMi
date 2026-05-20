@@ -106,6 +106,8 @@ The first implementation maps native simulation output or robot/simulator topics
 | `policy.proposed_action` | Non-authoritative action proposal |
 | `runtime.diagnostics` | Graph, timing, frame, QoS, and policy diagnostics |
 
+The current smoke path contract is summarized in [../../docs/demo-contract.md](../../docs/demo-contract.md).
+
 ## Mock Policy
 
 The mock policy exists to test the runtime contract.
