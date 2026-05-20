@@ -347,6 +347,46 @@ def check_studio_event_inspector(cdp: Any, session_id: str) -> None:
     require(payload["scroll_width"] <= payload["window_width"], "Studio event inspector introduced horizontal page overflow")
 
 
+def check_studio_dataset_report(cdp: Any, session_id: str) -> None:
+    expression = """
+      (() => {
+        document.body.classList.remove('capture-mode');
+        window.romiCapture.seekToSeconds(15.2);
+        window.romiCapture.setMode('dataset');
+        const report = window.romiCapture.datasetReport();
+        const markdown = window.romiCapture.datasetReportMarkdown();
+        return JSON.stringify({
+          report,
+          markdown,
+          export_button_present: Boolean(document.querySelector('[data-export-dataset-report]')),
+          preview: document.querySelector('.dataset-report-preview')?.textContent || '',
+          scroll_width: document.documentElement.scrollWidth,
+          window_width: window.innerWidth,
+        });
+      })();
+    """
+    result = cdp.send(
+        "Runtime.evaluate",
+        {"expression": expression, "returnByValue": True},
+        session_id=session_id,
+    )
+    payload = json.loads(result["result"]["value"])
+    report = payload["report"]
+    require(report["report_kind"] == "romi.browser_dataset_report", "Studio dataset report kind mismatch")
+    require(report["clock_domain"] == "sim_time", "Studio dataset report clock domain mismatch")
+    require(report["samples"] > 0, "Studio dataset report missing samples")
+    require(report["observation_window"]["available_streams"] >= 6, "Studio dataset report observation window incomplete")
+    require(report["policy"]["authority"] == "proposed_only", "Studio dataset report policy authority mismatch")
+    require(report["policy"]["actuator_authority"] == "none", "Studio dataset report actuator authority mismatch")
+    require(report["stream_counts"]["robot.camera.rgb"] > 0, "Studio dataset report missing RGB count")
+    require(report["stream_counts"]["policy.proposed_action"] > 0, "Studio dataset report missing policy count")
+    require(payload["export_button_present"] is True, "Studio dataset report export button missing")
+    require("RoMi Dataset Report" in payload["markdown"], "Studio dataset report markdown missing title")
+    require("proposed_only" in payload["markdown"], "Studio dataset report markdown missing policy authority")
+    require("robot.camera.rgb" in payload["preview"], "Studio dataset report preview missing stream counts")
+    require(payload["scroll_width"] <= payload["window_width"], "Studio dataset report introduced horizontal page overflow")
+
+
 def check_browser_native_contract(repo_root: Path, chrome_bin: str, contract: dict[str, Any]) -> None:
     helpers = load_capture_helpers(repo_root)
 
@@ -374,6 +414,7 @@ def check_browser_native_contract(repo_root: Path, chrome_bin: str, contract: di
         check_policy_event(snapshots[policy_snapshot][contract["policy"]["stream_id"]], contract)
         check_studio_seek_controls(cdp, session_id)
         check_studio_event_inspector(cdp, session_id)
+        check_studio_dataset_report(cdp, session_id)
         print(
             json.dumps(
                 {

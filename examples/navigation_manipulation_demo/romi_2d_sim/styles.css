@@ -326,6 +326,51 @@ button:hover {
   gap: 3px;
 }
 
+.dataset-report {
+  background: #101920;
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  padding: 8px;
+}
+
+.dataset-actions {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.dataset-actions span {
+  color: var(--muted);
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inline-button {
+  border-radius: 5px;
+  font-size: 12px;
+  min-height: 28px;
+  padding: 0 9px;
+}
+
+.dataset-report-preview {
+  color: #b7c7d0;
+  font-size: 10px;
+  line-height: 1.4;
+  margin: 0;
+  max-height: 132px;
+  min-width: 0;
+  overflow: auto;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
 .frame-edge {
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
 }
@@ -567,6 +612,10 @@ body.capture-mode .inspector {
 
 body.capture-mode .mode-view {
   min-height: 126px;
+}
+
+body.capture-mode .dataset-report-preview {
+  max-height: 74px;
 }
 
 body.capture-mode .stream-list {

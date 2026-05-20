@@ -780,22 +780,135 @@ function renderPolicyActions() {
   )).join("")}</div>`;
 }
 
-function renderDatasetGrid() {
+function datasetStreamCounts() {
+  return Object.fromEntries(streams.map((stream) => [stream, state.streamCounts[stream] || 0]));
+}
+
+function datasetObservationWindow() {
+  return [
+    "robot.camera.rgb",
+    "robot.camera.depth",
+    "robot.joints.state",
+    "robot.base.odom",
+    "robot.frames.tf",
+    "policy.proposed_action",
+  ].map((streamId) => {
+    const event = latestEvent(streamId);
+    const freshness = streamFreshness(streamId);
+    return {
+      stream_id: streamId,
+      present: Boolean(event),
+      event_time_sec: event ? Number(eventTimeSec(event).toFixed(3)) : null,
+      frame_id: event?.frame_id || null,
+      status: freshness.status,
+    };
+  });
+}
+
+function datasetReport() {
   const diagnostics = state.events.filter((event) => event.kind === "diagnostic_event").length;
-  const policySamples = state.streamCounts["policy.proposed_action"] || 0;
-  const observationStreams = streams.filter((stream) => stream.startsWith("robot.")).filter((stream) => state.streamCounts[stream] > 0).length;
+  const streamCounts = datasetStreamCounts();
+  const observationWindow = datasetObservationWindow();
+  const availableWindowStreams = observationWindow.filter((stream) => stream.present).length;
+  return {
+    schema_version: "0.1.0",
+    report_kind: "romi.browser_dataset_report",
+    episode_id: state.scenario?.scenario_id || "romi_2d_sim_episode",
+    scenario_id: state.scenario?.scenario_id || null,
+    source_system: "romi_2d_sim",
+    clock_domain: "sim_time",
+    generated_at_sim_time_sec: Number(state.elapsedSec.toFixed(3)),
+    stage: currentStage(clamp(state.elapsedSec / state.durationSec)),
+    duration_sec: Number(state.durationSec.toFixed(3)),
+    samples: state.events.length,
+    stream_counts: streamCounts,
+    observation_window: {
+      available_streams: availableWindowStreams,
+      required_streams: observationWindow.length,
+      streams: observationWindow,
+    },
+    diagnostics: {
+      events: diagnostics,
+      latest: latestEvent("runtime.diagnostics")?.event_id || null,
+    },
+    policy: {
+      stream_id: "policy.proposed_action",
+      samples: streamCounts["policy.proposed_action"] || 0,
+      authority: "proposed_only",
+      actuator_authority: "none",
+    },
+    replay: {
+      seekable: true,
+      buffered_events: state.events.length,
+      export_format: "jsonl_prototype",
+    },
+  };
+}
+
+function datasetReportMarkdown() {
+  const report = datasetReport();
+  const streamRows = Object.entries(report.stream_counts)
+    .map(([stream, count]) => `| ${stream} | ${count} |`)
+    .join("\n");
+  const windowRows = report.observation_window.streams
+    .map((stream) => `| ${stream.stream_id} | ${stream.present ? "yes" : "no"} | ${stream.status} | ${stream.frame_id || "n/a"} |`)
+    .join("\n");
+  return [
+    `# RoMi Dataset Report: ${report.episode_id}`,
+    "",
+    `- source: ${report.source_system}`,
+    `- clock: ${report.clock_domain} @ ${report.generated_at_sim_time_sec}s`,
+    `- stage: ${report.stage}`,
+    `- samples: ${report.samples}`,
+    `- policy authority: ${report.policy.authority}`,
+    `- actuator authority: ${report.policy.actuator_authority}`,
+    "",
+    "## Stream Counts",
+    "",
+    "| stream | samples |",
+    "| --- | ---: |",
+    streamRows,
+    "",
+    "## Observation Window",
+    "",
+    "| stream | present | freshness | frame |",
+    "| --- | --- | --- | --- |",
+    windowRows,
+  ].join("\n");
+}
+
+function exportDatasetReport() {
+  const blob = new Blob([datasetReportMarkdown() + "\n"], { type: "text/markdown" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${state.scenario?.scenario_id || "romi-2d-sim"}-dataset-report.md`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function renderDatasetGrid() {
+  const report = datasetReport();
   const latest = latestEvent();
   const latestStream = latest?.stream_id || latest?.event_id || "none";
+  const preview = datasetReportMarkdown().split("\n").slice(0, 18).join("\n");
 
   return `<div class="dataset-grid">
-    <div class="dataset-cell"><span>samples</span><strong>${state.events.length}</strong></div>
-    <div class="dataset-cell"><span>robot streams</span><strong>${observationStreams}/6</strong></div>
-    <div class="dataset-cell"><span>policy samples</span><strong>${policySamples}</strong></div>
-    <div class="dataset-cell"><span>diagnostics</span><strong>${diagnostics}</strong></div>
+    <div class="dataset-cell"><span>samples</span><strong>${report.samples}</strong></div>
+    <div class="dataset-cell"><span>window streams</span><strong>${report.observation_window.available_streams}/${report.observation_window.required_streams}</strong></div>
+    <div class="dataset-cell"><span>policy samples</span><strong>${report.policy.samples}</strong></div>
+    <div class="dataset-cell"><span>diagnostics</span><strong>${report.diagnostics.events}</strong></div>
   </div>${renderKeyValues([
-    ["episode", state.scenario?.scenario_id || "scenario"],
+    ["episode", report.episode_id],
     ["latest", latestStream],
-  ])}`;
+    ["authority", report.policy.authority],
+  ])}<div class="dataset-report">
+    <div class="dataset-actions">
+      <span>dataset-report.md</span>
+      <button class="inline-button" type="button" data-export-dataset-report>Export</button>
+    </div>
+    <pre class="dataset-report-preview">${escapeHtml(preview)}</pre>
+  </div>`;
 }
 
 function renderModeView(progress) {
@@ -1023,6 +1136,11 @@ seekControl.addEventListener("input", () => {
   seekToSeconds(progress * state.durationSec, "replay");
 });
 modeView.addEventListener("click", (event) => {
+  const exportTarget = event.target.closest("[data-export-dataset-report]");
+  if (exportTarget) {
+    exportDatasetReport();
+    return;
+  }
   const target = event.target.closest("[data-seek-progress]");
   if (!target) return;
   const progress = clamp(Number(target.dataset.seekProgress));
@@ -1041,6 +1159,8 @@ window.romiCapture = {
   seek: seekCapture,
   seekToSeconds,
   setMode,
+  datasetReport,
+  datasetReportMarkdown,
   selectLatestStreamEvent,
   latestEvent,
 };
