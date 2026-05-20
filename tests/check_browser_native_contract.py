@@ -104,7 +104,7 @@ def start_browser(repo_root: Path, chrome_bin: str, helpers: Any) -> tuple[Any, 
         stderr=subprocess.DEVNULL,
     )
 
-    chrome_profile = tempfile.TemporaryDirectory(prefix="romi-contract-chrome-")
+    chrome_profile = tempfile.TemporaryDirectory(prefix="romi-contract-chrome-", ignore_cleanup_errors=True)
     chrome = subprocess.Popen(
         [
             chrome_bin,
