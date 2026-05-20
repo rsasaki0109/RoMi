@@ -75,7 +75,7 @@ romi/
       romi_native_sim_source.py
       ros2_demo_sim_publisher.py
       run_smoke_demo.sh
-      turtlesim_demo/
+      romi_2d_sim/
         index.html
         styles.css
         sim.js

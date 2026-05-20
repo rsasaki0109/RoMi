@@ -1,4 +1,4 @@
-# Turtlesim-Style Navigation + Manipulation Demo
+# RoMi 2D Navigation + Manipulation Demo
 
 This is a browser-based visual simulator for the RoMi navigation + manipulation contract demo.
 
@@ -13,7 +13,7 @@ It is intentionally lightweight:
 Open the demo locally:
 
 ```bash
-xdg-open examples/navigation_manipulation_demo/turtlesim_demo/index.html
+xdg-open examples/navigation_manipulation_demo/romi_2d_sim/index.html
 ```
 
 The simulator shows a small mobile manipulator navigating to a work area, reaching for an object, grasping it, and placing it in a bin. The right-side panels expose stream counts, runtime stage, policy proposal state, and a recent event log.

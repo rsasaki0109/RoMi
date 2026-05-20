@@ -2,7 +2,7 @@
 
 This guide describes how to capture the first README-oriented navigation + manipulation demo using the current prototype pipeline.
 
-The current visual demo is a turtlesim-style browser simulator. It shows a ROS2-free mobile manipulation scene while exposing RoMi-shaped stream counts, runtime stages, policy proposals, and recent events. The smoke pipeline remains available for episode recording, replay, mock policy output, and dataset inspection.
+The current visual demo is a RoMi 2D browser simulator. It shows a ROS2-free mobile manipulation scene while exposing RoMi-shaped stream counts, runtime stages, policy proposals, and recent events. The smoke pipeline remains available for episode recording, replay, mock policy output, and dataset inspection.
 
 ## Capture Goal
 
@@ -65,7 +65,7 @@ Important output files:
 Open the visual demo locally:
 
 ```bash
-xdg-open examples/navigation_manipulation_demo/turtlesim_demo/index.html
+xdg-open examples/navigation_manipulation_demo/romi_2d_sim/index.html
 ```
 
 The simulator runs in the browser and does not need ROS2, a web server, or a build step. Use the `Export JSONL` control to export RoMi-shaped stream events from the browser session.
@@ -74,7 +74,7 @@ The simulator runs in the browser and does not need ROS2, a web server, or a bui
 
 Use three terminal panes or windows:
 
-1. Open `turtlesim_demo/index.html`.
+1. Open `romi_2d_sim/index.html`.
 2. Run the smoke script in a terminal.
 3. Open `dataset-report/report.md` or `episode/streams.json`.
 

@@ -123,4 +123,4 @@ PY
 
 echo "[romi demo] done"
 echo "[romi demo] report: ${REPORT_DIR}/report.md"
-echo "[romi demo] visual simulator: ${SCRIPT_DIR}/turtlesim_demo/index.html"
+echo "[romi demo] visual simulator: ${SCRIPT_DIR}/romi_2d_sim/index.html"
