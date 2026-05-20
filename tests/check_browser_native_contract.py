@@ -264,6 +264,48 @@ def check_policy_event(browser_event: dict[str, Any], contract: dict[str, Any]) 
     require(all(action.get("authority") == policy_contract["authority"] for action in actions), "browser policy action authority mismatch")
 
 
+def check_studio_seek_controls(cdp: Any, session_id: str) -> None:
+    expression = """
+      (() => {
+        window.romiCapture.seekToSeconds(2.0);
+        const placeButton = document.querySelector('[data-seek-progress="0.8100"]');
+        if (!placeButton) {
+          return JSON.stringify({button_present: false});
+        }
+        placeButton.click();
+        const afterButton = {
+          stage: document.getElementById('stageValue').textContent,
+          seek: document.getElementById('seekValue').textContent,
+          status: document.getElementById('modeStatus').textContent,
+        };
+        const seek = document.getElementById('seekControl');
+        seek.value = '930';
+        seek.dispatchEvent(new Event('input', {bubbles: true}));
+        return JSON.stringify({
+          button_present: true,
+          after_button: afterButton,
+          after_slider: {
+            stage: document.getElementById('stageValue').textContent,
+            seek: document.getElementById('seekValue').textContent,
+            range: Number(seek.value),
+            status: document.getElementById('modeStatus').textContent,
+          },
+        });
+      })();
+    """
+    result = cdp.send(
+        "Runtime.evaluate",
+        {"expression": expression, "returnByValue": True},
+        session_id=session_id,
+    )
+    payload = json.loads(result["result"]["value"])
+    require(payload.get("button_present") is True, "Studio timeline seek button missing")
+    require(payload["after_button"]["stage"] == "place", "Studio timeline button did not seek to place stage")
+    require(payload["after_button"]["seek"].startswith("12."), "Studio timeline button did not update seek readout")
+    require(payload["after_slider"]["stage"] == "report", "Studio slider did not seek to report stage")
+    require(payload["after_slider"]["range"] == 930, "Studio slider range did not preserve requested value")
+
+
 def check_browser_native_contract(repo_root: Path, chrome_bin: str, contract: dict[str, Any]) -> None:
     helpers = load_capture_helpers(repo_root)
 
@@ -289,6 +331,7 @@ def check_browser_native_contract(repo_root: Path, chrome_bin: str, contract: di
 
         policy_snapshot = max(snapshots)
         check_policy_event(snapshots[policy_snapshot][contract["policy"]["stream_id"]], contract)
+        check_studio_seek_controls(cdp, session_id)
         print(
             json.dumps(
                 {

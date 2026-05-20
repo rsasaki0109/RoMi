@@ -17,6 +17,8 @@ const eventLog = document.getElementById("eventLog");
 const modeStatus = document.getElementById("modeStatus");
 const modeView = document.getElementById("modeView");
 const modeButtons = Array.from(document.querySelectorAll(".mode-tab"));
+const seekControl = document.getElementById("seekControl");
+const seekValue = document.getElementById("seekValue");
 
 const startButton = document.getElementById("startButton");
 const pauseButton = document.getElementById("pauseButton");
@@ -163,6 +165,12 @@ function displayMode(progress) {
 function setMode(mode) {
   state.mode = mode;
   render();
+}
+
+function seekToSeconds(elapsedSec, mode = "replay") {
+  if (!state.ready || state.error) return;
+  if (!captureMode && mode) state.mode = mode;
+  seekCapture(elapsedSec);
 }
 
 function objectState(progress) {
@@ -606,7 +614,9 @@ function stageTimeline(progress) {
     const start = Number(stage.start ?? 0);
     const end = Number(stage.end ?? 1);
     const className = progress >= end ? "done" : progress >= start ? "active" : "";
-    return `<span class="timeline-step ${className}">${escapeHtml(stage.name || "stage")}</span>`;
+    const seekProgress = clamp(start + 0.01, 0, 1);
+    const label = escapeHtml(stage.name || "stage");
+    return `<button class="timeline-step ${className}" type="button" data-seek-progress="${seekProgress.toFixed(4)}" aria-label="Seek to ${label}">${label}</button>`;
   }).join("")}</div>`;
 }
 
@@ -736,6 +746,12 @@ function renderModeView(progress) {
   modeView.innerHTML = renderDatasetGrid();
 }
 
+function updateSeekUi(progress) {
+  if (!seekControl || !seekValue) return;
+  seekControl.value = String(Math.round(clamp(progress) * 1000));
+  seekValue.textContent = `${state.elapsedSec.toFixed(2)}s`;
+}
+
 function render() {
   if (state.error) {
     drawLoadError();
@@ -782,6 +798,7 @@ function updateInspector(progress) {
   graphNodes.report.classList.toggle("active", progress > 0.9);
 
   renderModeView(progress);
+  updateSeekUi(progress);
 
   const recent = state.error
     ? [`error ${state.error}`]
@@ -892,12 +909,24 @@ exportButton.addEventListener("click", exportJsonl);
 for (const button of modeButtons) {
   button.addEventListener("click", () => setMode(button.dataset.mode));
 }
+seekControl.addEventListener("input", () => {
+  const progress = clamp(Number(seekControl.value) / 1000);
+  seekToSeconds(progress * state.durationSec, "replay");
+});
+modeView.addEventListener("click", (event) => {
+  const target = event.target.closest("[data-seek-progress]");
+  if (!target) return;
+  const progress = clamp(Number(target.dataset.seekProgress));
+  seekToSeconds(progress * state.durationSec, "replay");
+});
 
 window.romiCapture = {
   ready: () => Boolean(state.ready && !state.error),
   error: () => state.error,
   duration: () => state.durationSec,
   seek: seekCapture,
+  seekToSeconds,
+  setMode,
   latestEvent,
 };
 

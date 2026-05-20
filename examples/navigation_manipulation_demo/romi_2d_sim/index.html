@@ -38,6 +38,13 @@
                 <button class="mode-tab" id="modeDataset" type="button" data-mode="dataset" role="tab" aria-selected="false">Dataset</button>
               </div>
               <div id="modeView" class="mode-view" aria-live="polite"></div>
+              <div class="seek-panel">
+                <div class="seek-heading">
+                  <span>Replay seek</span>
+                  <strong id="seekValue">0.00s</strong>
+                </div>
+                <input id="seekControl" type="range" min="0" max="1000" value="0" step="1" aria-label="Replay seek">
+              </div>
             </section>
 
             <section class="panel runtime-panel">
