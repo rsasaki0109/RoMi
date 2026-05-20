@@ -116,6 +116,7 @@ This is a prototype contract demo, not a production robot runtime.
 
 ## Docs
 
+- [Project plan](PLAN.md)
 - [Vision](docs/vision.md)
 - [Requirements](docs/requirements.md)
 - [Architecture](docs/architecture.md)
