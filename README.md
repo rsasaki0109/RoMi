@@ -1,5 +1,7 @@
 # RoMi
 
+[![CI](https://github.com/rsasaki0109/RoMi/actions/workflows/ci.yml/badge.svg)](https://github.com/rsasaki0109/RoMi/actions/workflows/ci.yml)
+
 **Physical AI-friendly robotics middleware for replayable, inspectable, simulation-native robot runtimes.**
 
 RoMi stands for **Robotics Middleware**. It is an early pre-MVP project exploring a bridge-first contract layer between live robots, simulators, recorded episodes, datasets, ML policies, and deployment runtimes.
