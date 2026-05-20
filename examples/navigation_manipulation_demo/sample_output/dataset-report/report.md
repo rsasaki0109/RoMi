@@ -56,6 +56,14 @@ It is a static reference artifact for README review. Fresh local runs write igno
 | 7999999968 | 3 | proposed_only | 0.004 |
 | 8999999964 | 3 | proposed_only | 0.004 |
 
+## Policy Compare Artifact
+
+RoMi Studio can replay the episode state, compare the baseline mock policy against a guarded counterfactual policy, and export review artifacts:
+
+- Markdown: [`../policy_compare.md`](../policy_compare.md)
+- JSON: [`../policy_compare.json`](../policy_compare.json)
+- Safety boundary: `proposed_only`, actuator authority `none`, command stream `not_emitted`
+
 ## Observation Window
 
 - Target time ns: `0`

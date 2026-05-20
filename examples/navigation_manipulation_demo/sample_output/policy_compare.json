@@ -1,0 +1,139 @@
+{
+  "schema_version": "0.1.0",
+  "report_kind": "romi.counterfactual_policy_compare",
+  "replay_source": "romi_2d_nav_manip_demo",
+  "stage": "grasp",
+  "clock_domain": "sim_time",
+  "evaluation_time_sec": 11.8,
+  "observation_window": {
+    "fresh_inputs": 5,
+    "required_inputs": 6,
+    "streams": [
+      {
+        "stream_id": "robot.camera.rgb",
+        "status": "fresh",
+        "age_ms": 0,
+        "frame_id": "camera_color_optical_frame",
+        "semantic_type": "rgb_image",
+        "sample_index": 142
+      },
+      {
+        "stream_id": "robot.camera.depth",
+        "status": "fresh",
+        "age_ms": 0,
+        "frame_id": "camera_depth_optical_frame",
+        "semantic_type": "depth_image",
+        "sample_index": 142
+      },
+      {
+        "stream_id": "robot.joints.state",
+        "status": "fresh",
+        "age_ms": 0,
+        "frame_id": "base_link",
+        "semantic_type": "joint_state",
+        "sample_index": 142
+      },
+      {
+        "stream_id": "robot.base.odom",
+        "status": "fresh",
+        "age_ms": 0,
+        "frame_id": "odom",
+        "semantic_type": "odometry",
+        "sample_index": 142
+      },
+      {
+        "stream_id": "robot.frames.tf",
+        "status": "fresh",
+        "age_ms": 0,
+        "frame_id": "map->odom",
+        "semantic_type": "transform_tree",
+        "sample_index": 142
+      },
+      {
+        "stream_id": "task.goal",
+        "status": "stale",
+        "age_ms": 750,
+        "frame_id": "map",
+        "semantic_type": "task_goal",
+        "sample_index": 12
+      }
+    ]
+  },
+  "policies": [
+    {
+      "policy_id": "mock_policy_v1",
+      "role": "baseline",
+      "latency_ms": 0.9,
+      "authority": "proposed_only",
+      "actuator_authority": "none",
+      "command_stream_emitted": false,
+      "actions": [
+        {
+          "target": "base",
+          "action_type": "hold_position",
+          "authority": "proposed_only"
+        },
+        {
+          "target": "end_effector",
+          "action_type": "carry_object",
+          "authority": "proposed_only"
+        },
+        {
+          "target": "gripper",
+          "action_type": "hold_closed",
+          "authority": "proposed_only"
+        }
+      ]
+    },
+    {
+      "policy_id": "mock_policy_v2_guarded",
+      "role": "counterfactual",
+      "latency_ms": 1.85,
+      "authority": "proposed_only",
+      "actuator_authority": "none",
+      "command_stream_emitted": false,
+      "actions": [
+        {
+          "target": "base",
+          "action_type": "hold_position",
+          "authority": "proposed_only"
+        },
+        {
+          "target": "end_effector",
+          "action_type": "hold_until_inputs_fresh",
+          "authority": "proposed_only"
+        },
+        {
+          "target": "gripper",
+          "action_type": "hold_last_safe",
+          "authority": "proposed_only"
+        }
+      ]
+    }
+  ],
+  "diffs": [
+    {
+      "target": "base",
+      "baseline": "hold_position",
+      "counterfactual": "hold_position",
+      "changed": false
+    },
+    {
+      "target": "end_effector",
+      "baseline": "carry_object",
+      "counterfactual": "hold_until_inputs_fresh",
+      "changed": true
+    },
+    {
+      "target": "gripper",
+      "baseline": "hold_closed",
+      "counterfactual": "hold_last_safe",
+      "changed": true
+    }
+  ],
+  "safety_boundary": {
+    "actuator_authority": "none",
+    "promotion_required": "external_supervisor",
+    "command_stream_emitted": false
+  }
+}
