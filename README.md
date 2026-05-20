@@ -4,6 +4,10 @@
 
 RoMi stands for **Robotics Middleware**. It is an early pre-MVP project exploring a bridge-first contract layer between live robots, simulators, recorded episodes, datasets, ML policies, and deployment runtimes.
 
+<p align="center">
+  <img src="docs/assets/romi-h-mascot.png" alt="RoMi-H semi-humanoid mobile manipulator mascot concept" width="420">
+</p>
+
 ## Demo
 
 Current visual target: **RoMi 2D semi-humanoid navigation + manipulation simulator**.
