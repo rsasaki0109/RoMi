@@ -16,6 +16,7 @@ Current static artifacts:
 - `ros2-qos-diagnostics.example.json`: planned QoS diagnostics shape
 - `run_smoke_demo.sh`: one-shot smoke run for bridge, record, replay, policy, and dataset report
 - `capture-guide.md`: README video capture guide
+- `render_sim_video.py`: renders the animated README simulation GIF and local MP4 artifact
 
 ## Demo Goal
 
@@ -112,6 +113,19 @@ examples/navigation_manipulation_demo/run_smoke_demo.sh
 ```
 
 The script publishes one `/goal_pose` message, runs bridge, episode recording, replay, mock policy, and dataset inspection, then prints the generated `report.md` path. See [capture-guide.md](capture-guide.md) for video capture steps.
+
+## Render README Animation
+
+Generate the README animation and local MP4 artifact:
+
+```bash
+python3 examples/navigation_manipulation_demo/render_sim_video.py
+```
+
+Outputs:
+
+- `docs/assets/romi-nav-manip-demo.gif`
+- `examples/navigation_manipulation_demo/artifacts/simulation/romi-nav-manip-demo.mp4`
 
 ## Episode Recording Prototype
 
