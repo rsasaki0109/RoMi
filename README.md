@@ -4,21 +4,17 @@
 
 RoMi stands for **Robotics Middleware**. It is an early pre-MVP project exploring a bridge-first contract layer between live robots, simulators, recorded episodes, datasets, ML policies, and deployment runtimes.
 
-<p align="center">
-  <a href="examples/navigation_manipulation_demo/capture-guide.md">
-    <img src="docs/assets/romi-nav-manip-demo.gif" alt="Animated RoMi navigation and manipulation simulation demo" width="900">
-  </a>
-</p>
+## Demo
 
-## Demo Video
+Current visual target: **turtlesim-style navigation + manipulation simulator**.
 
-README video target: **navigation + manipulation runtime contract demo**.
+Open the ROS2-free browser demo locally:
 
-The video slot is intentionally first. After capture, upload the video to GitHub and paste the asset URL here:
-
-```text
-https://github.com/<owner>/<repo>/assets/<asset-id>
+```bash
+xdg-open examples/navigation_manipulation_demo/turtlesim_demo/index.html
 ```
+
+The visual simulator shows a small mobile manipulator navigating to a work area, reaching for an object, placing it in a bin, and exposing RoMi-shaped stream counts, runtime stages, policy proposals, and event logs.
 
 Current smoke demo:
 
@@ -28,7 +24,6 @@ RoMi-native simulation: camera / depth / joints / odom / TF / goal
   -> replay source
   -> mock policy
   -> dataset inspection report
-  -> README animation rendered from RoMi artifacts
 ```
 
 Optional ROS2 interop mode:
@@ -48,7 +43,7 @@ Run the default ROS2-free demo from the repository root:
 examples/navigation_manipulation_demo/run_smoke_demo.sh
 ```
 
-The script generates a RoMi-native navigation + manipulation simulation, records a prototype episode, replays it, emits non-authoritative `policy.proposed_action` samples, generates `dataset-report/report.md`, and re-renders the README GIF from those artifacts.
+The script generates a RoMi-native navigation + manipulation simulation, records a prototype episode, replays it, emits non-authoritative `policy.proposed_action` samples, and generates `dataset-report/report.md`.
 
 To exercise the ROS2 bridge instead:
 

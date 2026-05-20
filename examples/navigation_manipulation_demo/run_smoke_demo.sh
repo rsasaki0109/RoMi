@@ -108,12 +108,6 @@ python3 "${REPO_ROOT}/tools/dataset_inspector/romi_inspect_dataset.py" \
   --policy-events "${POLICY_EVENTS}" \
   --output-dir "${REPORT_DIR}"
 
-echo "[romi demo] rendering README animation from RoMi artifacts"
-python3 "${SCRIPT_DIR}/render_sim_video.py" \
-  --run-dir "${RUN_DIR}" \
-  --gif "${REPO_ROOT}/docs/assets/romi-nav-manip-demo.gif" \
-  --mp4 "${RUN_DIR}/romi-nav-manip-demo.mp4"
-
 python3 - "${REPORT_DIR}/report.json" <<'PY'
 import json
 import sys
@@ -129,3 +123,4 @@ PY
 
 echo "[romi demo] done"
 echo "[romi demo] report: ${REPORT_DIR}/report.md"
+echo "[romi demo] visual simulator: ${SCRIPT_DIR}/turtlesim_demo/index.html"
