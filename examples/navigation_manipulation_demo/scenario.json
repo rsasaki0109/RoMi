@@ -1,7 +1,7 @@
 {
   "schema_version": "0.1.0",
   "scenario_id": "romi_2d_nav_manip_demo",
-  "name": "RoMi 2D navigation and manipulation demo",
+  "name": "RoMi 2D semi-humanoid navigation and manipulation demo",
   "timing": {
     "duration_sec": 16.0,
     "rate_hz": 12.0,
@@ -59,7 +59,8 @@
     "scale_px_per_m": 300.0
   },
   "robot": {
-    "label": "RoMi",
+    "label": "RoMi-H",
+    "morphology": "semi_humanoid_mobile_manipulator",
     "start_px": [
       140,
       392
@@ -72,12 +73,21 @@
     "yaw_start_rad": -0.05,
     "yaw_goal_rad": -0.65,
     "base_size_px": [
-      68,
-      46
+      76,
+      42
     ],
+    "torso_size_px": [
+      42,
+      58
+    ],
+    "head_radius_px": 17,
     "shoulder_offset_px": [
       28,
-      -9
+      -62
+    ],
+    "left_shoulder_offset_px": [
+      -12,
+      -60
     ]
   },
   "arm": {
@@ -100,6 +110,10 @@
     "tool_carry_offset_px": [
       72,
       -34
+    ],
+    "left_hand_home_offset_px": [
+      -52,
+      -36
     ]
   },
   "workspace": {
