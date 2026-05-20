@@ -20,4 +20,6 @@ xdg-open http://127.0.0.1:8000/romi_2d_sim/
 
 The simulator shows a semi-humanoid mobile manipulator navigating to a work area, reaching for an object, grasping it, and placing it in a bin. The right-side panels expose stream counts, runtime stage, policy proposal state, and a recent event log.
 
+The browser JSONL export uses the same RoMi stream names as the native smoke source and keeps payload summaries aligned with the smoke pipeline where practical.
+
 This is not a physics simulator. It is a visual contract demo for RoMi stream, replay, observability, and policy-runtime semantics.

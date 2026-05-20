@@ -110,6 +110,14 @@ def file_size(path: Path) -> str:
     return f"{path.stat().st_size} B"
 
 
+def display_path(path: Path, root: Path) -> str:
+    resolved = path.resolve()
+    try:
+        return str(resolved.relative_to(root))
+    except ValueError:
+        return str(resolved)
+
+
 def main() -> int:
     args = parse_args()
     width, height = [int(part) for part in args.viewport.lower().split("x", maxsplit=1)]
@@ -251,9 +259,9 @@ def main() -> int:
         )
 
         print(f"captured {frame_count} frames from {url}")
-        print(f"mp4    {args.mp4.relative_to(repo_root)} {file_size(args.mp4)}")
-        print(f"webp   {args.webp.relative_to(repo_root)} {file_size(args.webp)}")
-        print(f"poster {args.poster.relative_to(repo_root)} {file_size(args.poster)}")
+        print(f"mp4    {display_path(args.mp4, repo_root)} {file_size(args.mp4)}")
+        print(f"webp   {display_path(args.webp, repo_root)} {file_size(args.webp)}")
+        print(f"poster {display_path(args.poster, repo_root)} {file_size(args.poster)}")
         return 0
     finally:
         if cdp is not None:

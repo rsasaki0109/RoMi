@@ -298,6 +298,7 @@ def camera_info_summary(scenario: dict[str, Any]) -> dict[str, Any]:
 
 
 def joint_summary(scenario: dict[str, Any], progress: float) -> dict[str, Any]:
+    _, _, yaw = robot_pose_px(scenario, progress)
     names = [
         "waist_yaw",
         "torso_lift",
@@ -310,10 +311,9 @@ def joint_summary(scenario: dict[str, Any], progress: float) -> dict[str, Any]:
     reach = arm_reach(scenario, progress)
     holding = object_state(scenario, progress) == "held"
     positions = [
-        -0.08 * reach,
-        0.18 * reach,
+        yaw,
+        0.08 + 0.02 * math.sin(progress * math.pi),
         -0.22 * reach,
-        -0.52 * reach,
         0.82 * reach,
         -0.34 * reach,
         0.0 if holding else 0.04,
