@@ -1,0 +1,159 @@
+{
+  "schema_version": "0.1.0",
+  "contract_id": "romi.navigation_manipulation_demo.contract",
+  "scenario_id": "romi_2d_nav_manip_demo",
+  "robot": {
+    "label": "RoMi-H",
+    "morphology": "semi_humanoid_mobile_manipulator",
+    "joint_state": {
+      "stream_id": "robot.joints.state",
+      "joint_count": 7,
+      "joint_names": [
+        "waist_yaw",
+        "torso_lift",
+        "right_shoulder_pitch",
+        "right_elbow",
+        "right_wrist",
+        "gripper_left",
+        "gripper_right"
+      ],
+      "position_count": 7,
+      "velocity_count": 7,
+      "effort_count": 7
+    }
+  },
+  "required_streams": [
+    {
+      "stream_id": "robot.camera.rgb",
+      "semantic_type": "rgb_image",
+      "frame_id": "camera_color_optical_frame",
+      "source_message_type": "romi.robotics.ImageSummary",
+      "payload_invariants": {
+        "encoding": "rgb8",
+        "channels": 3,
+        "required_synthetic_scene_fields": [
+          "target_visible",
+          "object_state"
+        ]
+      }
+    },
+    {
+      "stream_id": "robot.camera.depth",
+      "semantic_type": "depth_image",
+      "frame_id": "camera_depth_optical_frame",
+      "source_message_type": "romi.robotics.ImageSummary",
+      "payload_invariants": {
+        "encoding": "16UC1",
+        "channels": 2,
+        "required_synthetic_scene_fields": [
+          "target_depth_mm",
+          "object_state"
+        ]
+      }
+    },
+    {
+      "stream_id": "robot.camera.info",
+      "semantic_type": "camera_info",
+      "frame_id": "camera_color_optical_frame",
+      "source_message_type": "romi.robotics.CameraInfoSummary",
+      "payload_invariants": {
+        "distortion_model": "plumb_bob",
+        "d_len": 0,
+        "k_len": 9,
+        "p_len": 12
+      }
+    },
+    {
+      "stream_id": "robot.joints.state",
+      "semantic_type": "joint_state",
+      "frame_id": "base_link",
+      "source_message_type": "romi.robotics.JointStateSummary"
+    },
+    {
+      "stream_id": "robot.base.odom",
+      "semantic_type": "odometry",
+      "frame_id": "odom",
+      "source_message_type": "romi.robotics.OdometrySummary",
+      "payload_invariants": {
+        "child_frame_id": "base_link"
+      }
+    },
+    {
+      "stream_id": "robot.frames.tf",
+      "semantic_type": "transform_tree",
+      "frame_id": "map->odom",
+      "source_message_type": "romi.robotics.TransformTreeSummary",
+      "payload_invariants": {
+        "transform_count": 6,
+        "required_fields": [
+          "synthetic_base_translation",
+          "synthetic_object_position"
+        ],
+        "frame_pairs": [
+          [
+            "map",
+            "odom"
+          ],
+          [
+            "odom",
+            "base_link"
+          ],
+          [
+            "base_link",
+            "camera_color_optical_frame"
+          ],
+          [
+            "base_link",
+            "camera_depth_optical_frame"
+          ],
+          [
+            "base_link",
+            "arm_base_link"
+          ],
+          [
+            "arm_base_link",
+            "tool0"
+          ]
+        ]
+      }
+    },
+    {
+      "stream_id": "task.goal",
+      "semantic_type": "task_goal",
+      "frame_id": "map",
+      "source_message_type": "romi.robotics.PoseGoalSummary",
+      "payload_invariants": {
+        "target_object": "orange_cube"
+      }
+    }
+  ],
+  "source_invariants": {
+    "clock_domain": "sim_time",
+    "observation_authority": "observation_only"
+  },
+  "replay_invariants": {
+    "source_system": "replay"
+  },
+  "policy": {
+    "stream_id": "policy.proposed_action",
+    "semantic_type": "command",
+    "authority": "proposed_only",
+    "proposed_action_count": 3
+  },
+  "dataset_report": {
+    "required_sections": [
+      "episode",
+      "streams",
+      "diagnostics",
+      "policy",
+      "observation_window"
+    ],
+    "observation_window_status": "ok"
+  },
+  "browser_native_compare": {
+    "snapshot_times_sec": [
+      0.0,
+      11.5
+    ]
+  }
+}
