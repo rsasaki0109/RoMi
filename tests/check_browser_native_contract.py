@@ -390,11 +390,14 @@ def check_studio_dataset_report(cdp: Any, session_id: str) -> None:
     require(report["observation_window"]["available_streams"] >= 6, "Studio dataset report observation window incomplete")
     require(report["policy"]["authority"] == "proposed_only", "Studio dataset report policy authority mismatch")
     require(report["policy"]["actuator_authority"] == "none", "Studio dataset report actuator authority mismatch")
+    require(report["policy_compare"]["report_kind"] == "romi.counterfactual_policy_compare", "Studio dataset report missing policy compare artifact")
     require(report["stream_counts"]["robot.camera.rgb"] > 0, "Studio dataset report missing RGB count")
     require(report["stream_counts"]["policy.proposed_action"] > 0, "Studio dataset report missing policy count")
     require(payload["export_button_present"] is True, "Studio dataset report export button missing")
     require("RoMi Dataset Report" in payload["markdown"], "Studio dataset report markdown missing title")
     require("proposed_only" in payload["markdown"], "Studio dataset report markdown missing policy authority")
+    require("policy compare:" in payload["markdown"], "Studio dataset report markdown missing policy compare summary")
+    require("compare command stream: not_emitted" in payload["markdown"], "Studio dataset report markdown missing compare command boundary")
     require("robot.camera.rgb" in payload["preview"], "Studio dataset report preview missing stream counts")
     require(payload["scroll_width"] <= payload["window_width"], "Studio dataset report introduced horizontal page overflow")
 
@@ -446,10 +449,16 @@ def check_studio_policy_compare(cdp: Any, session_id: str) -> None:
         window.romiCapture.seekToSeconds(11.8);
         window.romiCapture.setMode('compare');
         const report = window.romiCapture.policyCompareReport();
+        const markdown = window.romiCapture.policyCompareReportMarkdown();
+        const jsonReport = JSON.parse(window.romiCapture.policyCompareReportJson());
         return JSON.stringify({
           report,
+          markdown,
+          json_report: jsonReport,
           active_tab: document.querySelector('.mode-tab.active')?.dataset.mode,
           compare_text: document.getElementById('modeView').textContent,
+          markdown_export_present: Boolean(document.querySelector('[data-export-policy-compare="markdown"]')),
+          json_export_present: Boolean(document.querySelector('[data-export-policy-compare="json"]')),
           card_count: document.querySelectorAll('.compare-card').length,
           diff_count: document.querySelectorAll('.diff-row').length,
           changed_count: document.querySelectorAll('.diff-row.changed').length,
@@ -469,6 +478,7 @@ def check_studio_policy_compare(cdp: Any, session_id: str) -> None:
     policy_ids = {policy["policy_id"] for policy in policies}
     require(payload["active_tab"] == "compare", "Studio policy compare tab did not activate")
     require(report["report_kind"] == "romi.counterfactual_policy_compare", "Studio policy compare report kind mismatch")
+    require(payload["json_report"]["report_kind"] == report["report_kind"], "Studio policy compare JSON export kind mismatch")
     require(report["clock_domain"] == "sim_time", "Studio policy compare clock domain mismatch")
     require(report["observation_window"]["required_inputs"] == 6, "Studio policy compare required input count mismatch")
     require(report["observation_window"]["fresh_inputs"] >= 5, "Studio policy compare should use mostly fresh inputs")
@@ -479,6 +489,8 @@ def check_studio_policy_compare(cdp: Any, session_id: str) -> None:
     require(all(policy["command_stream_emitted"] is False for policy in policies), "Studio policy compare command stream boundary mismatch")
     require(report["safety_boundary"]["command_stream_emitted"] is False, "Studio policy compare safety boundary should not emit commands")
     require(len(report["diffs"]) >= 3, "Studio policy compare diff count mismatch")
+    require(payload["markdown_export_present"] is True, "Studio policy compare markdown export button missing")
+    require(payload["json_export_present"] is True, "Studio policy compare JSON export button missing")
     require(payload["card_count"] == 2, "Studio policy compare card count mismatch")
     require(payload["diff_count"] >= 3, "Studio policy compare UI diff rows missing")
     require(payload["changed_count"] >= 1, "Studio policy compare UI should show at least one changed action")
@@ -486,6 +498,10 @@ def check_studio_policy_compare(cdp: Any, session_id: str) -> None:
     require("mock_policy_v2_guarded" in payload["compare_text"], "Studio policy compare UI missing guarded policy")
     require("not_emitted" in payload["compare_text"], "Studio policy compare UI missing command stream boundary")
     require("->" in payload["compare_text"], "Studio policy compare UI missing action diff arrow")
+    require("RoMi Policy Compare" in payload["markdown"], "Studio policy compare markdown missing title")
+    require("mock_policy_v1" in payload["markdown"], "Studio policy compare markdown missing baseline policy")
+    require("mock_policy_v2_guarded" in payload["markdown"], "Studio policy compare markdown missing guarded policy")
+    require("not_emitted" in payload["markdown"], "Studio policy compare markdown missing command stream boundary")
     require(payload["scroll_width"] <= payload["window_width"], "Studio policy compare introduced horizontal page overflow")
 
 

@@ -28,7 +28,7 @@ python3 -m http.server 8000 --bind 127.0.0.1 --directory examples/navigation_man
 xdg-open http://127.0.0.1:8000/romi_2d_sim/
 ```
 
-The visual simulator shows a semi-humanoid mobile manipulator navigating to a work area, reaching for an object, placing it in a bin, and exposing RoMi-shaped stream counts, runtime stages, policy proposals, and event envelopes. The RoMi Studio mini inspector can switch between live stream freshness, replay graph state, proposed policy actions with observation-window freshness, counterfactual policy comparison, safety/actuator authority boundaries, and dataset report views, with seek controls, runtime graph inspection, and event-envelope inspection for replay debugging.
+The visual simulator shows a semi-humanoid mobile manipulator navigating to a work area, reaching for an object, placing it in a bin, and exposing RoMi-shaped stream counts, runtime stages, policy proposals, and event envelopes. The RoMi Studio mini inspector can switch between live stream freshness, replay graph state, proposed policy actions with observation-window freshness, exportable counterfactual policy comparison, safety/actuator authority boundaries, and dataset report views, with seek controls, runtime graph inspection, and event-envelope inspection for replay debugging.
 
 The browser simulator and the smoke pipeline both read [scenario.json](examples/navigation_manipulation_demo/scenario.json), so the visual motion and generated RoMi artifacts share the same scenario.
 
@@ -37,6 +37,7 @@ This demo currently proves:
 - The navigation + manipulation scenario can run without ROS2.
 - The browser simulator and native smoke source share the same scenario contract.
 - The pipeline records an episode, replays it, runs a mock policy, and generates a dataset report.
+- Counterfactual policy comparison can be inspected and exported as Markdown or JSON evaluation artifacts.
 - Policy output is `proposed_only`; it is not actuator authority.
 
 Current smoke demo:

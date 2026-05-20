@@ -50,13 +50,13 @@ python3 -m http.server 8000 --bind 127.0.0.1 --directory examples/navigation_man
 xdg-open http://127.0.0.1:8000/romi_2d_sim/
 ```
 
-The simulator shows a semi-humanoid mobile manipulator navigating to a work area, reaching for an object, placing it in a bin, and exposing RoMi-shaped stream counters, runtime graph state, policy proposals, and event envelopes. Its RoMi Studio mini inspector adds switchable live, replay, policy, compare, safety, and dataset report views plus policy observation-window freshness, counterfactual policy comparison, actuator authority boundaries, replay seek controls, runtime graph inspection, and event-envelope inspection. It runs without ROS2 or a build step.
+The simulator shows a semi-humanoid mobile manipulator navigating to a work area, reaching for an object, placing it in a bin, and exposing RoMi-shaped stream counters, runtime graph state, policy proposals, and event envelopes. Its RoMi Studio mini inspector adds switchable live, replay, policy, compare, safety, and dataset report views plus policy observation-window freshness, exportable counterfactual policy comparison artifacts, actuator authority boundaries, replay seek controls, runtime graph inspection, and event-envelope inspection. It runs without ROS2 or a build step.
 
 The visual direction follows the [RoMi-H mascot concept](../../docs/assets/romi-h-mascot.png): a semi-humanoid mobile manipulator, not a ROS2-only simulator mascot.
 
 The browser simulator and `romi_native_sim_source.py` both read `scenario.json`, so the motion shown on screen and the RoMi JSONL artifact stream are generated from the same scenario definition.
 
-The browser export and native smoke source intentionally use the same RoMi stream names and closely aligned payload summaries for RGB, depth, camera info, joint state, odometry, TF, task goal, diagnostics, and non-authoritative policy proposals.
+The browser export and native smoke source intentionally use the same RoMi stream names and closely aligned payload summaries for RGB, depth, camera info, joint state, odometry, TF, task goal, diagnostics, and non-authoritative policy proposals. The Studio compare view can export `policy_compare.md` or `policy_compare.json` from the replay state.
 
 The machine-readable contract lives in [contract.example.json](contract.example.json).
 

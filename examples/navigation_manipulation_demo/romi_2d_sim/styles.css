@@ -593,6 +593,12 @@ button:hover {
   white-space: nowrap;
 }
 
+.artifact-buttons {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 6px;
+}
+
 .inline-button {
   border-radius: 5px;
   font-size: 12px;
@@ -960,6 +966,10 @@ body.capture-mode .policy-window-list {
 }
 
 body.capture-mode .policy-window-row:nth-child(n+3) {
+  display: none;
+}
+
+body.capture-mode .runtime-panel .metrics div:nth-child(n+3) {
   display: none;
 }
 

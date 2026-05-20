@@ -1138,6 +1138,43 @@ function policyCompareReport() {
   };
 }
 
+function policyCompareReportJson() {
+  return JSON.stringify(policyCompareReport(), null, 2);
+}
+
+function policyCompareReportMarkdown() {
+  const report = policyCompareReport();
+  const policyRows = report.policies
+    .map((policy) => `| ${policy.policy_id} | ${policy.role} | ${policy.latency_ms}ms | ${policy.authority} | ${policy.actuator_authority} | ${policy.command_stream_emitted ? "emitted" : "not_emitted"} |`)
+    .join("\n");
+  const diffRows = report.diffs
+    .map((diff) => `| ${diff.target} | ${diff.baseline} | ${diff.counterfactual} | ${diff.changed ? "yes" : "no"} |`)
+    .join("\n");
+  return [
+    `# RoMi Policy Compare: ${report.replay_source}`,
+    "",
+    `- report kind: ${report.report_kind}`,
+    `- clock: ${report.clock_domain} @ ${report.evaluation_time_sec}s`,
+    `- stage: ${report.stage}`,
+    `- observation window: ${report.observation_window.fresh_inputs}/${report.observation_window.required_inputs} fresh`,
+    `- actuator authority: ${report.safety_boundary.actuator_authority}`,
+    `- command stream: ${report.safety_boundary.command_stream_emitted ? "emitted" : "not_emitted"}`,
+    `- promotion required: ${report.safety_boundary.promotion_required}`,
+    "",
+    "## Policies",
+    "",
+    "| policy | role | latency | authority | actuator | command stream |",
+    "| --- | --- | ---: | --- | --- | --- |",
+    policyRows,
+    "",
+    "## Action Diffs",
+    "",
+    "| target | baseline | counterfactual | changed |",
+    "| --- | --- | --- | --- |",
+    diffRows,
+  ].join("\n");
+}
+
 function renderPolicyCompare() {
   const report = policyCompareReport();
   const [baseline, guarded] = report.policies;
@@ -1158,7 +1195,16 @@ function renderPolicyCompare() {
   ])}<div class="compare-grid">${renderCard(baseline)}${renderCard(guarded)}</div>
   <div class="diff-list">${report.diffs.map((diff) => (
     `<div class="diff-row ${diff.changed ? "changed" : ""}"><span>${escapeHtml(diff.target)}</span><strong>${escapeHtml(diff.baseline)} -> ${escapeHtml(diff.counterfactual)}</strong></div>`
-  )).join("")}</div>`;
+  )).join("")}</div>
+  <div class="dataset-report compare-artifact">
+    <div class="dataset-actions">
+      <span>policy_compare.md / policy_compare.json</span>
+      <div class="artifact-buttons">
+        <button class="inline-button" type="button" data-export-policy-compare="markdown">MD</button>
+        <button class="inline-button" type="button" data-export-policy-compare="json">JSON</button>
+      </div>
+    </div>
+  </div>`;
 }
 
 function datasetStreamCounts() {
@@ -1223,6 +1269,9 @@ function datasetReport() {
 
 function datasetReportMarkdown() {
   const report = datasetReport();
+  const compare = report.policy_compare;
+  const comparePolicyIds = compare.policies.map((policy) => policy.policy_id).join(" vs ");
+  const compareChanged = compare.diffs.filter((diff) => diff.changed).length;
   const streamRows = Object.entries(report.stream_counts)
     .map(([stream, count]) => `| ${stream} | ${count} |`)
     .join("\n");
@@ -1238,6 +1287,9 @@ function datasetReportMarkdown() {
     `- samples: ${report.samples}`,
     `- policy authority: ${report.policy.authority}`,
     `- actuator authority: ${report.policy.actuator_authority}`,
+    `- policy compare: ${comparePolicyIds}`,
+    `- compare changed actions: ${compareChanged}/${compare.diffs.length}`,
+    `- compare command stream: ${compare.safety_boundary.command_stream_emitted ? "emitted" : "not_emitted"}`,
     "",
     "## Stream Counts",
     "",
@@ -1253,14 +1305,30 @@ function datasetReportMarkdown() {
   ].join("\n");
 }
 
-function exportDatasetReport() {
-  const blob = new Blob([datasetReportMarkdown() + "\n"], { type: "text/markdown" });
+function downloadTextArtifact(filename, content, type) {
+  const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `${state.scenario?.scenario_id || "romi-2d-sim"}-dataset-report.md`;
+  link.download = filename;
   link.click();
   URL.revokeObjectURL(url);
+}
+
+function exportDatasetReport() {
+  downloadTextArtifact(
+    `${state.scenario?.scenario_id || "romi-2d-sim"}-dataset-report.md`,
+    `${datasetReportMarkdown()}\n`,
+    "text/markdown",
+  );
+}
+
+function exportPolicyCompareReport(format) {
+  if (format === "json") {
+    downloadTextArtifact("policy_compare.json", `${policyCompareReportJson()}\n`, "application/json");
+    return;
+  }
+  downloadTextArtifact("policy_compare.md", `${policyCompareReportMarkdown()}\n`, "text/markdown");
 }
 
 function renderDatasetGrid() {
@@ -1545,6 +1613,11 @@ modeView.addEventListener("click", (event) => {
     exportDatasetReport();
     return;
   }
+  const compareExportTarget = event.target.closest("[data-export-policy-compare]");
+  if (compareExportTarget) {
+    exportPolicyCompareReport(compareExportTarget.dataset.exportPolicyCompare);
+    return;
+  }
   const inspectTarget = event.target.closest("[data-inspect-stream]");
   if (inspectTarget) {
     selectLatestStreamEvent(inspectTarget.dataset.inspectStream);
@@ -1571,6 +1644,8 @@ window.romiCapture = {
   datasetReport,
   datasetReportMarkdown,
   policyCompareReport,
+  policyCompareReportJson,
+  policyCompareReportMarkdown,
   safetyReport,
   selectGraphNode,
   selectLatestStreamEvent,
