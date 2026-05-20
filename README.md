@@ -2,9 +2,15 @@
 
 [![CI](https://github.com/rsasaki0109/RoMi/actions/workflows/ci.yml/badge.svg)](https://github.com/rsasaki0109/RoMi/actions/workflows/ci.yml)
 
-**Physical AI-friendly robotics middleware for replayable, inspectable, simulation-native robot runtimes.**
+**Physical AI-friendly robotics middleware for replay-first, inspectable, simulation-native robot runtimes.**
+
+Replay a robot episode, swap a policy, and inspect what changed before touching actuators.
 
 RoMi stands for **Robotics Middleware**. It is an early pre-MVP project exploring a bridge-first contract layer between live robots, simulators, recorded episodes, datasets, ML policies, and deployment runtimes.
+
+- Run a ROS2-free navigation + manipulation simulator.
+- Record and replay RoMi-shaped camera, depth, joint, odometry, TF, goal, and policy streams.
+- Export dataset and counterfactual policy comparison artifacts for review.
 
 <p align="center">
   <a href="docs/assets/romi-2d-nav-manip-demo.mp4">
@@ -13,14 +19,22 @@ RoMi stands for **Robotics Middleware**. It is an early pre-MVP project explorin
 </p>
 
 <p align="center">
-  <sub>Actual RoMi 2D simulator capture: ROS2-free navigation/manipulation with a RoMi Studio mini inspector for live, replay, policy, and dataset state.</sub>
+  <sub>Actual RoMi 2D simulator capture: ROS2-free navigation/manipulation with RoMi Studio for replay, policy comparison, safety boundaries, and dataset state.</sub>
 </p>
 
-## Demo
+## Try It
 
 Current visual target: **RoMi 2D semi-humanoid navigation + manipulation simulator**.
 
-Open the ROS2-free browser demo locally:
+Run the default ROS2-free smoke demo from the repository root:
+
+```bash
+examples/navigation_manipulation_demo/run_smoke_demo.sh
+```
+
+It generates a simulation stream, records an episode, replays it, emits non-authoritative `policy.proposed_action` samples, and writes a dataset report.
+
+Open the browser Studio demo locally:
 
 ```bash
 python3 -m http.server 8000 --bind 127.0.0.1 --directory examples/navigation_manipulation_demo
@@ -28,17 +42,19 @@ python3 -m http.server 8000 --bind 127.0.0.1 --directory examples/navigation_man
 xdg-open http://127.0.0.1:8000/romi_2d_sim/
 ```
 
-The visual simulator shows a semi-humanoid mobile manipulator navigating to a work area, reaching for an object, placing it in a bin, and exposing RoMi-shaped stream counts, runtime stages, policy proposals, and event envelopes. The RoMi Studio mini inspector can switch between live stream freshness, replay graph state, proposed policy actions with observation-window freshness, exportable counterfactual policy comparison, safety/actuator authority boundaries, and dataset report views, with seek controls, runtime graph inspection, and event-envelope inspection for replay debugging.
-
-The browser simulator and the smoke pipeline both read [scenario.json](examples/navigation_manipulation_demo/scenario.json), so the visual motion and generated RoMi artifacts share the same scenario.
-
-This demo currently proves:
+What this demo currently proves:
 
 - The navigation + manipulation scenario can run without ROS2.
 - The browser simulator and native smoke source share the same scenario contract.
 - The pipeline records an episode, replays it, runs a mock policy, and generates a dataset report.
 - Counterfactual policy comparison can be inspected and exported as Markdown or JSON evaluation artifacts.
 - Policy output is `proposed_only`; it is not actuator authority.
+
+Sample artifacts:
+
+- [policy_compare.md](examples/navigation_manipulation_demo/sample_output/policy_compare.md)
+- [policy_compare.json](examples/navigation_manipulation_demo/sample_output/policy_compare.json)
+- [dataset-report/report.md](examples/navigation_manipulation_demo/sample_output/dataset-report/report.md)
 
 Current smoke demo:
 
@@ -48,6 +64,7 @@ RoMi-native simulation: camera / depth / joints / odom / TF / goal
   -> replay source
   -> mock policy
   -> dataset inspection report
+  -> RoMi Studio policy comparison artifact
 ```
 
 Optional ROS2 interop mode:
@@ -59,17 +76,8 @@ ROS2 camera / depth / joints / odom / TF / goal
   -> replay source
   -> mock policy
   -> dataset inspection report
+  -> RoMi Studio policy comparison artifact
 ```
-
-Run the default ROS2-free demo from the repository root:
-
-```bash
-examples/navigation_manipulation_demo/run_smoke_demo.sh
-```
-
-The script generates a RoMi-native navigation + manipulation simulation, records a prototype episode, replays it, emits non-authoritative `policy.proposed_action` samples, and generates `dataset-report/report.md`.
-
-Example generated report: [sample dataset report](examples/navigation_manipulation_demo/sample_output/dataset-report/report.md).
 
 To exercise the ROS2 bridge instead:
 

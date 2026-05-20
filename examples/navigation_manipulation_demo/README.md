@@ -2,7 +2,7 @@
 
 Status: prototype pipeline / smoke-demo ready.
 
-This example is the target for RoMi's first README demo video. It should show a semi-humanoid robot navigating to a manipulation area, observing a target, running a mock policy, recording an episode, replaying that episode, and exposing runtime diagnostics.
+This example is the target for RoMi's first README demo video. It shows a semi-humanoid robot navigating to a manipulation area, observing a target, running a mock policy, recording an episode, replaying that episode, comparing policy behavior, and exposing runtime diagnostics.
 
 This directory contains a prototype pipeline for the first README demo. No simulator, transport, or ML framework is selected as a permanent architectural choice.
 
@@ -22,6 +22,8 @@ Current prototype files:
 - `romi_2d_sim/`: browser-based RoMi 2D navigation + manipulation simulator
 - `capture_readme_video.py`: headless Chrome capture script for README MP4, WebP, and poster assets
 - `sample_output/dataset-report/report.md`: committed example of the generated dataset report
+- `sample_output/policy_compare.md`: committed Markdown policy comparison artifact from RoMi Studio
+- `sample_output/policy_compare.json`: committed JSON policy comparison artifact from RoMi Studio
 - `capture-guide.md`: README video capture guide
 
 ## Demo Goal
@@ -34,6 +36,7 @@ Demonstrate RoMi's intended contract layer across:
 - Episode recording
 - Replay
 - Mock policy inference
+- Counterfactual policy comparison
 - Dataset-style inspection
 - Diagnostics
 - A simple visual simulator that is not tied to ROS2
@@ -89,7 +92,7 @@ RoMi stream events
 recorded episode
         |
         v
-replay source -> same graph shape -> mock policy -> diagnostics
+replay source -> same graph shape -> mock policy -> policy compare + diagnostics
 ```
 
 ## Minimum Source Signals

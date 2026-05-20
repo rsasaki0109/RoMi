@@ -22,4 +22,9 @@ The simulator shows a semi-humanoid mobile manipulator navigating to a work area
 
 The browser JSONL export uses the same RoMi stream names as the native smoke source and keeps payload summaries aligned with the smoke pipeline where practical. The compare view can export `policy_compare.md` and `policy_compare.json` as replay evaluation artifacts.
 
+Committed examples:
+
+- [`policy_compare.md`](../sample_output/policy_compare.md)
+- [`policy_compare.json`](../sample_output/policy_compare.json)
+
 This is not a physics simulator. It is a visual contract demo for RoMi stream, replay, observability, and policy-runtime semantics.

@@ -505,6 +505,20 @@ def check_studio_policy_compare(cdp: Any, session_id: str) -> None:
     require(payload["scroll_width"] <= payload["window_width"], "Studio policy compare introduced horizontal page overflow")
 
 
+def check_sample_policy_compare_artifacts(repo_root: Path) -> None:
+    sample_dir = repo_root / "examples" / "navigation_manipulation_demo" / "sample_output"
+    report = load_json(sample_dir / "policy_compare.json")
+    markdown = (sample_dir / "policy_compare.md").read_text(encoding="utf-8")
+    require(report["report_kind"] == "romi.counterfactual_policy_compare", "sample policy compare report kind mismatch")
+    require(report["clock_domain"] == "sim_time", "sample policy compare clock domain mismatch")
+    require(len(report["policies"]) == 2, "sample policy compare policy count mismatch")
+    require(all(policy["authority"] == "proposed_only" for policy in report["policies"]), "sample policy compare authority mismatch")
+    require(report["safety_boundary"]["command_stream_emitted"] is False, "sample policy compare command stream boundary mismatch")
+    require("RoMi Policy Compare" in markdown, "sample policy compare markdown missing title")
+    require("mock_policy_v2_guarded" in markdown, "sample policy compare markdown missing guarded policy")
+    require("not_emitted" in markdown, "sample policy compare markdown missing command stream boundary")
+
+
 def check_studio_safety_authority(cdp: Any, session_id: str) -> None:
     expression = """
       (() => {
@@ -586,6 +600,7 @@ def check_studio_runtime_graph(cdp: Any, session_id: str) -> None:
 
 def check_browser_native_contract(repo_root: Path, chrome_bin: str, contract: dict[str, Any]) -> None:
     helpers = load_capture_helpers(repo_root)
+    check_sample_policy_compare_artifacts(repo_root)
 
     with tempfile.TemporaryDirectory(prefix="romi-native-contract-") as tmp:
         native_events = run_native_source(repo_root, Path(tmp) / "native-events.jsonl")
