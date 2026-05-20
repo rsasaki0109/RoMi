@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://romi.dev/schemas/core/episode.schema.json",
+  "title": "RoMi Episode Metadata",
+  "description": "Draft metadata schema for recorded live, simulated, or replayable robot episodes.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "episode_id",
+    "scenario",
+    "clock",
+    "streams",
+    "runtime_graph"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "0.1.0"
+    },
+    "episode_id": {
+      "type": "string"
+    },
+    "scenario": {
+      "type": "object",
+      "required": [
+        "name",
+        "mode"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "live",
+            "simulation",
+            "replay",
+            "dataset"
+          ]
+        },
+        "world_id": {
+          "type": "string"
+        },
+        "robot_id": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "clock": {
+      "type": "object",
+      "required": [
+        "clock_domain",
+        "start_time_ns"
+      ],
+      "properties": {
+        "clock_domain": {
+          "type": "string"
+        },
+        "start_time_ns": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end_time_ns": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "replay_time_scale": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "streams": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "stream_id",
+          "schema_id"
+        ],
+        "properties": {
+          "stream_id": {
+            "type": "string"
+          },
+          "schema_id": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "message_count": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "runtime_graph": {
+      "type": "object",
+      "required": [
+        "graph_id"
+      ],
+      "properties": {
+        "graph_id": {
+          "type": "string"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

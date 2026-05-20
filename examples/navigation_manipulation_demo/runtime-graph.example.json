@@ -1,0 +1,103 @@
+{
+  "schema_version": "0.1.0",
+  "graph_id": "nav_manip_demo_graph",
+  "nodes": [
+    {
+      "node_id": "ros2_bridge",
+      "kind": "bridge",
+      "lifecycle_state": "active",
+      "metadata": {
+        "source_system": "ros2",
+        "bridge_mode": "selected_topics"
+      }
+    },
+    {
+      "node_id": "episode_recorder",
+      "kind": "recorder",
+      "lifecycle_state": "active",
+      "metadata": {
+        "logging_direction": "mcap-compatible"
+      }
+    },
+    {
+      "node_id": "replay_source",
+      "kind": "replay_source",
+      "lifecycle_state": "configured",
+      "metadata": {
+        "clock_domain": "recorded_time"
+      }
+    },
+    {
+      "node_id": "observation_synchronizer",
+      "kind": "synchronizer",
+      "lifecycle_state": "active",
+      "metadata": {
+        "window_ms": 100
+      }
+    },
+    {
+      "node_id": "mock_nav_manip_policy",
+      "kind": "policy",
+      "lifecycle_state": "active",
+      "metadata": {
+        "authority": "proposed_only"
+      }
+    },
+    {
+      "node_id": "diagnostics_reporter",
+      "kind": "diagnostics",
+      "lifecycle_state": "active",
+      "metadata": {
+        "reports": [
+          "graph",
+          "latency",
+          "frames",
+          "qos",
+          "policy"
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "ros2_bridge",
+      "to": "episode_recorder",
+      "stream_id": "robot.camera.rgb"
+    },
+    {
+      "from": "ros2_bridge",
+      "to": "episode_recorder",
+      "stream_id": "robot.camera.depth"
+    },
+    {
+      "from": "ros2_bridge",
+      "to": "observation_synchronizer",
+      "stream_id": "robot.camera.rgb"
+    },
+    {
+      "from": "ros2_bridge",
+      "to": "observation_synchronizer",
+      "stream_id": "robot.joints.state"
+    },
+    {
+      "from": "ros2_bridge",
+      "to": "observation_synchronizer",
+      "stream_id": "robot.base.odom"
+    },
+    {
+      "from": "observation_synchronizer",
+      "to": "mock_nav_manip_policy",
+      "stream_id": "policy.observation"
+    },
+    {
+      "from": "mock_nav_manip_policy",
+      "to": "diagnostics_reporter",
+      "stream_id": "policy.proposed_action"
+    },
+    {
+      "from": "replay_source",
+      "to": "observation_synchronizer",
+      "stream_id": "robot.camera.rgb"
+    }
+  ]
+}

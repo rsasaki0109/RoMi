@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://romi.dev/schemas/ml/policy_io.schema.json",
+  "title": "RoMi Policy IO",
+  "description": "Draft schema for policy observations and non-authoritative proposed actions.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "policy_id",
+    "time"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "0.1.0"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "observation",
+        "proposed_action"
+      ]
+    },
+    "policy_id": {
+      "type": "string"
+    },
+    "time": {
+      "type": "object",
+      "required": [
+        "event_time_ns",
+        "clock_domain"
+      ],
+      "properties": {
+        "event_time_ns": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "clock_domain": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "input_streams": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "freshness": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "age_ms": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "proposed_actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "target",
+          "action_type"
+        ],
+        "properties": {
+          "target": {
+            "type": "string"
+          },
+          "action_type": {
+            "type": "string"
+          },
+          "values": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "authority": {
+            "type": "string",
+            "const": "proposed_only"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "inference_latency_ms": {
+      "type": "number",
+      "minimum": 0
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,98 @@
+{
+  "schema_version": "0.1.0",
+  "demo": "navigation_manipulation",
+  "source_system": "ros2",
+  "streams": [
+    {
+      "stream_id": "robot.camera.rgb",
+      "semantic_type": "rgb_image",
+      "source_topic": "/camera/color/image_raw",
+      "source_message_type": "sensor_msgs/msg/Image",
+      "clock_domain": "sim_time",
+      "frame_id": "camera_color_optical_frame",
+      "expected_rate_hz": 30.0,
+      "required": true
+    },
+    {
+      "stream_id": "robot.camera.depth",
+      "semantic_type": "depth_image",
+      "source_topic": "/camera/depth/image_raw",
+      "source_message_type": "sensor_msgs/msg/Image",
+      "clock_domain": "sim_time",
+      "frame_id": "camera_depth_optical_frame",
+      "expected_rate_hz": 30.0,
+      "required": true
+    },
+    {
+      "stream_id": "robot.camera.info",
+      "semantic_type": "camera_info",
+      "source_topic": "/camera/color/camera_info",
+      "source_message_type": "sensor_msgs/msg/CameraInfo",
+      "clock_domain": "sim_time",
+      "frame_id": "camera_color_optical_frame",
+      "expected_rate_hz": 30.0,
+      "required": true
+    },
+    {
+      "stream_id": "robot.joints.state",
+      "semantic_type": "joint_state",
+      "source_topic": "/joint_states",
+      "source_message_type": "sensor_msgs/msg/JointState",
+      "clock_domain": "sim_time",
+      "frame_id": "base_link",
+      "expected_rate_hz": 100.0,
+      "required": true
+    },
+    {
+      "stream_id": "robot.base.odom",
+      "semantic_type": "odometry",
+      "source_topic": "/odom",
+      "source_message_type": "nav_msgs/msg/Odometry",
+      "clock_domain": "sim_time",
+      "frame_id": "odom",
+      "expected_rate_hz": 50.0,
+      "required": true
+    },
+    {
+      "stream_id": "robot.frames.tf",
+      "semantic_type": "transform_tree",
+      "source_topic": "/tf",
+      "source_message_type": "tf2_msgs/msg/TFMessage",
+      "clock_domain": "sim_time",
+      "frame_id": "map",
+      "expected_rate_hz": 50.0,
+      "required": true
+    },
+    {
+      "stream_id": "task.goal",
+      "semantic_type": "task_goal",
+      "source_topic": "/goal_pose",
+      "source_message_type": "geometry_msgs/msg/PoseStamped",
+      "clock_domain": "sim_time",
+      "frame_id": "map",
+      "expected_rate_hz": 1.0,
+      "required": true
+    },
+    {
+      "stream_id": "policy.proposed_action",
+      "semantic_type": "command",
+      "source_topic": null,
+      "source_message_type": "romi/ml/PolicyProposedAction",
+      "clock_domain": "sim_time",
+      "frame_id": "base_link",
+      "expected_rate_hz": 10.0,
+      "required": true,
+      "authority": "proposed_only"
+    },
+    {
+      "stream_id": "runtime.diagnostics",
+      "semantic_type": "diagnostics",
+      "source_topic": null,
+      "source_message_type": "romi/core/DiagnosticEvent",
+      "clock_domain": "sim_time",
+      "frame_id": null,
+      "expected_rate_hz": 1.0,
+      "required": true
+    }
+  ]
+}

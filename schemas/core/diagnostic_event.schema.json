@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://romi.dev/schemas/core/diagnostic_event.schema.json",
+  "title": "RoMi Diagnostic Event",
+  "description": "Draft diagnostic event schema for runtime, bridge, replay, frame, QoS, and policy diagnostics.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "event_id",
+    "time",
+    "severity",
+    "source",
+    "category",
+    "message"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "0.1.0"
+    },
+    "event_id": {
+      "type": "string"
+    },
+    "time": {
+      "type": "object",
+      "required": [
+        "event_time_ns",
+        "clock_domain"
+      ],
+      "properties": {
+        "event_time_ns": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "clock_domain": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "debug",
+        "info",
+        "warning",
+        "error",
+        "critical"
+      ]
+    },
+    "source": {
+      "type": "string",
+      "description": "Node, bridge, replay source, recorder, policy, or diagnostic subsystem."
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "graph",
+        "stream",
+        "latency",
+        "frame",
+        "qos",
+        "replay",
+        "policy",
+        "safety",
+        "lifecycle"
+      ]
+    },
+    "message": {
+      "type": "string"
+    },
+    "attributes": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}
