@@ -72,6 +72,22 @@ xdg-open http://127.0.0.1:8000/romi_2d_sim/
 
 The simulator runs in the browser and does not need ROS2 or a build step. Use the `Export JSONL` control to export RoMi-shaped stream events from the browser session.
 
+## README Media Capture
+
+Generate the README video assets from the actual browser simulator:
+
+```bash
+examples/navigation_manipulation_demo/capture_readme_video.py
+```
+
+Generated assets:
+
+- `docs/assets/romi-2d-nav-manip-demo.mp4`
+- `docs/assets/romi-2d-nav-manip-demo.webp`
+- `docs/assets/romi-2d-nav-manip-demo-poster.png`
+
+The capture script uses headless Chrome against `romi_2d_sim/?capture=readme`, seeks through the shared scenario deterministically, and records the sim UI. It is a visualization capture path, not a runtime dependency.
+
 ## Suggested Recording Layout
 
 Use three terminal panes or windows:

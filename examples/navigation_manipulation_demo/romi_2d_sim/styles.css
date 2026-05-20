@@ -222,6 +222,31 @@ button:hover {
   white-space: pre-wrap;
 }
 
+body.capture-mode {
+  overflow: hidden;
+}
+
+body.capture-mode .app-shell {
+  padding: 18px;
+}
+
+body.capture-mode .topbar {
+  margin-bottom: 12px;
+}
+
+body.capture-mode .controls,
+body.capture-mode .event-panel {
+  display: none;
+}
+
+body.capture-mode .workbench {
+  grid-template-columns: minmax(0, 1fr) 340px;
+}
+
+body.capture-mode #simCanvas {
+  max-height: calc(100vh - 112px);
+}
+
 @media (max-width: 1040px) {
   .topbar {
     align-items: stretch;

@@ -19,6 +19,7 @@ Current prototype files:
 - `ros2_demo_sim_publisher.py`: scripted ROS2 navigation + manipulation source for the smoke demo
 - `run_smoke_demo.sh`: one-shot smoke run for source, record, replay, policy, and dataset report
 - `romi_2d_sim/`: browser-based RoMi 2D navigation + manipulation simulator
+- `capture_readme_video.py`: headless Chrome capture script for README MP4, WebP, and poster assets
 - `capture-guide.md`: README video capture guide
 
 ## Demo Goal
@@ -52,6 +53,12 @@ The simulator shows a semi-humanoid mobile manipulator navigating to a work area
 The visual direction follows the [RoMi-H mascot concept](../../docs/assets/romi-h-mascot.png): a semi-humanoid mobile manipulator, not a ROS2-only simulator mascot.
 
 The browser simulator and `romi_native_sim_source.py` both read `scenario.json`, so the motion shown on screen and the RoMi JSONL artifact stream are generated from the same scenario definition.
+
+Generate the README media assets:
+
+```bash
+examples/navigation_manipulation_demo/capture_readme_video.py
+```
 
 ## Planned Flow
 

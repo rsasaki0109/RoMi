@@ -2,6 +2,11 @@
 
 const canvas = document.getElementById("simCanvas");
 const ctx = canvas.getContext("2d");
+const urlParams = new URLSearchParams(window.location.search);
+
+if (urlParams.get("capture") === "readme") {
+  document.body.classList.add("capture-mode");
+}
 
 const stageValue = document.getElementById("stageValue");
 const clockValue = document.getElementById("clockValue");
@@ -246,10 +251,18 @@ function emitEvents(progress) {
       p_len: 12,
     }, "camera_color_optical_frame", "camera_info", "romi.robotics.CameraInfoSummary"),
     createEvent("robot.joints.state", {
-      joint_count: 6,
-      joint_names_sample: ["shoulder_pan", "shoulder_lift", "elbow", "wrist", "gripper_left", "gripper_right"],
-      position_sample: [-0.22 * reach, -0.52 * reach, 0.82 * reach, -0.34 * reach, holding ? 0.0 : 0.04, holding ? 0.0 : 0.04],
-      position_count: 6,
+      joint_count: 7,
+      joint_names_sample: ["waist_yaw", "torso_lift", "right_shoulder_pitch", "right_elbow", "right_wrist", "gripper_left", "gripper_right"],
+      position_sample: [
+        pose.yaw,
+        0.08 + 0.02 * Math.sin(progress * Math.PI),
+        -0.22 * reach,
+        0.82 * reach,
+        -0.34 * reach,
+        holding ? 0.0 : 0.04,
+        holding ? 0.0 : 0.04,
+      ],
+      position_count: 7,
     }, "base_link", "joint_state", "romi.robotics.JointStateSummary"),
     createEvent("robot.base.odom", {
       child_frame_id: "base_link",
@@ -602,6 +615,31 @@ function reset() {
   render();
 }
 
+function seekCapture(elapsedSec) {
+  if (!state.ready || state.error) {
+    return { ready: false, error: state.error || "scenario_not_ready" };
+  }
+
+  const targetSec = clamp(Number(elapsedSec) || 0, 0, state.durationSec);
+  if (targetSec < state.elapsedSec || state.running) reset();
+  state.running = false;
+
+  while (state.sampleIndex === 0 || state.sampleIndex / state.rateHz <= targetSec) {
+    state.elapsedSec = Math.min(state.durationSec, state.sampleIndex / state.rateHz);
+    emitEvents(clamp(state.elapsedSec / state.durationSec));
+    if (state.elapsedSec >= state.durationSec) break;
+  }
+
+  state.elapsedSec = targetSec;
+  render();
+  return {
+    ready: true,
+    elapsed_sec: state.elapsedSec,
+    stage: currentStage(clamp(state.elapsedSec / state.durationSec)),
+    events: state.events.length,
+  };
+}
+
 function exportJsonl() {
   const blob = new Blob([state.events.map((event) => JSON.stringify(event)).join("\n") + "\n"], {
     type: "application/x-ndjson",
@@ -639,6 +677,13 @@ pauseButton.addEventListener("click", () => {
 });
 resetButton.addEventListener("click", reset);
 exportButton.addEventListener("click", exportJsonl);
+
+window.romiCapture = {
+  ready: () => Boolean(state.ready && !state.error),
+  error: () => state.error,
+  duration: () => state.durationSec,
+  seek: seekCapture,
+};
 
 loadScenario()
   .then(reset)
