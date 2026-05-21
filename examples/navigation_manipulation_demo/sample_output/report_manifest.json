@@ -1,0 +1,50 @@
+{
+  "artifacts": [
+    {
+      "artifact_id": "dataset_report",
+      "json_path": "dataset-report/report.json",
+      "markdown_path": "dataset-report/report.md",
+      "report_kind": "dataset_inspection_report",
+      "schema_path": "../../../schemas/core/dataset_report.schema.json"
+    },
+    {
+      "artifact_id": "policy_compare",
+      "authority_boundary": {
+        "actuator_authority": "none",
+        "command_stream_emitted": false,
+        "policy_authority": "proposed_only"
+      },
+      "json_path": "policy_compare.json",
+      "markdown_path": "policy_compare.md",
+      "report_kind": "romi.counterfactual_policy_compare",
+      "schema_path": "../../../schemas/ml/policy_compare.schema.json"
+    },
+    {
+      "artifact_id": "evaluation_timeline",
+      "authority_boundary": {
+        "actuator_authority": "none",
+        "command_stream_emitted": false,
+        "policy_authority": "proposed_only"
+      },
+      "json_path": "evaluation_timeline.json",
+      "markdown_path": "evaluation_timeline.md",
+      "report_kind": "romi.replay_evaluation_timeline",
+      "schema_path": "../../../schemas/ml/evaluation_timeline.schema.json"
+    },
+    {
+      "artifact_id": "safety_authority",
+      "authority_boundary": {
+        "actuator_authority": "none",
+        "command_stream_emitted": false,
+        "policy_authority": "proposed_only"
+      },
+      "json_path": "safety_authority.json",
+      "markdown_path": "safety_authority.md",
+      "report_kind": "romi.safety_authority_report",
+      "schema_path": "../../../schemas/core/safety_authority.schema.json"
+    }
+  ],
+  "generated_by": "examples/navigation_manipulation_demo/generate_sample_artifacts.py",
+  "manifest_kind": "romi.report_artifact_manifest",
+  "schema_version": "0.1.0"
+}

@@ -18,6 +18,14 @@
       "type": "string",
       "const": "0.1.0"
     },
+    "schema_id": {
+      "type": "string",
+      "const": "romi.core.diagnostic_event/0.1.0"
+    },
+    "kind": {
+      "type": "string",
+      "const": "diagnostic_event"
+    },
     "event_id": {
       "type": "string"
     },

@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import base64
 import json
+import os
 import shutil
 import socket
 import subprocess
@@ -15,18 +16,28 @@ import time
 import urllib.request
 from pathlib import Path
 
-try:
-    import websocket
-except ImportError as exc:  # pragma: no cover - optional local capture dependency.
-    raise SystemExit(
-        "capture_readme_video.py requires the websocket-client Python package "
-        "for Chrome DevTools Protocol access."
-    ) from exc
+websocket = None
+
+
+def require_websocket() -> object:
+    global websocket
+    if websocket is not None:
+        return websocket
+    try:
+        import websocket as websocket_module
+    except ImportError as exc:  # pragma: no cover - optional local capture dependency.
+        raise SystemExit(
+            "capture_readme_video.py requires browser capture dependencies. "
+            "Install them with: python -m pip install -r requirements-browser.txt"
+        ) from exc
+    websocket = websocket_module
+    return websocket_module
 
 
 class CdpClient:
     def __init__(self, websocket_url: str) -> None:
-        self._socket = websocket.create_connection(websocket_url, timeout=30)
+        websocket_module = require_websocket()
+        self._socket = websocket_module.create_connection(websocket_url, timeout=30)
         self._next_id = 1
 
     def close(self) -> None:
@@ -60,8 +71,26 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--webp", type=Path, default=default_asset_dir / "romi-2d-nav-manip-demo.webp")
     parser.add_argument("--poster", type=Path, default=default_asset_dir / "romi-2d-nav-manip-demo-poster.png")
     parser.add_argument("--keep-frames", action="store_true", help="Keep intermediate PNG frames under artifacts/.")
-    parser.add_argument("--chrome-bin", default=shutil.which("google-chrome") or shutil.which("chromium") or "google-chrome")
+    parser.add_argument("--chrome-bin", default=default_chrome_bin(), help="Chrome or Chromium executable.")
     return parser.parse_args()
+
+
+def default_chrome_bin() -> str:
+    path_bin = shutil.which("google-chrome") or shutil.which("chromium") or shutil.which("chrome")
+    if path_bin:
+        return path_bin
+
+    candidates = [
+        Path(os.environ.get("ProgramFiles", "")) / "Google/Chrome/Application/chrome.exe",
+        Path(os.environ.get("ProgramFiles(x86)", "")) / "Google/Chrome/Application/chrome.exe",
+        Path(os.environ.get("LOCALAPPDATA", "")) / "Google/Chrome/Application/chrome.exe",
+        Path(os.environ.get("ProgramFiles", "")) / "Microsoft/Edge/Application/msedge.exe",
+        Path(os.environ.get("ProgramFiles(x86)", "")) / "Microsoft/Edge/Application/msedge.exe",
+    ]
+    for candidate in candidates:
+        if candidate.is_file():
+            return str(candidate)
+    return "google-chrome"
 
 
 def free_port() -> int:
@@ -97,8 +126,32 @@ def wait_for_http(url: str, timeout_sec: float = 10.0) -> None:
     raise TimeoutError(f"Timed out waiting for {url}: {last_error}")
 
 
+def ffmpeg_bin() -> str:
+    path_bin = shutil.which("ffmpeg")
+    if path_bin:
+        return path_bin
+    try:
+        import imageio_ffmpeg
+    except ImportError as exc:  # pragma: no cover - optional local capture dependency.
+        raise SystemExit(
+            "capture_readme_video.py requires ffmpeg on PATH or the imageio-ffmpeg "
+            "Python package for media encoding. Install local capture dependencies "
+            "with: python -m pip install -r requirements-browser.txt"
+        ) from exc
+    return imageio_ffmpeg.get_ffmpeg_exe()
+
+
 def run_ffmpeg(args: list[str]) -> None:
-    subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", *args], check=True)
+    subprocess.run([ffmpeg_bin(), "-hide_banner", "-loglevel", "error", *args], check=True)
+
+
+def require_browser_executable(chrome_bin: str) -> None:
+    if Path(chrome_bin).is_file() or shutil.which(chrome_bin):
+        return
+    raise SystemExit(
+        "Could not find Chrome or Chromium. Install Chrome/Chromium, or pass "
+        "--chrome-bin with the executable path."
+    )
 
 
 def file_size(path: Path) -> str:
@@ -130,6 +183,7 @@ def main() -> int:
     debug_port = free_port()
     url = f"http://127.0.0.1:{server_port}/romi_2d_sim/?capture=readme"
     frame_count = max(2, int(round(args.fps * args.video_duration_sec)))
+    require_browser_executable(args.chrome_bin)
 
     server = subprocess.Popen(
         [sys.executable, "-m", "http.server", str(server_port), "--bind", "127.0.0.1", "--directory", str(example_dir)],

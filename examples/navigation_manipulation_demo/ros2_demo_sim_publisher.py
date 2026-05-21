@@ -17,6 +17,7 @@ import rclpy
 from geometry_msgs.msg import PoseStamped, Quaternion, TransformStamped
 from nav_msgs.msg import Odometry
 from rclpy.node import Node
+from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
 from sensor_msgs.msg import CameraInfo, Image, JointState
 from tf2_msgs.msg import TFMessage
 
@@ -52,9 +53,16 @@ class DemoSimPublisher(Node):
         self.joint_pub = self.create_publisher(JointState, "/joint_states", 10)
         self.odom_pub = self.create_publisher(Odometry, "/odom", 10)
         self.tf_pub = self.create_publisher(TFMessage, "/tf", 10)
+        static_tf_qos = QoSProfile(
+            depth=1,
+            reliability=ReliabilityPolicy.RELIABLE,
+            durability=DurabilityPolicy.TRANSIENT_LOCAL,
+        )
+        self.static_tf_pub = self.create_publisher(TFMessage, "/tf_static", static_tf_qos)
         self.goal_pub = self.create_publisher(PoseStamped, "/goal_pose", 10)
 
         self.timer = self.create_timer(1.0 / rate_hz, self.tick)
+        self.publish_static_tf()
 
     def progress(self) -> float:
         elapsed = (self.get_clock().now().nanoseconds - self.start_ns) / 1_000_000_000.0
@@ -113,14 +121,21 @@ class DemoSimPublisher(Node):
         transforms = [
             self.transform(now, "map", "odom", 0.0, 0.0, 0.0, 0.0),
             self.transform(now, "odom", "base_link", x, y, 0.0, yaw),
-            self.transform(now, "base_link", "camera_color_optical_frame", 0.28, 0.0, 0.42, 0.0),
-            self.transform(now, "base_link", "camera_depth_optical_frame", 0.28, 0.0, 0.42, 0.0),
-            self.transform(now, "base_link", "arm_base_link", 0.22, 0.0, 0.28, 0.0),
             self.transform(now, "arm_base_link", "tool0", 0.25 + 0.32 * ease(progress), -0.04, 0.28, -0.35 * ease(progress)),
         ]
         msg = TFMessage()
         msg.transforms = transforms
         self.tf_pub.publish(msg)
+
+    def publish_static_tf(self) -> None:
+        now = self.get_clock().now()
+        msg = TFMessage()
+        msg.transforms = [
+            self.transform(now, "base_link", "camera_color_optical_frame", 0.28, 0.0, 0.42, 0.0),
+            self.transform(now, "base_link", "camera_depth_optical_frame", 0.28, 0.0, 0.42, 0.0),
+            self.transform(now, "base_link", "arm_base_link", 0.22, 0.0, 0.28, 0.0),
+        ]
+        self.static_tf_pub.publish(msg)
 
     def transform(
         self,

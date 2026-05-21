@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://romi.dev/schemas/robotics/task_goal_summary.schema.json",
+  "title": "RoMi Task Goal Payload Summary",
+  "description": "Compact task-goal payload summary used by demo stream samples.",
+  "type": "object",
+  "required": [
+    "scenario_id",
+    "target_object",
+    "position",
+    "orientation"
+  ],
+  "properties": {
+    "scenario_id": {
+      "type": "string"
+    },
+    "target_object": {
+      "type": "string"
+    },
+    "position": {
+      "type": "object",
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "orientation": {
+      "type": "object",
+      "required": [
+        "x",
+        "y",
+        "z",
+        "w"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        },
+        "w": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

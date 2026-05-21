@@ -6,7 +6,7 @@ The ROS2 bridge is the first planned bridge adapter for RoMi. It should connect 
 
 The bridge is not RoMi core. It is an interoperability boundary.
 
-An initial prototype is available in [rclpy_bridge](rclpy_bridge). It reads the demo stream map, subscribes to supported ROS2 topics, and writes RoMi stream envelopes and diagnostics as JSON Lines.
+An initial prototype is available in [rclpy_bridge](rclpy_bridge). It reads the demo stream map, subscribes to supported ROS2 topics, and writes RoMi stream envelopes and diagnostics as JSON Lines. The rclpy README includes a full scripted ROS2 smoke run, expected outputs, validation command, and troubleshooting notes. A committed diagnostics example is available at [ros2-qos-diagnostics.example.json](../../examples/navigation_manipulation_demo/ros2-qos-diagnostics.example.json).
 
 ## Purpose
 
@@ -106,6 +106,8 @@ Requirements:
 - Emit diagnostics for missing, stale, cyclic, conflicting, or disconnected transforms.
 - Preserve recorded time for replay.
 
+The current prototype maps both `/tf` and `/tf_static` into `robot.frames.tf` while preserving `source_topic` on each sample. `/tf_static` uses reliable, transient-local QoS metadata and is marked as a static transform source in diagnostics.
+
 ## QoS Diagnostics
 
 The bridge should expose QoS because many ROS2 integration bugs are QoS bugs.
@@ -129,6 +131,8 @@ Diagnostics should report:
 - Queue growth
 - Deadline misses where available
 - Bridge backpressure
+
+The committed diagnostics sample is validated in CI without a ROS2 installation. It checks that QoS metadata is present, `/tf_static` remains visible, and policy output remains non-authoritative.
 
 ## Services And Actions
 

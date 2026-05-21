@@ -64,6 +64,17 @@
       "required": true
     },
     {
+      "stream_id": "robot.frames.tf",
+      "semantic_type": "transform_tree",
+      "source_topic": "/tf_static",
+      "source_message_type": "tf2_msgs/msg/TFMessage",
+      "clock_domain": "sim_time",
+      "frame_id": "map",
+      "expected_rate_hz": 0.0,
+      "required": true,
+      "static_transform": true
+    },
+    {
       "stream_id": "task.goal",
       "semantic_type": "task_goal",
       "source_topic": "/goal_pose",

@@ -1,0 +1,249 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://romi.dev/schemas/observability/ros2_bridge_diagnostics.schema.json",
+  "title": "RoMi ROS2 Bridge Diagnostics Report",
+  "description": "Draft report schema for ROS2 bridge topic, QoS, TF, timing, and limitation diagnostics.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "report_kind",
+    "bridge",
+    "source_system",
+    "stream_map",
+    "summary",
+    "streams",
+    "tf_bridge",
+    "events",
+    "limitations"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "0.1.0"
+    },
+    "report_kind": {
+      "type": "string",
+      "const": "romi.ros2_bridge_diagnostics"
+    },
+    "bridge": {
+      "type": "string"
+    },
+    "source_system": {
+      "type": "string",
+      "const": "ros2"
+    },
+    "stream_map": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "required_streams",
+        "mapped_topics",
+        "healthy_topics",
+        "warning_topics",
+        "policy_authority",
+        "actuator_authority"
+      ],
+      "properties": {
+        "required_streams": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mapped_topics": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "healthy_topics": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "warning_topics": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "policy_authority": {
+          "type": "string",
+          "const": "proposed_only"
+        },
+        "actuator_authority": {
+          "type": "string",
+          "const": "none"
+        }
+      },
+      "additionalProperties": false
+    },
+    "streams": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "stream_id",
+          "source_topic",
+          "source_message_type",
+          "required",
+          "status",
+          "clock_domain",
+          "qos",
+          "timing",
+          "frame"
+        ],
+        "properties": {
+          "stream_id": {
+            "type": "string"
+          },
+          "source_topic": {
+            "type": "string"
+          },
+          "source_message_type": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "warning",
+              "missing",
+              "unsupported"
+            ]
+          },
+          "clock_domain": {
+            "type": "string"
+          },
+          "qos": {
+            "type": "object",
+            "required": [
+              "reliability",
+              "durability",
+              "history",
+              "depth"
+            ],
+            "properties": {
+              "reliability": {
+                "type": "string"
+              },
+              "durability": {
+                "type": "string"
+              },
+              "history": {
+                "type": "string"
+              },
+              "depth": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": true
+          },
+          "timing": {
+            "type": "object",
+            "required": [
+              "expected_rate_hz",
+              "observed_rate_hz",
+              "max_bridge_latency_ms"
+            ],
+            "properties": {
+              "expected_rate_hz": {
+                "type": "number",
+                "minimum": 0
+              },
+              "observed_rate_hz": {
+                "type": "number",
+                "minimum": 0
+              },
+              "max_bridge_latency_ms": {
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": false
+          },
+          "frame": {
+            "type": "object",
+            "required": [
+              "frame_id",
+              "status"
+            ],
+            "properties": {
+              "frame_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "status": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "tf_bridge": {
+      "type": "object",
+      "required": [
+        "dynamic_topic",
+        "static_topic",
+        "status",
+        "tracked_frames",
+        "notes"
+      ],
+      "properties": {
+        "dynamic_topic": {
+          "type": "string",
+          "const": "/tf"
+        },
+        "static_topic": {
+          "type": "string",
+          "const": "/tf_static"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "ok",
+            "warning",
+            "missing"
+          ]
+        },
+        "tracked_frames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

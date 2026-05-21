@@ -31,6 +31,7 @@ class StreamConfig:
     frame_id: str | None = None
     expected_rate_hz: float | None = None
     required: bool = False
+    static_transform: bool = False
 
 
 @dataclass
@@ -90,6 +91,7 @@ def load_stream_configs(path: Path) -> list[StreamConfig]:
                 frame_id=item.get("frame_id"),
                 expected_rate_hz=item.get("expected_rate_hz"),
                 required=bool(item.get("required", False)),
+                static_transform=bool(item.get("static_transform", False)),
             )
         )
     return configs
@@ -339,6 +341,12 @@ def qos_metadata(config: StreamConfig) -> dict[str, Any]:
     }
 
 
+def diagnostic_key(config: StreamConfig) -> str:
+    source = config.source_topic or config.source_message_type
+    sanitized_source = source.strip("/").replace("/", "_").replace("-", "_")
+    return f"{config.stream_id.replace('.', '_')}_{sanitized_source}"
+
+
 def make_diagnostic(
     *,
     event_id: str,
@@ -379,7 +387,7 @@ class RomiRos2Bridge:
         self.node = node
         self.ros2 = ros2
         self.writer = writer
-        self.states = {config.stream_id: StreamState(config=config) for config in configs}
+        self.states = [StreamState(config=config) for config in configs]
         self.message_types = ros2["message_types"]
         self.start_monotonic = time.monotonic()
 
@@ -402,7 +410,7 @@ class RomiRos2Bridge:
         return int(self.node.get_clock().now().nanoseconds)
 
     def _create_subscriptions(self) -> None:
-        for state in self.states.values():
+        for state in self.states:
             config = state.config
             if not config.source_topic:
                 continue
@@ -439,6 +447,7 @@ class RomiRos2Bridge:
                     "source_topic": config.source_topic,
                     "source_message_type": config.source_message_type,
                     "qos": qos_metadata(config),
+                    "static_transform": config.static_transform,
                 },
             )
 
@@ -499,6 +508,7 @@ class RomiRos2Bridge:
             "metadata": {
                 "bridge": "rclpy_bridge",
                 "sample_index": state.count,
+                "static_transform": config.static_transform,
             },
         }
         self.writer.write(envelope)
@@ -514,7 +524,7 @@ class RomiRos2Bridge:
     ) -> None:
         config = state.config
         receive_time_ns = self._now_ns()
-        event_id = f"ros2_bridge_{config.stream_id.replace('.', '_')}_{state.count}"
+        event_id = f"ros2_bridge_{diagnostic_key(config)}_{state.count}"
         self.writer.write(
             make_diagnostic(
                 event_id=event_id,
@@ -529,7 +539,7 @@ class RomiRos2Bridge:
 
     def _emit_periodic_diagnostics(self) -> None:
         now_ns = self._now_ns()
-        for state in self.states.values():
+        for state in self.states:
             config = state.config
             if not config.required:
                 continue
@@ -562,11 +572,13 @@ class RomiRos2Bridge:
                     "age_ms": age_ms,
                     "gap_count": state.gap_count,
                     "last_frame_id": state.last_frame_id,
+                    "qos": qos_metadata(config),
+                    "static_transform": config.static_transform,
                 }
 
             self.writer.write(
                 make_diagnostic(
-                    event_id=f"ros2_bridge_status_{config.stream_id.replace('.', '_')}_{int(time.time())}",
+                    event_id=f"ros2_bridge_status_{diagnostic_key(config)}_{int(time.time())}",
                     receive_time_ns=now_ns,
                     clock_domain=config.clock_domain,
                     severity=severity,
@@ -583,14 +595,19 @@ class RomiRos2Bridge:
                 "kind": "bridge_stop",
                 "bridge": "rclpy_bridge",
                 "wall_time_ns": time.time_ns(),
-                "streams": {
-                    stream_id: {
+                "streams": [
+                    {
+                        "stream_id": state.config.stream_id,
+                        "source_topic": state.config.source_topic,
+                        "source_message_type": state.config.source_message_type,
                         "sample_count": state.count,
                         "gap_count": state.gap_count,
                         "last_frame_id": state.last_frame_id,
+                        "qos": qos_metadata(state.config),
+                        "static_transform": state.config.static_transform,
                     }
-                    for stream_id, state in self.states.items()
-                },
+                    for state in self.states
+                ],
             }
         )
 

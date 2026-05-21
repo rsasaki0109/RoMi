@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://romi.dev/schemas/core/stream_sample.schema.json",
+  "title": "RoMi Stream Sample Event",
+  "description": "Draft event envelope schema for stream samples emitted by native sources, browser simulation, replay, policies, bridges, simulators, logs, or SDK adapters.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "schema_id",
+    "kind",
+    "stream_id",
+    "semantic_type",
+    "source_system",
+    "source_message_type",
+    "event_time_ns",
+    "clock_domain",
+    "payload_summary",
+    "metadata"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "0.1.0"
+    },
+    "schema_id": {
+      "type": "string",
+      "description": "Schema identifier for the stream payload or stream metadata carried by this sample."
+    },
+    "kind": {
+      "type": "string",
+      "const": "stream_sample"
+    },
+    "stream_id": {
+      "type": "string"
+    },
+    "semantic_type": {
+      "type": "string",
+      "enum": [
+        "rgb_image",
+        "depth_image",
+        "point_cloud",
+        "camera_info",
+        "joint_state",
+        "odometry",
+        "transform_tree",
+        "task_goal",
+        "command",
+        "diagnostics"
+      ]
+    },
+    "source_system": {
+      "type": "string",
+      "description": "Logical producer such as romi_native_sim, romi_2d_sim, replay, ros2, romi, simulator, dataset, or sdk."
+    },
+    "source_topic": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "source_message_type": {
+      "type": "string"
+    },
+    "event_time_ns": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "source_emit_wall_time_ns": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "bridge_receive_time_ns": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "bridge_latency_ms": {
+      "type": "number",
+      "minimum": 0
+    },
+    "policy_emit_wall_time_ns": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "replay_emit_wall_time_ns": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "clock_domain": {
+      "type": "string"
+    },
+    "frame_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "qos": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "payload_summary": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "replay": {
+      "type": "object",
+      "required": [
+        "episode_id",
+        "sequence_index",
+        "original_event_time_ns",
+        "replay_elapsed_ns",
+        "replay_start_wall_time_ns",
+        "replay_emit_wall_time_ns",
+        "speed",
+        "no_sleep"
+      ],
+      "properties": {
+        "episode_id": {
+          "type": "string"
+        },
+        "sequence_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "original_event_time_ns": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "replay_elapsed_ns": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "replay_start_wall_time_ns": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "replay_emit_wall_time_ns": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "speed": {
+          "type": "number",
+          "minimum": 0
+        },
+        "no_sleep": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": true
+}

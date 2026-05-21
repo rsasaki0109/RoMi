@@ -124,6 +124,7 @@ const state = {
   events: [],
   streamCounts: Object.fromEntries(streams.map((stream) => [stream, 0])),
   trace: [],
+  evaluationTimelineCache: null,
 };
 
 function clamp(value, min = 0, max = 1) {
@@ -209,6 +210,7 @@ function currentStage(progress) {
 
 function displayMode(progress) {
   if (!captureMode) return state.mode;
+  if (state.mode !== "live") return state.mode;
   if (progress < 0.34) return "live";
   if (progress < 0.58) return "replay";
   if (progress < 0.70) return "policy";
@@ -437,8 +439,24 @@ function emitEvents(progress) {
 
   if (state.sampleIndex % Math.max(1, Math.round(state.rateHz * 1.5)) === 0 || progress > 0.68) {
     const observationWindow = policyObservationWindow([...state.events, ...events], eventTimeNs);
+    const policyFreshness = Object.fromEntries(observationWindow.map((input) => [
+      input.stream_id,
+      {
+        age_ms: input.age_ms,
+        status: input.status,
+        required: true,
+      },
+    ]));
     events.push(createEvent("policy.proposed_action", {
+      schema_version: "0.1.0",
+      kind: "proposed_action",
       policy_id: "mock_nav_manip_policy",
+      time: {
+        event_time_ns: eventTimeNs,
+        clock_domain: "sim_time",
+      },
+      input_streams: policyInputStreams,
+      freshness: policyFreshness,
       observation_window: observationWindow,
       input_status: {
         fresh: observationWindow.filter((input) => input.status === "fresh").length,
@@ -959,11 +977,6 @@ function renderPolicyActions() {
 }
 
 function latestPolicyObservationWindow() {
-  const policyEvent = latestEvent("policy.proposed_action");
-  const payloadWindow = policyEvent?.payload_summary?.observation_window;
-  if (Array.isArray(payloadWindow) && payloadWindow.length) {
-    return payloadWindow;
-  }
   return policyObservationWindow(state.events, Math.round(state.elapsedSec * 1_000_000_000));
 }
 
@@ -1015,6 +1028,36 @@ function safetyReport() {
   };
 }
 
+function safetyReportJson() {
+  return JSON.stringify(safetyReport(), null, 2);
+}
+
+function safetyReportMarkdown() {
+  const report = safetyReport();
+  const actionRows = report.proposed_actions
+    .map((action) => `| ${action.target} | ${action.action_type} | ${action.authority} | ${action.blocked ? "yes" : "no"} | ${action.reason} |`)
+    .join("\n");
+  return [
+    `# RoMi Safety Authority Report: ${state.scenario?.scenario_id || "romi_2d_sim_episode"}`,
+    "",
+    `- report kind: ${report.report_kind}`,
+    `- clock: ${report.clock_domain}`,
+    `- stage: ${report.stage}`,
+    `- policy stream: ${report.policy_stream}`,
+    `- policy authority: ${report.policy_authority}`,
+    `- actuator authority: ${report.actuator_authority}`,
+    `- command stream: ${report.command_stream_emitted ? "emitted" : "not_emitted"}`,
+    `- promotion required: ${report.promotion_required}`,
+    `- blocked reason: ${report.blocked_reason}`,
+    "",
+    "## Proposed Actions",
+    "",
+    "| target | action | authority | blocked | reason |",
+    "| --- | --- | --- | --- | --- |",
+    actionRows,
+  ].join("\n");
+}
+
 function renderSafetyBoundary() {
   const report = safetyReport();
   const actions = report.proposed_actions.length
@@ -1048,6 +1091,87 @@ function policyActionSummary(actions) {
   return Object.fromEntries(actions.map((action) => [action.target, action.action_type]));
 }
 
+function runtimeGraphReportContext(reportKind) {
+  const artifactOutput = reportKind === "romi.replay_evaluation_timeline"
+    ? "evaluation_timeline.json"
+    : "policy_compare.json";
+  return {
+    graph_id: "romi_studio_replay_eval_graph",
+    source_graph: "examples/navigation_manipulation_demo/runtime-graph.example.json",
+    mode: "replay_evaluation",
+    active_path: ["source", "record", "replay", "policy", "evaluation", "safety"],
+    nodes: [
+      {
+        node_id: "source",
+        role: "source",
+        label: "native simulator",
+        inputs: ["scenario.json"],
+        outputs: ["robot.camera.rgb", "robot.camera.depth", "robot.camera.info", "robot.joints.state", "robot.base.odom", "robot.frames.tf", "task.goal", "runtime.diagnostics"],
+        status: "available",
+        authority: "observation_only",
+      },
+      {
+        node_id: "record",
+        role: "log/dataset plane",
+        label: "episode recorder",
+        inputs: ["robot.*", "task.goal", "runtime.diagnostics"],
+        outputs: ["episode.jsonl", "episode_metadata"],
+        status: "available",
+        authority: "observation_only",
+      },
+      {
+        node_id: "replay",
+        role: "replay plane",
+        label: "replay source",
+        inputs: ["episode.jsonl"],
+        outputs: ["robot.*", "task.goal", "runtime.diagnostics"],
+        status: "seekable",
+        authority: "observation_only",
+      },
+      {
+        node_id: "policy",
+        role: "policy runtime",
+        label: "mock policy",
+        inputs: policyInputStreams,
+        outputs: ["policy.proposed_action"],
+        status: "proposing",
+        authority: "proposed_only",
+      },
+      {
+        node_id: "evaluation",
+        role: "evaluation/report plane",
+        label: reportKind === "romi.replay_evaluation_timeline" ? "replay evaluation timeline" : "policy compare",
+        inputs: ["episode.jsonl", "policy.proposed_action"],
+        outputs: [artifactOutput],
+        status: "generated",
+        authority: "observation_only",
+      },
+      {
+        node_id: "safety",
+        role: "safety boundary",
+        label: "actuator authority boundary",
+        inputs: ["policy.proposed_action"],
+        outputs: [],
+        status: "blocking_commands",
+        authority: "none",
+      },
+    ],
+    edges: [
+      { from: "source", to: "record", stream_id: "robot.*" },
+      { from: "record", to: "replay", stream_id: "episode.jsonl" },
+      { from: "replay", to: "policy", stream_id: "policy.observation_window" },
+      { from: "policy", to: "evaluation", stream_id: "policy.proposed_action" },
+      { from: "policy", to: "safety", stream_id: "policy.proposed_action" },
+    ],
+    authority_boundary: {
+      policy_authority: "proposed_only",
+      actuator_authority: "none",
+      command_stream_emitted: false,
+      promotion_required: "external_supervisor",
+    },
+  };
+}
+
 function guardedActionFor(target, stage, freshInputs, requiredInputs) {
   const degraded = freshInputs < requiredInputs;
   if (target === "base") {
@@ -1067,13 +1191,14 @@ function guardedActionFor(target, stage, freshInputs, requiredInputs) {
   return "hold_position";
 }
 
-function policyCompareReport() {
-  const policyEvent = latestEvent("policy.proposed_action");
+function policyCompareReportFor(sourceEvents, evaluationTimeSec) {
+  const eventTimeNs = Math.round(evaluationTimeSec * 1_000_000_000);
+  const policyEvent = latestEventFrom(sourceEvents, "policy.proposed_action");
   const payload = policyEvent?.payload_summary || {};
-  const observationWindow = latestPolicyObservationWindow();
+  const observationWindow = policyObservationWindow(sourceEvents, eventTimeNs);
   const freshInputs = observationWindow.filter((input) => input.status === "fresh").length;
   const requiredInputs = observationWindow.length;
-  const stage = currentStage(clamp(state.elapsedSec / state.durationSec));
+  const stage = currentStage(clamp(evaluationTimeSec / state.durationSec));
   const baselineActions = Array.isArray(payload.proposed_actions) && payload.proposed_actions.length
     ? payload.proposed_actions
     : [
@@ -1103,7 +1228,7 @@ function policyCompareReport() {
     replay_source: state.scenario?.scenario_id || "romi_2d_sim_episode",
     stage,
     clock_domain: "sim_time",
-    evaluation_time_sec: Number(state.elapsedSec.toFixed(3)),
+    evaluation_time_sec: Number(evaluationTimeSec.toFixed(3)),
     observation_window: {
       fresh_inputs: freshInputs,
       required_inputs: requiredInputs,
@@ -1135,7 +1260,12 @@ function policyCompareReport() {
       promotion_required: "external_supervisor",
       command_stream_emitted: false,
     },
+    runtime_graph: runtimeGraphReportContext("romi.counterfactual_policy_compare"),
   };
+}
+
+function policyCompareReport() {
+  return policyCompareReportFor(state.events, state.elapsedSec);
 }
 
 function policyCompareReportJson() {
@@ -1202,6 +1332,199 @@ function renderPolicyCompare() {
       <div class="artifact-buttons">
         <button class="inline-button" type="button" data-export-policy-compare="markdown">MD</button>
         <button class="inline-button" type="button" data-export-policy-compare="json">JSON</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function restoreReplaySnapshot(snapshot) {
+  state.elapsedSec = snapshot.elapsedSec;
+  state.sampleIndex = snapshot.sampleIndex;
+  state.events = snapshot.events;
+  state.streamCounts = snapshot.streamCounts;
+  state.trace = snapshot.trace;
+  state.selectedEventIndex = snapshot.selectedEventIndex;
+  state.running = snapshot.running;
+}
+
+function fullReplayEvents() {
+  const cacheKey = [
+    state.scenario?.scenario_id || "romi_2d_sim_episode",
+    state.durationSec,
+    state.rateHz,
+  ].join(":");
+  if (state.evaluationTimelineCache?.cacheKey === cacheKey) {
+    return state.evaluationTimelineCache.events;
+  }
+
+  const snapshot = {
+    elapsedSec: state.elapsedSec,
+    sampleIndex: state.sampleIndex,
+    events: state.events,
+    streamCounts: state.streamCounts,
+    trace: state.trace,
+    selectedEventIndex: state.selectedEventIndex,
+    running: state.running,
+  };
+
+  state.running = false;
+  state.elapsedSec = 0;
+  state.sampleIndex = 0;
+  state.events = [];
+  state.streamCounts = Object.fromEntries(streams.map((stream) => [stream, 0]));
+  state.trace = [];
+  state.selectedEventIndex = null;
+
+  while (state.sampleIndex === 0 || state.sampleIndex / state.rateHz <= state.durationSec) {
+    state.elapsedSec = Math.min(state.durationSec, state.sampleIndex / state.rateHz);
+    emitEvents(clamp(state.elapsedSec / state.durationSec));
+    if (state.elapsedSec >= state.durationSec) break;
+  }
+
+  const events = state.events.map((event) => JSON.parse(JSON.stringify(event)));
+  restoreReplaySnapshot(snapshot);
+  state.evaluationTimelineCache = {
+    cacheKey,
+    events,
+  };
+  return events;
+}
+
+function evaluationSampleTimes() {
+  const duration = state.durationSec || 16;
+  const times = new Set();
+  for (let index = 0; index <= 10; index += 1) {
+    times.add((duration * index / 10).toFixed(3));
+  }
+  const stages = Array.isArray(scenarioTiming().stages) ? scenarioTiming().stages : [];
+  for (const stage of stages) {
+    const start = Number(stage.start ?? 0) * duration;
+    const end = Number(stage.end ?? 1) * duration;
+    times.add(clamp((start + end) / 2, 0, duration).toFixed(3));
+  }
+  return Array.from(times)
+    .map((time) => Number(time))
+    .sort((a, b) => a - b);
+}
+
+function evaluationTimelineReport() {
+  const replayEvents = fullReplayEvents();
+  const samples = evaluationSampleTimes().map((timeSec) => {
+    const eventTimeNs = Math.round(timeSec * 1_000_000_000);
+    const sourceEvents = replayEvents.filter((event) => {
+      const timeNs = Number(event.event_time_ns ?? event.time?.event_time_ns ?? 0);
+      return timeNs <= eventTimeNs;
+    });
+    const compare = policyCompareReportFor(sourceEvents, timeSec);
+    const policyLatency = Math.max(...compare.policies.map((policy) => Number(policy.latency_ms || 0)));
+    const changed = compare.diffs.filter((diff) => diff.changed);
+    return {
+      time_sec: Number(timeSec.toFixed(3)),
+      stage: compare.stage,
+      fresh_inputs: compare.observation_window.fresh_inputs,
+      required_inputs: compare.observation_window.required_inputs,
+      policy_latency_ms: Number(policyLatency.toFixed(2)),
+      changed_actions: changed.length,
+      changed_targets: changed.map((diff) => diff.target),
+      command_stream_emitted: compare.safety_boundary.command_stream_emitted,
+      actuator_authority: compare.safety_boundary.actuator_authority,
+    };
+  });
+
+  const stageSummary = [];
+  for (const stage of Array.from(new Set(samples.map((sample) => sample.stage)))) {
+    const stageSamples = samples.filter((sample) => sample.stage === stage);
+    stageSummary.push({
+      stage,
+      samples: stageSamples.length,
+      changed_action_samples: stageSamples.filter((sample) => sample.changed_actions > 0).length,
+      min_fresh_inputs: Math.min(...stageSamples.map((sample) => sample.fresh_inputs)),
+      max_latency_ms: Number(Math.max(...stageSamples.map((sample) => sample.policy_latency_ms)).toFixed(2)),
+      command_stream_emitted: stageSamples.some((sample) => sample.command_stream_emitted),
+    });
+  }
+
+  return {
+    schema_version: "0.1.0",
+    report_kind: "romi.replay_evaluation_timeline",
+    episode_id: state.scenario?.scenario_id || "romi_2d_sim_episode",
+    clock_domain: "sim_time",
+    duration_sec: Number((state.durationSec || 0).toFixed(3)),
+    policy_ids: ["mock_policy_v1", "mock_policy_v2_guarded"],
+    sample_count: samples.length,
+    samples,
+    stage_summary: stageSummary,
+    safety_boundary: {
+      actuator_authority: "none",
+      promotion_required: "external_supervisor",
+      command_stream_emitted: false,
+    },
+    runtime_graph: runtimeGraphReportContext("romi.replay_evaluation_timeline"),
+  };
+}
+
+function evaluationTimelineReportJson() {
+  return JSON.stringify(evaluationTimelineReport(), null, 2);
+}
+
+function evaluationTimelineReportMarkdown() {
+  const report = evaluationTimelineReport();
+  const sampleRows = report.samples
+    .map((sample) => `| ${sample.time_sec}s | ${sample.stage} | ${sample.fresh_inputs}/${sample.required_inputs} | ${sample.policy_latency_ms}ms | ${sample.changed_actions} | ${sample.command_stream_emitted ? "emitted" : "not_emitted"} |`)
+    .join("\n");
+  const stageRows = report.stage_summary
+    .map((stage) => `| ${stage.stage} | ${stage.samples} | ${stage.changed_action_samples} | ${stage.min_fresh_inputs} | ${stage.max_latency_ms}ms | ${stage.command_stream_emitted ? "emitted" : "not_emitted"} |`)
+    .join("\n");
+  return [
+    `# RoMi Replay Evaluation Timeline: ${report.episode_id}`,
+    "",
+    `- report kind: ${report.report_kind}`,
+    `- clock: ${report.clock_domain}`,
+    `- duration: ${report.duration_sec}s`,
+    `- samples: ${report.sample_count}`,
+    `- policies: ${report.policy_ids.join(" vs ")}`,
+    `- actuator authority: ${report.safety_boundary.actuator_authority}`,
+    `- command stream: ${report.safety_boundary.command_stream_emitted ? "emitted" : "not_emitted"}`,
+    `- promotion required: ${report.safety_boundary.promotion_required}`,
+    "",
+    "## Samples",
+    "",
+    "| time | stage | inputs fresh | latency | changed actions | command stream |",
+    "| ---: | --- | ---: | ---: | ---: | --- |",
+    sampleRows,
+    "",
+    "## Stage Summary",
+    "",
+    "| stage | samples | changed samples | min fresh inputs | max latency | command stream |",
+    "| --- | ---: | ---: | ---: | ---: | --- |",
+    stageRows,
+  ].join("\n");
+}
+
+function renderEvaluationTimeline() {
+  const report = evaluationTimelineReport();
+  const changedSamples = report.samples.filter((sample) => sample.changed_actions > 0).length;
+  const maxLatency = Math.max(...report.samples.map((sample) => sample.policy_latency_ms));
+  const sampleRows = report.samples.map((sample) => {
+    const width = Math.max(8, (sample.policy_latency_ms / Math.max(1, maxLatency)) * 100);
+    return `<button class="eval-row ${sample.changed_actions > 0 ? "changed" : ""}" type="button" data-seek-seconds="${sample.time_sec}">
+      <span>${escapeHtml(sample.time_sec.toFixed(1))}s</span>
+      <strong>${escapeHtml(sample.stage)}</strong>
+      <em>${escapeHtml(`${sample.fresh_inputs}/${sample.required_inputs}`)}</em>
+      <i style="width: ${width.toFixed(1)}%"></i>
+    </button>`;
+  }).join("");
+  return `${renderKeyValues([
+    ["samples", report.sample_count],
+    ["changed samples", changedSamples],
+    ["command stream", report.safety_boundary.command_stream_emitted ? "emitted" : "not_emitted"],
+  ])}<div class="eval-timeline">${sampleRows}</div>
+  <div class="dataset-report compare-artifact">
+    <div class="dataset-actions">
+      <span>evaluation_timeline.md / evaluation_timeline.json</span>
+      <div class="artifact-buttons">
+        <button class="inline-button" type="button" data-export-evaluation-timeline="markdown">MD</button>
+        <button class="inline-button" type="button" data-export-evaluation-timeline="json">JSON</button>
       </div>
     </div>
   </div>`;
@@ -1331,6 +1654,14 @@ function exportPolicyCompareReport(format) {
   downloadTextArtifact("policy_compare.md", `${policyCompareReportMarkdown()}\n`, "text/markdown");
 }
 
+function exportEvaluationTimelineReport(format) {
+  if (format === "json") {
+    downloadTextArtifact("evaluation_timeline.json", `${evaluationTimelineReportJson()}\n`, "application/json");
+    return;
+  }
+  downloadTextArtifact("evaluation_timeline.md", `${evaluationTimelineReportMarkdown()}\n`, "text/markdown");
+}
+
 function renderDatasetGrid() {
   const report = datasetReport();
   const latest = latestEvent();
@@ -1362,6 +1693,7 @@ function renderModeView(progress) {
     replay: "Replay",
     policy: "Policy",
     compare: "Compare",
+    timeline: "Timeline",
     safety: "Safety",
     dataset: "Dataset",
   };
@@ -1409,6 +1741,11 @@ function renderModeView(progress) {
 
   if (mode === "compare") {
     modeView.innerHTML = renderPolicyCompare();
+    return;
+  }
+
+  if (mode === "timeline") {
+    modeView.innerHTML = renderEvaluationTimeline();
     return;
   }
 
@@ -1618,9 +1955,19 @@ modeView.addEventListener("click", (event) => {
     exportPolicyCompareReport(compareExportTarget.dataset.exportPolicyCompare);
     return;
   }
+  const timelineExportTarget = event.target.closest("[data-export-evaluation-timeline]");
+  if (timelineExportTarget) {
+    exportEvaluationTimelineReport(timelineExportTarget.dataset.exportEvaluationTimeline);
+    return;
+  }
   const inspectTarget = event.target.closest("[data-inspect-stream]");
   if (inspectTarget) {
     selectLatestStreamEvent(inspectTarget.dataset.inspectStream);
+    return;
+  }
+  const seekSecondsTarget = event.target.closest("[data-seek-seconds]");
+  if (seekSecondsTarget) {
+    seekToSeconds(Number(seekSecondsTarget.dataset.seekSeconds), "timeline");
     return;
   }
   const target = event.target.closest("[data-seek-progress]");
@@ -1646,7 +1993,12 @@ window.romiCapture = {
   policyCompareReport,
   policyCompareReportJson,
   policyCompareReportMarkdown,
+  evaluationTimelineReport,
+  evaluationTimelineReportJson,
+  evaluationTimelineReportMarkdown,
   safetyReport,
+  safetyReportJson,
+  safetyReportMarkdown,
   selectGraphNode,
   selectLatestStreamEvent,
   latestEvent,

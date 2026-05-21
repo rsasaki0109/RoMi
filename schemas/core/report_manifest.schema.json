@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://romi.dev/schemas/core/report_manifest.schema.json",
+  "title": "RoMi Report Artifact Manifest",
+  "description": "Draft manifest schema for committed report artifacts and their validating schemas.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "manifest_kind",
+    "generated_by",
+    "artifacts"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "0.1.0"
+    },
+    "manifest_kind": {
+      "type": "string",
+      "const": "romi.report_artifact_manifest"
+    },
+    "generated_by": {
+      "type": "string"
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "artifact_id",
+          "report_kind",
+          "json_path",
+          "schema_path"
+        ],
+        "properties": {
+          "artifact_id": {
+            "type": "string"
+          },
+          "report_kind": {
+            "type": "string"
+          },
+          "json_path": {
+            "type": "string"
+          },
+          "markdown_path": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "schema_path": {
+            "type": "string"
+          },
+          "authority_boundary": {
+            "type": "object",
+            "properties": {
+              "policy_authority": {
+                "type": "string"
+              },
+              "actuator_authority": {
+                "type": "string"
+              },
+              "command_stream_emitted": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

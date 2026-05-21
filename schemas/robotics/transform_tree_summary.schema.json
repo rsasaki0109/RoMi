@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://romi.dev/schemas/robotics/transform_tree_summary.schema.json",
+  "title": "RoMi Transform Tree Payload Summary",
+  "description": "Compact TF payload summary used by demo stream samples.",
+  "type": "object",
+  "required": [
+    "transform_count",
+    "frames_sample",
+    "synthetic_base_translation",
+    "synthetic_object_position"
+  ],
+  "properties": {
+    "transform_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "frames_sample": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "parent_frame_id",
+          "child_frame_id",
+          "stamp_ns"
+        ],
+        "properties": {
+          "parent_frame_id": {
+            "type": "string"
+          },
+          "child_frame_id": {
+            "type": "string"
+          },
+          "stamp_ns": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "synthetic_base_translation": {
+      "type": "object",
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "synthetic_object_position": {
+      "type": "object",
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

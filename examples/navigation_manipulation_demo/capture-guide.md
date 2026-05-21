@@ -10,7 +10,8 @@ Show that RoMi can connect:
 
 ```text
 RoMi-native simulation camera / depth / joints / odom / TF / goal
-  -> episode -> replay -> mock policy -> dataset report
+  -> episode -> replay -> mock policy
+  -> policy compare -> replay timeline -> safety report -> dataset report
 ```
 
 The video should communicate:
@@ -21,11 +22,32 @@ The video should communicate:
 - Policy output is non-authoritative.
 - Runtime data remains inspectable.
 - Dataset views preserve stream, time, frame, diagnostics, and policy metadata.
+- Timeline and safety reports make policy behavior reviewable without emitting commands.
+- ROS2 bridge diagnostics preserve topic, QoS, TF, timing, and limitation metadata.
 
 ## Prerequisites
 
 - Python 3.
 - A modern browser for the visual simulator.
+- Chrome or Chromium for browser-backed contract checks and media capture.
+
+Install local browser/capture Python dependencies from the repository root:
+
+```bash
+python -m pip install -r requirements-browser.txt
+```
+
+This installs:
+
+- `websocket-client` for Chrome DevTools Protocol access.
+- `imageio-ffmpeg` as an ffmpeg fallback for media encoding.
+
+If Chrome or Chromium is not on `PATH`, pass the executable explicitly:
+
+```bash
+python examples/navigation_manipulation_demo/capture_readme_video.py --chrome-bin /path/to/chrome
+python tests/check_browser_native_contract.py --chrome-bin /path/to/chrome
+```
 
 The default smoke script starts a RoMi-native source that emits synthetic camera, depth, camera info, joint state, odometry, TF, and goal stream samples. A richer simulator can be connected later if available, but it is not required for this contract capture.
 
@@ -60,6 +82,16 @@ Important output files:
 - `dataset-report/report.md`
 - `dataset-report/report.json`
 
+Committed README-adjacent review artifacts:
+
+- `sample_output/policy_compare.md`
+- `sample_output/policy_compare.json`
+- `sample_output/evaluation_timeline.md`
+- `sample_output/evaluation_timeline.json`
+- `sample_output/safety_authority.md`
+- `sample_output/safety_authority.json`
+- `ros2-qos-diagnostics.example.json`
+
 For GitHub review without running the demo, see the committed reference report:
 
 ```text
@@ -92,7 +124,7 @@ Generated assets:
 - `docs/assets/romi-2d-nav-manip-demo.webp`
 - `docs/assets/romi-2d-nav-manip-demo-poster.png`
 
-The capture script uses headless Chrome against `romi_2d_sim/?capture=readme`, seeks through the shared scenario deterministically, and records the sim UI. It is a visualization capture path, not a runtime dependency.
+The capture script uses headless Chrome against `romi_2d_sim/?capture=readme`, seeks through the shared scenario deterministically, and records the sim UI. It can use system `ffmpeg` or the Python `imageio-ffmpeg` package for encoding. It is a visualization capture path, not a runtime dependency.
 
 ## Suggested Recording Layout
 
@@ -117,9 +149,10 @@ Keep the video short, around 60 to 90 seconds.
 ```text
 0:00 - 0:15  Start the browser simulator and show navigation
 0:15 - 0:35  Show manipulation reach, grasp, and place
-0:35 - 0:50  Show stream counters and policy proposals
-0:50 - 1:10  Run smoke script and show generated episode/report
-1:10 - 1:30  Close on ROS2-free / replay-first / inspectable summary
+0:35 - 0:50  Show stream counters, runtime graph, and policy proposals
+0:50 - 1:10  Show compare, timeline, safety, and dataset Studio modes
+1:10 - 1:25  Show committed artifacts and ROS2 bridge diagnostics
+1:25 - 1:30  Close on ROS2-free / replay-first / bridge-first summary
 ```
 
 ## What To Highlight
@@ -128,13 +161,16 @@ During capture, show these concrete details:
 
 - Camera, depth, joint, odometry, TF, and `task.goal` samples arrive as RoMi-shaped streams without requiring ROS2.
 - The browser simulator shows navigation, manipulation, runtime graph stages, and recent events.
+- RoMi Studio shows live, replay, policy, compare, timeline, safety, and dataset modes.
 - The browser simulator and smoke pipeline share `scenario.json`.
 - The same downstream pipeline can be exercised through `ROMI_DEMO_SOURCE=ros2`.
+- The ROS2 bridge diagnostics sample keeps `/tf`, `/tf_static`, QoS, timing, and limitations visible.
 - `episode.json` records the episode metadata.
 - `replay-events.jsonl` re-emits the stream with `source_system: replay`.
 - `policy-events.jsonl` emits `policy.proposed_action`.
 - Proposed actions have `authority: proposed_only`.
 - `dataset-report/report.md` shows stream counts, diagnostics, policy output, and observation window.
+- `safety_authority.json` keeps actuator authority as `none`.
 
 ## What Not To Claim
 

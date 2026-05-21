@@ -202,25 +202,22 @@ Exit criteria:
 
 ## Milestone B: Replay Evaluation Timeline
 
-Status: next recommended feature.
+Status: implemented first pass.
 
 Goal:
 
 Move from "compare two policies at one replay time" to "evaluate policy behavior
 across the whole replay."
 
-Planned user-facing feature:
+Implemented user-facing feature:
 
-- Add an `Eval` or `Timeline` view to RoMi Studio.
-- Generate `evaluation_timeline.md`.
-- Generate `evaluation_timeline.json`.
-- Show where policy outputs changed.
-- Show stale or missing inputs over replay time.
-- Show latency bands.
-- Show safety boundary state.
-- Summarize by runtime stage.
+- Studio now has a `Timeline` view.
+- RoMi Studio can generate `evaluation_timeline.md`.
+- RoMi Studio can generate `evaluation_timeline.json`.
+- The report shows changed policy actions, stale or missing inputs, latency,
+  safety boundary state, and stage summary.
 
-Planned report shape:
+Current report shape:
 
 ```json
 {
@@ -251,17 +248,17 @@ Planned report shape:
 }
 ```
 
-Implementation plan:
+Completed implementation:
 
-1. Add `evaluationTimelineReport()` in the browser simulator.
-2. Sample replay time points from existing event state.
-3. Reuse `policyCompareReport()` logic for each sampled time.
-4. Aggregate by stage.
-5. Add markdown and JSON export helpers.
-6. Add Studio tab or compact panel.
-7. Add browser/native contract checks.
-8. Add committed sample artifacts.
-9. Update README media if the UI changes visibly.
+1. Added `evaluationTimelineReport()` in the browser simulator.
+2. Sampled replay time points from generated replay state.
+3. Reused policy compare logic for each sampled time.
+4. Aggregated by stage.
+5. Added Markdown and JSON export helpers.
+6. Added Studio Timeline tab.
+7. Added browser/native contract checks.
+8. Added committed sample artifacts.
+9. Added schema validation for the committed JSON artifact.
 
 Non-goals for this milestone:
 
@@ -278,7 +275,7 @@ Exit criteria:
 
 ## Milestone C: Artifact Reproducibility
 
-Status: partially done.
+Status: implemented for current sample artifacts.
 
 Goal:
 
@@ -292,14 +289,17 @@ but users should eventually have a single reproducible path for sample artifacts
 
 Planned actions:
 
-- Add a small script such as `examples/navigation_manipulation_demo/generate_sample_artifacts.py`.
-- Generate or refresh:
-  - README media.
+- Added `examples/navigation_manipulation_demo/generate_sample_artifacts.py`.
+- Generates or refreshes:
   - Dataset report sample.
   - Policy compare sample.
-  - Future evaluation timeline sample.
-- Keep generated sample files deterministic enough for review.
-- Document which artifacts are browser-derived and which are CLI-derived.
+  - Evaluation timeline sample.
+- Keeps generated sample files deterministic enough for review.
+- Documents artifact regeneration in README and demo docs.
+
+Still open:
+
+- README media regeneration remains separate through `capture_readme_video.py`.
 
 Exit criteria:
 
@@ -310,13 +310,13 @@ Exit criteria:
 
 ## Milestone D: Contracts And Schemas
 
-Status: scaffolded, needs consolidation.
+Status: partially implemented.
 
 Goal:
 
 Turn the demo's implicit stream and report shapes into reviewable schemas.
 
-Priority schema targets:
+Schema targets:
 
 - Event envelope.
 - Stream sample.
@@ -327,12 +327,20 @@ Priority schema targets:
 - Replay evaluation timeline.
 - Safety authority report.
 
-Planned actions:
+Completed actions:
 
-- Add schema files under `schemas/`.
-- Ensure sample artifacts declare schema version and report kind.
-- Add JSON schema validation in CI for committed samples.
-- Keep schema content small and readable.
+- Added schema files under `schemas/ml/` for policy compare and evaluation
+  timeline.
+- Sample artifacts declare schema version and report kind.
+- Added CI validation for committed policy compare and timeline samples.
+- Kept schema content small and readable.
+
+Still open:
+
+- Event envelope schema consolidation.
+- Dataset report schema.
+- Safety authority report schema.
+- Graph metadata schema in generated reports.
 
 Exit criteria:
 
@@ -457,26 +465,27 @@ scope.
 
 Priority 1:
 
-- Add replay evaluation timeline in Studio.
-- Export `evaluation_timeline.md` and `evaluation_timeline.json`.
-- Add committed sample artifacts.
-- Add CI contract checks for the new artifacts.
+- Done: replay evaluation timeline in Studio.
+- Done: export `evaluation_timeline.md` and `evaluation_timeline.json`.
+- Done: committed sample artifacts.
+- Done: CI contract checks for the new artifacts.
 
 Priority 2:
 
-- Add `generate_sample_artifacts.py` or equivalent.
-- Document artifact regeneration.
+- Done: add `generate_sample_artifacts.py`.
+- Done: document artifact regeneration.
 - Keep README media current.
 
 Priority 3:
 
-- Draft schemas for policy compare and evaluation timeline.
-- Validate committed sample artifacts against those schemas.
+- Done: draft schemas for policy compare and evaluation timeline.
+- Done: validate committed sample artifacts against those schemas.
 
 Priority 4:
 
-- Refresh `docs/roadmap.md` so it no longer describes the repository as docs-only.
-- Keep `docs/demo-backlog.md` synchronized with implemented items.
+- Done: refresh `docs/roadmap.md` so it no longer describes the repository as
+  docs-only.
+- Done: keep `docs/demo-backlog.md` synchronized with implemented items.
 
 ## 60 Day Plan
 
@@ -485,7 +494,8 @@ The next 60 days should make RoMi feel like a coherent pre-MVP, not only a demo.
 Priority 1:
 
 - Consolidate event envelope and report schemas.
-- Add graph contract metadata to reports.
+- Done: add graph contract metadata to reports.
+- Done: add dataset report and safety authority schemas.
 - Add a minimal CLI command for artifact inspection if a language stack is
   already clearly justified.
 
@@ -530,13 +540,15 @@ source or bridge
   -> inspectable graph
 ```
 
-## Issue Candidates
+## Completed Issue Candidates
 
-These can become GitHub issues after the plan is accepted.
+These items have first-pass implementations in the current prototype.
 
 ### Add Replay Evaluation Timeline
 
 Labels: `demo`, `replay`, `policy`, `observability`
+
+Status: implemented first pass.
 
 Deliverables:
 
@@ -550,6 +562,8 @@ Deliverables:
 
 Labels: `tooling`, `demo`, `documentation`
 
+Status: implemented.
+
 Deliverables:
 
 - One command to regenerate README-adjacent artifacts.
@@ -560,6 +574,8 @@ Deliverables:
 
 Labels: `schema`, `policy`, `replay`
 
+Status: implemented first pass.
+
 Deliverables:
 
 - JSON schema for `romi.counterfactual_policy_compare`.
@@ -568,6 +584,8 @@ Deliverables:
 ### Add Evaluation Timeline Schema
 
 Labels: `schema`, `policy`, `observability`
+
+Status: implemented first pass.
 
 Deliverables:
 
@@ -578,22 +596,233 @@ Deliverables:
 
 Labels: `documentation`, `planning`
 
+Status: implemented.
+
 Deliverables:
 
-- Update `docs/roadmap.md` to reflect implemented prototype pieces.
-- Update `docs/demo-backlog.md` statuses.
-- Link `PLAN.md` as the current tactical plan.
+- Updated `docs/roadmap.md` to reflect implemented prototype pieces.
+- Updated `docs/demo-backlog.md` statuses.
+- Kept `PLAN.md` aligned with the current tactical plan.
+
+### Add Runtime Graph Contract Metadata To Reports
+
+Labels: `runtime`, `schema`, `observability`
+
+Status: implemented first pass.
+
+Deliverables:
+
+- Added graph metadata to policy compare and evaluation timeline reports.
+- Included node inputs, outputs, status, and authority boundary.
+- Validated graph metadata in committed samples.
+- Kept graph shape compatible with `runtime-graph.example.json`.
+
+## Current Issue Candidates
+
+These are the best next issues to cut from the plan.
+
+### Add Dataset Report And Safety Authority Schemas
+
+Labels: `schema`, `dataset`, `safety`, `observability`
+
+Status: implemented first pass.
+
+Deliverables:
+
+- Added JSON schema for the committed dataset report shape.
+- Added JSON schema for `romi.safety_authority_report`.
+- Added validation tests for committed samples.
+- Added contract checks that policy authority remains `proposed_only`.
+- Added contract checks that actuator authority remains `none`.
 
 ### Improve ROS2 Bridge Diagnostics
 
 Labels: `bridge`, `ros2`, `observability`
 
+Status: implemented first pass.
+
 Deliverables:
 
-- Clear QoS metadata capture.
-- TF bridge notes.
-- Bridge sample output.
-- CI-safe checks where possible.
+- Added clear QoS metadata capture in the committed bridge diagnostics sample.
+- Added `/tf` and `/tf_static` bridge notes.
+- Added bridge diagnostics sample output.
+- Added CI-safe diagnostics checks.
+
+### README Media Refresh
+
+Labels: `documentation`, `demo`, `media`
+
+Status: implemented.
+
+Deliverables:
+
+- Regenerated README MP4, WebP, and poster assets from the current Studio UI.
+- Fixed capture-mode Studio tab layout so compare, timeline, safety, and dataset
+  modes render cleanly in README media.
+- Added Chrome path discovery and `imageio-ffmpeg` encoding fallback to the
+  capture script.
+- Updated README and capture guide copy to reflect policy compare, timeline,
+  safety, dataset, and ROS2 bridge diagnostics artifacts.
+
+### Event Envelope Schema Consolidation
+
+Labels: `schema`, `runtime`, `replay`, `bridge`, `ci`
+
+Status: implemented first pass.
+
+Deliverables:
+
+- Added `schemas/core/stream_sample.schema.json`.
+- Validated source, replay, and policy JSONL samples in `check_demo_contract`.
+- Validated browser and native simulator stream samples in
+  `check_browser_native_contract`.
+- Validated a representative ROS2 `/tf_static` bridge stream sample in
+  `check_ros2_bridge_diagnostics`.
+- Documented the shared event envelope in the demo contract.
+
+### Browser/native Contract Dependency Cleanup
+
+Labels: `tooling`, `ci`, `documentation`, `browser`
+
+Status: implemented.
+
+Deliverables:
+
+- Added `requirements-browser.txt` for browser contract and README capture
+  dependencies.
+- Updated CI to install browser dependencies from the same requirements file.
+- Made `capture_readme_video.py` import browser dependencies lazily and emit a
+  concrete install command when they are missing.
+- Added clearer Chrome/Chromium prerequisite checks for capture and
+  browser/native contract runs.
+- Documented local install and `--chrome-bin` usage in README, demo README,
+  capture guide, and demo contract docs.
+
+### ROS2 Bridge Sample Run Instructions
+
+Labels: `bridge`, `ros2`, `documentation`, `demo`
+
+Status: implemented first pass.
+
+Deliverables:
+
+- Added a scripted ROS2 smoke runbook to `bridges/ros2/rclpy_bridge/README.md`.
+- Documented setup, command, expected outputs, validation, direct bridge use,
+  and troubleshooting.
+- Added ROS2 Python dependency preflight checks to `run_smoke_demo.sh`.
+- Updated `ros2_demo_sim_publisher.py` to publish `/tf_static` with
+  transient-local QoS.
+- Extended CI-safe ROS2 diagnostics checks to cover publisher and runbook
+  expectations without requiring ROS2.
+
+### Broader Event-Kind Schemas
+
+Labels: `schema`, `runtime`, `reports`, `ci`
+
+Status: implemented first pass.
+
+Deliverables:
+
+- Added `schemas/core/lifecycle_event.schema.json`.
+- Added `schemas/core/report_manifest.schema.json`.
+- Added committed `sample_output/report_manifest.json`.
+- Validated replay and policy lifecycle events in `check_demo_contract`.
+- Validated representative bridge lifecycle events in
+  `check_ros2_bridge_diagnostics`.
+- Validated report manifest metadata and authority boundaries in
+  `check_sample_artifact_schemas`.
+
+### Stream Payload Schema Tightening
+
+Labels: `schema`, `robotics`, `payload`, `ci`
+
+Status: implemented first pass.
+
+Deliverables:
+
+- Added payload summary schemas for image/depth, camera info, joint state,
+  odometry, transform tree, and task goal streams.
+- Validated source and replay payload summaries in `check_demo_contract`.
+- Documented payload summary schemas in the demo contract and schema README.
+
+### Dataset Observation Window Schema Tightening
+
+Labels: `schema`, `dataset`, `ci`
+
+Status: implemented first pass.
+
+Deliverables:
+
+- Added window bounds, availability counts, payload schema IDs, message types,
+  sample indexes, and signed/absolute time deltas to dataset observation window
+  rows.
+- Regenerated the committed dataset report JSON with the enriched observation
+  window.
+- Validated observation window payload summaries in
+  `check_sample_artifact_schemas` and `check_demo_contract`.
+
+### Policy Payload Schema Tightening
+
+Labels: `schema`, `policy`, `payload`, `ci`
+
+Status: implemented first pass.
+
+Deliverables:
+
+- Tightened `schemas/ml/policy_io.schema.json` for proposed-action payloads,
+  including time, input streams, freshness entries, action authority, latency,
+  and metadata authority.
+- Added schema-aligned policy payload fields to the browser simulator.
+- Validated native `policy-events.jsonl` payload summaries in
+  `check_demo_contract`.
+- Validated browser `policy.proposed_action` payload summaries in
+  `check_browser_native_contract`.
+
+### Non-ROS2 Final CI And Diff Sweep
+
+Labels: `ci`, `review`, `demo`
+
+Status: completed.
+
+Deliverables:
+
+- Re-ran Python syntax checks for changed scripts and tests.
+- Re-ran browser simulator JavaScript syntax check.
+- Re-ran committed sample artifact schema validation.
+- Re-ran representative ROS2 diagnostics artifact validation without launching
+  ROS2.
+- Generated a temporary native smoke artifact set and validated the demo
+  contract.
+- Re-ran browser/native contract parity checks.
+- Checked JSON syntax, diff whitespace, and temporary artifact cleanup.
+
+### Package Schema And Report Changes For Review
+
+Labels: `review`, `docs`, `schema`
+
+Status: completed.
+
+Deliverables:
+
+- Added `docs/schema-report-review-package.md`.
+- Drafted a PR title and template-aligned review notes.
+- Summarized interoperability, replayability, observability, transport, and
+  safety/authority implications.
+- Listed main files to review and known local tests.
+- Recorded that ROS2 live smoke was intentionally not run.
+
+### Prepare Commit And PR Metadata
+
+Labels: `review`, `git`, `docs`
+
+Status: completed.
+
+Deliverables:
+
+- Added a concise draft commit message.
+- Added a PR body aligned with `.github/PULL_REQUEST_TEMPLATE.md`.
+- Added a suggested review order.
+- Added an optional split plan for reducing review size.
 
 ## Non-Goals
 
@@ -655,27 +884,24 @@ A new RoMi demo feature should generally include:
 The highest-value next implementation is:
 
 ```text
-Replay Evaluation Timeline
+Commit or open PR
 ```
 
-It extends the current policy compare work from one time point to a replay-wide
-evaluation artifact. It strengthens the repository's central message without
-requiring a heavy runtime implementation.
+The committed artifact set now has schema-backed policy, timeline, dataset,
+safety, ROS2 bridge diagnostics, stream sample envelope coverage, lifecycle
+event coverage, report artifact manifest coverage, and robotics payload summary
+coverage. Dataset report observation windows now carry schema-linked stream
+rows, bounds, and validated payload summaries. Native and browser policy
+payload summaries are now validated against `ml/policy_io.schema.json`. README
+media has also been refreshed against the current Studio UI, and browser/capture
+dependencies are explicit for local development.
 
-The second-best next step is:
-
-```text
-Sample Artifact Generator
-```
-
-It makes the repository easier to maintain and keeps the README, Studio demo, and
-committed sample artifacts synchronized.
+The remaining practical work is to either create the commit/open the PR, or
+split the large change set if review size needs to be reduced.
 
 The recommended order is:
 
-1. Replay Evaluation Timeline.
-2. Sample Artifact Generator.
-3. Policy compare and timeline schemas.
-4. Roadmap/backlog refresh.
-5. ROS2 bridge diagnostics polish.
+1. Commit or open PR.
+2. Optional split into smaller PRs if review size needs to be reduced.
+3. Optional ROS2 live smoke run when a ROS2 environment is available.
 

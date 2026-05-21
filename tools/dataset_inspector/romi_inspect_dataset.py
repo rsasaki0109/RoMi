@@ -12,6 +12,14 @@ from typing import Any
 
 
 SCHEMA_VERSION = "0.1.0"
+PAYLOAD_SCHEMA_IDS = {
+    "romi.robotics.ImageSummary": "https://romi.dev/schemas/robotics/image_summary.schema.json",
+    "romi.robotics.CameraInfoSummary": "https://romi.dev/schemas/robotics/camera_info_summary.schema.json",
+    "romi.robotics.JointStateSummary": "https://romi.dev/schemas/robotics/joint_state_summary.schema.json",
+    "romi.robotics.OdometrySummary": "https://romi.dev/schemas/robotics/odometry_summary.schema.json",
+    "romi.robotics.TransformTreeSummary": "https://romi.dev/schemas/robotics/transform_tree_summary.schema.json",
+    "romi.robotics.PoseGoalSummary": "https://romi.dev/schemas/robotics/task_goal_summary.schema.json",
+}
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
@@ -150,6 +158,12 @@ def sample_for_window(
     return best
 
 
+def payload_schema_id(source_message_type: Any) -> str | None:
+    if not isinstance(source_message_type, str):
+        return None
+    return PAYLOAD_SCHEMA_IDS.get(source_message_type)
+
+
 def build_observation_window(
     *,
     samples: list[dict[str, Any]],
@@ -158,11 +172,14 @@ def build_observation_window(
     window_ms: float,
 ) -> dict[str, Any]:
     window_ns = int(window_ms * 1_000_000)
+    window_start_time_ns = max(0, target_time_ns - window_ns)
+    window_end_time_ns = target_time_ns + window_ns
     entries = []
     for stream in stream_summaries:
         stream_id = stream.get("stream_id")
         if not isinstance(stream_id, str):
             continue
+        source_message_type = stream.get("source_message_type")
         sample = sample_for_window(
             samples=samples,
             stream_id=stream_id,
@@ -173,10 +190,16 @@ def build_observation_window(
             entries.append(
                 {
                     "stream_id": stream_id,
+                    "semantic_type": stream.get("semantic_type"),
+                    "source_topic": stream.get("source_topic"),
+                    "source_message_type": source_message_type,
+                    "payload_schema_id": payload_schema_id(source_message_type),
                     "status": "missing_in_window",
                     "delta_ms": None,
+                    "delta_abs_ms": None,
                     "event_time_ns": None,
                     "frame_id": None,
+                    "sample_index": None,
                     "payload_summary": None,
                 }
             )
@@ -190,17 +213,29 @@ def build_observation_window(
         entries.append(
             {
                 "stream_id": stream_id,
+                "semantic_type": sample.get("semantic_type") or stream.get("semantic_type"),
+                "source_topic": sample.get("source_topic", stream.get("source_topic")),
+                "source_message_type": sample.get("source_message_type") or source_message_type,
+                "payload_schema_id": payload_schema_id(sample.get("source_message_type") or source_message_type),
                 "status": "ok",
                 "delta_ms": delta_ms,
+                "delta_abs_ms": abs(delta_ms) if delta_ms is not None else None,
                 "event_time_ns": sample_time,
                 "frame_id": sample.get("frame_id"),
+                "sample_index": (sample.get("metadata") or {}).get("sample_index"),
                 "payload_summary": sample.get("payload_summary"),
             }
         )
 
+    available_stream_count = sum(1 for entry in entries if entry["status"] == "ok")
     return {
         "target_time_ns": target_time_ns,
+        "window_start_time_ns": window_start_time_ns,
+        "window_end_time_ns": window_end_time_ns,
         "window_ms": window_ms,
+        "required_stream_count": len(entries),
+        "available_stream_count": available_stream_count,
+        "missing_stream_count": len(entries) - available_stream_count,
         "streams": entries,
     }
 

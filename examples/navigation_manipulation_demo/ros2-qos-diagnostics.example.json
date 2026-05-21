@@ -1,8 +1,250 @@
 {
   "schema_version": "0.1.0",
+  "report_kind": "romi.ros2_bridge_diagnostics",
+  "bridge": "rclpy_bridge",
+  "source_system": "ros2",
+  "stream_map": "examples/navigation_manipulation_demo/stream-map.example.json",
+  "summary": {
+    "required_streams": 10,
+    "mapped_topics": 8,
+    "healthy_topics": 7,
+    "warning_topics": 1,
+    "policy_authority": "proposed_only",
+    "actuator_authority": "none"
+  },
+  "streams": [
+    {
+      "stream_id": "robot.camera.rgb",
+      "source_topic": "/camera/color/image_raw",
+      "source_message_type": "sensor_msgs/msg/Image",
+      "required": true,
+      "status": "ok",
+      "clock_domain": "sim_time",
+      "qos": {
+        "reliability": "best_effort",
+        "durability": "volatile",
+        "history": "keep_last",
+        "depth": 10
+      },
+      "timing": {
+        "expected_rate_hz": 30.0,
+        "observed_rate_hz": 30.0,
+        "max_bridge_latency_ms": 3.4
+      },
+      "frame": {
+        "frame_id": "camera_color_optical_frame",
+        "status": "present"
+      },
+      "notes": [
+        "Image payloads stay summarized in JSONL; future transports can attach external payload references."
+      ]
+    },
+    {
+      "stream_id": "robot.camera.depth",
+      "source_topic": "/camera/depth/image_raw",
+      "source_message_type": "sensor_msgs/msg/Image",
+      "required": true,
+      "status": "ok",
+      "clock_domain": "sim_time",
+      "qos": {
+        "reliability": "best_effort",
+        "durability": "volatile",
+        "history": "keep_last",
+        "depth": 10
+      },
+      "timing": {
+        "expected_rate_hz": 30.0,
+        "observed_rate_hz": 30.0,
+        "max_bridge_latency_ms": 3.8
+      },
+      "frame": {
+        "frame_id": "camera_depth_optical_frame",
+        "status": "present"
+      },
+      "notes": [
+        "Depth is a required observation stream for the demo policy input window."
+      ]
+    },
+    {
+      "stream_id": "robot.camera.info",
+      "source_topic": "/camera/color/camera_info",
+      "source_message_type": "sensor_msgs/msg/CameraInfo",
+      "required": true,
+      "status": "ok",
+      "clock_domain": "sim_time",
+      "qos": {
+        "reliability": "reliable",
+        "durability": "volatile",
+        "history": "keep_last",
+        "depth": 10
+      },
+      "timing": {
+        "expected_rate_hz": 30.0,
+        "observed_rate_hz": 30.0,
+        "max_bridge_latency_ms": 2.5
+      },
+      "frame": {
+        "frame_id": "camera_color_optical_frame",
+        "status": "present"
+      },
+      "notes": [
+        "Camera calibration is preserved as a separate RoMi stream."
+      ]
+    },
+    {
+      "stream_id": "robot.joints.state",
+      "source_topic": "/joint_states",
+      "source_message_type": "sensor_msgs/msg/JointState",
+      "required": true,
+      "status": "ok",
+      "clock_domain": "sim_time",
+      "qos": {
+        "reliability": "reliable",
+        "durability": "volatile",
+        "history": "keep_last",
+        "depth": 10
+      },
+      "timing": {
+        "expected_rate_hz": 100.0,
+        "observed_rate_hz": 100.0,
+        "max_bridge_latency_ms": 1.8
+      },
+      "frame": {
+        "frame_id": "base_link",
+        "status": "configured_fallback"
+      },
+      "notes": [
+        "JointState has no standard header frame, so the stream map supplies the frame context."
+      ]
+    },
+    {
+      "stream_id": "robot.base.odom",
+      "source_topic": "/odom",
+      "source_message_type": "nav_msgs/msg/Odometry",
+      "required": true,
+      "status": "warning",
+      "clock_domain": "sim_time",
+      "qos": {
+        "reliability": "reliable",
+        "durability": "volatile",
+        "history": "keep_last",
+        "depth": 10
+      },
+      "timing": {
+        "expected_rate_hz": 50.0,
+        "observed_rate_hz": 47.8,
+        "max_bridge_latency_ms": 5.2
+      },
+      "frame": {
+        "frame_id": "odom",
+        "status": "present"
+      },
+      "notes": [
+        "One sample gap was observed; the bridge keeps the stream usable but raises a QoS diagnostic."
+      ]
+    },
+    {
+      "stream_id": "robot.frames.tf",
+      "source_topic": "/tf",
+      "source_message_type": "tf2_msgs/msg/TFMessage",
+      "required": true,
+      "status": "ok",
+      "clock_domain": "sim_time",
+      "qos": {
+        "reliability": "reliable",
+        "durability": "volatile",
+        "history": "keep_last",
+        "depth": 10
+      },
+      "timing": {
+        "expected_rate_hz": 50.0,
+        "observed_rate_hz": 50.0,
+        "max_bridge_latency_ms": 2.2
+      },
+      "frame": {
+        "frame_id": "map->odom",
+        "status": "present"
+      },
+      "notes": [
+        "Dynamic transforms remain stream samples so replay can preserve recorded time."
+      ]
+    },
+    {
+      "stream_id": "robot.frames.tf",
+      "source_topic": "/tf_static",
+      "source_message_type": "tf2_msgs/msg/TFMessage",
+      "required": true,
+      "status": "ok",
+      "clock_domain": "sim_time",
+      "qos": {
+        "reliability": "reliable",
+        "durability": "transient_local",
+        "history": "keep_last",
+        "depth": 10
+      },
+      "timing": {
+        "expected_rate_hz": 0.0,
+        "observed_rate_hz": 1.0,
+        "max_bridge_latency_ms": 2.0
+      },
+      "frame": {
+        "frame_id": "base_link->camera_color_optical_frame",
+        "status": "present"
+      },
+      "notes": [
+        "Static transforms use transient local durability and share the RoMi frame stream."
+      ]
+    },
+    {
+      "stream_id": "task.goal",
+      "source_topic": "/goal_pose",
+      "source_message_type": "geometry_msgs/msg/PoseStamped",
+      "required": true,
+      "status": "ok",
+      "clock_domain": "sim_time",
+      "qos": {
+        "reliability": "reliable",
+        "durability": "volatile",
+        "history": "keep_last",
+        "depth": 10
+      },
+      "timing": {
+        "expected_rate_hz": 1.0,
+        "observed_rate_hz": 1.0,
+        "max_bridge_latency_ms": 1.6
+      },
+      "frame": {
+        "frame_id": "map",
+        "status": "present"
+      },
+      "notes": [
+        "The goal remains an observation input; it is not an actuator command."
+      ]
+    }
+  ],
+  "tf_bridge": {
+    "dynamic_topic": "/tf",
+    "static_topic": "/tf_static",
+    "status": "ok",
+    "tracked_frames": [
+      "map",
+      "odom",
+      "base_link",
+      "camera_color_optical_frame",
+      "camera_depth_optical_frame",
+      "tool0"
+    ],
+    "notes": [
+      "Both /tf and /tf_static map into robot.frames.tf while retaining source_topic.",
+      "Frame diagnostics should flag missing, stale, cyclic, conflicting, or disconnected transforms.",
+      "RoMi replay can inspect frame data without requiring direct ROS2 tooling."
+    ]
+  },
   "events": [
     {
       "schema_version": "0.1.0",
+      "schema_id": "romi.core.diagnostic_event/0.1.0",
+      "kind": "diagnostic_event",
       "event_id": "ros2_bridge_topic_ok_camera_rgb",
       "time": {
         "event_time_ns": 12000000000,
@@ -16,14 +258,44 @@
         "stream_id": "robot.camera.rgb",
         "source_topic": "/camera/color/image_raw",
         "source_message_type": "sensor_msgs/msg/Image",
-        "reliability": "best_effort",
-        "durability": "volatile",
-        "history": "keep_last",
-        "depth": 10
+        "qos": {
+          "reliability": "best_effort",
+          "durability": "volatile",
+          "history": "keep_last",
+          "depth": 10
+        }
       }
     },
     {
       "schema_version": "0.1.0",
+      "schema_id": "romi.core.diagnostic_event/0.1.0",
+      "kind": "diagnostic_event",
+      "event_id": "ros2_bridge_tf_static_ok",
+      "time": {
+        "event_time_ns": 12010000000,
+        "clock_domain": "sim_time"
+      },
+      "severity": "info",
+      "source": "ros2_bridge",
+      "category": "frame",
+      "message": "Static transform topic is mapped with transient local QoS.",
+      "attributes": {
+        "stream_id": "robot.frames.tf",
+        "source_topic": "/tf_static",
+        "source_message_type": "tf2_msgs/msg/TFMessage",
+        "static_transform": true,
+        "qos": {
+          "reliability": "reliable",
+          "durability": "transient_local",
+          "history": "keep_last",
+          "depth": 10
+        }
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "schema_id": "romi.core.diagnostic_event/0.1.0",
+      "kind": "diagnostic_event",
       "event_id": "ros2_bridge_gap_odom_001",
       "time": {
         "event_time_ns": 12050000000,
@@ -41,5 +313,11 @@
         "observed_gap_ms": 80.0
       }
     }
+  ],
+  "limitations": [
+    "This example is a bridge diagnostics artifact, not a ROS2 replacement claim.",
+    "Discovery-level publisher QoS inspection is still future work; the prototype records subscription-side QoS and runtime observations.",
+    "Large sensor payloads are summarized in JSONL until an external payload strategy is selected.",
+    "The bridge does not emit authoritative actuator commands in the demo path."
   ]
 }

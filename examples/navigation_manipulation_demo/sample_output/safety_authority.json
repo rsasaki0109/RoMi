@@ -1,0 +1,36 @@
+{
+  "schema_version": "0.1.0",
+  "report_kind": "romi.safety_authority_report",
+  "stage": "place",
+  "clock_domain": "sim_time",
+  "policy_stream": "policy.proposed_action",
+  "policy_authority": "proposed_only",
+  "actuator_authority": "none",
+  "command_stream_emitted": false,
+  "promotion_required": "external_supervisor",
+  "blocked_reason": "proposal_not_actuator_authority",
+  "policy_samples": 41,
+  "proposed_actions": [
+    {
+      "target": "base",
+      "action_type": "hold_position",
+      "authority": "proposed_only",
+      "blocked": true,
+      "reason": "proposal_not_actuator_authority"
+    },
+    {
+      "target": "end_effector",
+      "action_type": "carry_object",
+      "authority": "proposed_only",
+      "blocked": true,
+      "reason": "proposal_not_actuator_authority"
+    },
+    {
+      "target": "gripper",
+      "action_type": "hold_closed",
+      "authority": "proposed_only",
+      "blocked": true,
+      "reason": "proposal_not_actuator_authority"
+    }
+  ]
+}
