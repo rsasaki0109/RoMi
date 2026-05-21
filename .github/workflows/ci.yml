@@ -30,7 +30,7 @@ jobs:
           node-version: "22"
 
       - name: Install browser contract dependencies
-        run: python3 -m pip install websocket-client
+        run: python3 -m pip install -r requirements-browser.txt
 
       - name: Python syntax check
         run: |
@@ -44,6 +44,12 @@ jobs:
         run: |
           find schemas examples -name '*.json' -not -path '*/artifacts/*' -print0 \
             | xargs -0 -n 1 python3 -m json.tool >/dev/null
+
+      - name: Validate sample artifact schemas
+        run: python3 tests/check_sample_artifact_schemas.py
+
+      - name: Check ROS2 bridge diagnostics
+        run: python3 tests/check_ros2_bridge_diagnostics.py
 
       - name: Run RoMi-native smoke demo
         env:

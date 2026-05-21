@@ -12,7 +12,7 @@
       {
         "stream_id": "robot.camera.rgb",
         "status": "fresh",
-        "age_ms": 0,
+        "age_ms": 50,
         "frame_id": "camera_color_optical_frame",
         "semantic_type": "rgb_image",
         "sample_index": 142
@@ -20,7 +20,7 @@
       {
         "stream_id": "robot.camera.depth",
         "status": "fresh",
-        "age_ms": 0,
+        "age_ms": 50,
         "frame_id": "camera_depth_optical_frame",
         "semantic_type": "depth_image",
         "sample_index": 142
@@ -28,7 +28,7 @@
       {
         "stream_id": "robot.joints.state",
         "status": "fresh",
-        "age_ms": 0,
+        "age_ms": 50,
         "frame_id": "base_link",
         "semantic_type": "joint_state",
         "sample_index": 142
@@ -36,7 +36,7 @@
       {
         "stream_id": "robot.base.odom",
         "status": "fresh",
-        "age_ms": 0,
+        "age_ms": 50,
         "frame_id": "odom",
         "semantic_type": "odometry",
         "sample_index": 142
@@ -44,7 +44,7 @@
       {
         "stream_id": "robot.frames.tf",
         "status": "fresh",
-        "age_ms": 0,
+        "age_ms": 50,
         "frame_id": "map->odom",
         "semantic_type": "transform_tree",
         "sample_index": 142
@@ -52,7 +52,7 @@
       {
         "stream_id": "task.goal",
         "status": "stale",
-        "age_ms": 750,
+        "age_ms": 800,
         "frame_id": "map",
         "semantic_type": "task_goal",
         "sample_index": 12
@@ -135,5 +135,147 @@
     "actuator_authority": "none",
     "promotion_required": "external_supervisor",
     "command_stream_emitted": false
+  },
+  "runtime_graph": {
+    "graph_id": "romi_studio_replay_eval_graph",
+    "source_graph": "examples/navigation_manipulation_demo/runtime-graph.example.json",
+    "mode": "replay_evaluation",
+    "active_path": [
+      "source",
+      "record",
+      "replay",
+      "policy",
+      "evaluation",
+      "safety"
+    ],
+    "nodes": [
+      {
+        "node_id": "source",
+        "role": "source",
+        "label": "native simulator",
+        "inputs": [
+          "scenario.json"
+        ],
+        "outputs": [
+          "robot.camera.rgb",
+          "robot.camera.depth",
+          "robot.camera.info",
+          "robot.joints.state",
+          "robot.base.odom",
+          "robot.frames.tf",
+          "task.goal",
+          "runtime.diagnostics"
+        ],
+        "status": "available",
+        "authority": "observation_only"
+      },
+      {
+        "node_id": "record",
+        "role": "log/dataset plane",
+        "label": "episode recorder",
+        "inputs": [
+          "robot.*",
+          "task.goal",
+          "runtime.diagnostics"
+        ],
+        "outputs": [
+          "episode.jsonl",
+          "episode_metadata"
+        ],
+        "status": "available",
+        "authority": "observation_only"
+      },
+      {
+        "node_id": "replay",
+        "role": "replay plane",
+        "label": "replay source",
+        "inputs": [
+          "episode.jsonl"
+        ],
+        "outputs": [
+          "robot.*",
+          "task.goal",
+          "runtime.diagnostics"
+        ],
+        "status": "seekable",
+        "authority": "observation_only"
+      },
+      {
+        "node_id": "policy",
+        "role": "policy runtime",
+        "label": "mock policy",
+        "inputs": [
+          "robot.camera.rgb",
+          "robot.camera.depth",
+          "robot.joints.state",
+          "robot.base.odom",
+          "robot.frames.tf",
+          "task.goal"
+        ],
+        "outputs": [
+          "policy.proposed_action"
+        ],
+        "status": "proposing",
+        "authority": "proposed_only"
+      },
+      {
+        "node_id": "evaluation",
+        "role": "evaluation/report plane",
+        "label": "policy compare",
+        "inputs": [
+          "episode.jsonl",
+          "policy.proposed_action"
+        ],
+        "outputs": [
+          "policy_compare.json"
+        ],
+        "status": "generated",
+        "authority": "observation_only"
+      },
+      {
+        "node_id": "safety",
+        "role": "safety boundary",
+        "label": "actuator authority boundary",
+        "inputs": [
+          "policy.proposed_action"
+        ],
+        "outputs": [],
+        "status": "blocking_commands",
+        "authority": "none"
+      }
+    ],
+    "edges": [
+      {
+        "from": "source",
+        "to": "record",
+        "stream_id": "robot.*"
+      },
+      {
+        "from": "record",
+        "to": "replay",
+        "stream_id": "episode.jsonl"
+      },
+      {
+        "from": "replay",
+        "to": "policy",
+        "stream_id": "policy.observation_window"
+      },
+      {
+        "from": "policy",
+        "to": "evaluation",
+        "stream_id": "policy.proposed_action"
+      },
+      {
+        "from": "policy",
+        "to": "safety",
+        "stream_id": "policy.proposed_action"
+      }
+    ],
+    "authority_boundary": {
+      "policy_authority": "proposed_only",
+      "actuator_authority": "none",
+      "command_stream_emitted": false,
+      "promotion_required": "external_supervisor"
+    }
   }
 }

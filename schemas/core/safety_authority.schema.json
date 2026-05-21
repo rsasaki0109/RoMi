@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://romi.dev/schemas/core/safety_authority.schema.json",
+  "title": "RoMi Safety Authority Report",
+  "description": "Draft schema for explicit policy proposal and actuator authority boundaries.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "report_kind",
+    "stage",
+    "clock_domain",
+    "policy_stream",
+    "policy_authority",
+    "actuator_authority",
+    "command_stream_emitted",
+    "promotion_required",
+    "blocked_reason",
+    "policy_samples",
+    "proposed_actions"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "0.1.0"
+    },
+    "report_kind": {
+      "type": "string",
+      "const": "romi.safety_authority_report"
+    },
+    "stage": {
+      "type": "string"
+    },
+    "clock_domain": {
+      "type": "string",
+      "const": "sim_time"
+    },
+    "policy_stream": {
+      "type": "string",
+      "const": "policy.proposed_action"
+    },
+    "policy_authority": {
+      "type": "string",
+      "const": "proposed_only"
+    },
+    "actuator_authority": {
+      "type": "string",
+      "const": "none"
+    },
+    "command_stream_emitted": {
+      "type": "boolean",
+      "const": false
+    },
+    "promotion_required": {
+      "type": "string"
+    },
+    "blocked_reason": {
+      "type": "string"
+    },
+    "policy_samples": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "proposed_actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "target",
+          "action_type",
+          "authority",
+          "blocked",
+          "reason"
+        ],
+        "properties": {
+          "target": {
+            "type": "string"
+          },
+          "action_type": {
+            "type": "string"
+          },
+          "authority": {
+            "type": "string",
+            "const": "proposed_only"
+          },
+          "blocked": {
+            "type": "boolean",
+            "const": true
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

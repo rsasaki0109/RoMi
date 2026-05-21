@@ -18,13 +18,23 @@ python3 -m http.server 8000 --bind 127.0.0.1 --directory examples/navigation_man
 xdg-open http://127.0.0.1:8000/romi_2d_sim/
 ```
 
-The simulator shows a semi-humanoid mobile manipulator navigating to a work area, reaching for an object, grasping it, and placing it in a bin. The right-side RoMi Studio mini inspector exposes live stream freshness, interactive runtime graph state, proposed policy actions with observation-window freshness, exportable counterfactual policy comparison, safety/actuator authority boundaries, browser-generated dataset report, replay seek controls, stream counts, runtime stage, and selectable event envelopes.
+The simulator shows a semi-humanoid mobile manipulator navigating to a work area, reaching for an object, grasping it, and placing it in a bin. The right-side RoMi Studio mini inspector exposes live stream freshness, interactive runtime graph state, proposed policy actions with observation-window freshness, exportable counterfactual policy comparison, replay-wide evaluation timeline artifacts, safety/actuator authority boundaries, browser-generated dataset report, replay seek controls, stream counts, runtime stage, and selectable event envelopes.
 
-The browser JSONL export uses the same RoMi stream names as the native smoke source and keeps payload summaries aligned with the smoke pipeline where practical. The compare view can export `policy_compare.md` and `policy_compare.json` as replay evaluation artifacts.
+The browser JSONL export uses the same RoMi stream names as the native smoke source and keeps payload summaries aligned with the smoke pipeline where practical. The compare view can export `policy_compare.md` and `policy_compare.json` as replay evaluation artifacts. The timeline view can export `evaluation_timeline.md` and `evaluation_timeline.json` for replay-wide policy behavior checks.
 
 Committed examples:
 
 - [`policy_compare.md`](../sample_output/policy_compare.md)
 - [`policy_compare.json`](../sample_output/policy_compare.json)
+- [`evaluation_timeline.md`](../sample_output/evaluation_timeline.md)
+- [`evaluation_timeline.json`](../sample_output/evaluation_timeline.json)
+- [`safety_authority.md`](../sample_output/safety_authority.md)
+- [`safety_authority.json`](../sample_output/safety_authority.json)
+
+Regenerate the committed examples from the repository root:
+
+```bash
+python examples/navigation_manipulation_demo/generate_sample_artifacts.py
+```
 
 This is not a physics simulator. It is a visual contract demo for RoMi stream, replay, observability, and policy-runtime semantics.

@@ -10,7 +10,7 @@ RoMi stands for **Robotics Middleware**. It is an early pre-MVP project explorin
 
 - Run a ROS2-free navigation + manipulation simulator.
 - Record and replay RoMi-shaped camera, depth, joint, odometry, TF, goal, and policy streams.
-- Export dataset and counterfactual policy comparison artifacts for review.
+- Export dataset, policy comparison, replay timeline, safety, and bridge diagnostics artifacts for review.
 
 <p align="center">
   <a href="docs/assets/romi-2d-nav-manip-demo.mp4">
@@ -19,7 +19,7 @@ RoMi stands for **Robotics Middleware**. It is an early pre-MVP project explorin
 </p>
 
 <p align="center">
-  <sub>Actual RoMi 2D simulator capture: ROS2-free navigation/manipulation with RoMi Studio for replay, policy comparison, safety boundaries, and dataset state.</sub>
+  <sub>Actual RoMi 2D simulator capture: ROS2-free navigation/manipulation with RoMi Studio for replay, policy comparison, timeline evaluation, safety boundaries, and dataset state.</sub>
 </p>
 
 ## Try It
@@ -42,19 +42,45 @@ python3 -m http.server 8000 --bind 127.0.0.1 --directory examples/navigation_man
 xdg-open http://127.0.0.1:8000/romi_2d_sim/
 ```
 
+Run browser-backed contract checks or regenerate README media locally:
+
+```bash
+python -m pip install -r requirements-browser.txt
+python tests/check_browser_native_contract.py
+python examples/navigation_manipulation_demo/capture_readme_video.py
+```
+
+These commands require Chrome or Chromium. The capture command can use system
+`ffmpeg` or the Python `imageio-ffmpeg` package from `requirements-browser.txt`.
+
 What this demo currently proves:
 
 - The navigation + manipulation scenario can run without ROS2.
 - The browser simulator and native smoke source share the same scenario contract.
 - The pipeline records an episode, replays it, runs a mock policy, and generates a dataset report.
 - Counterfactual policy comparison can be inspected and exported as Markdown or JSON evaluation artifacts.
+- Replay-wide timeline evaluation and safety authority reports are committed as reviewable artifacts.
+- ROS2 bridge diagnostics have a schema-backed sample covering QoS, TF, timing, and limitations.
 - Policy output is `proposed_only`; it is not actuator authority.
 
 Sample artifacts:
 
 - [policy_compare.md](examples/navigation_manipulation_demo/sample_output/policy_compare.md)
 - [policy_compare.json](examples/navigation_manipulation_demo/sample_output/policy_compare.json)
+- [evaluation_timeline.md](examples/navigation_manipulation_demo/sample_output/evaluation_timeline.md)
+- [evaluation_timeline.json](examples/navigation_manipulation_demo/sample_output/evaluation_timeline.json)
 - [dataset-report/report.md](examples/navigation_manipulation_demo/sample_output/dataset-report/report.md)
+- [dataset-report/report.json](examples/navigation_manipulation_demo/sample_output/dataset-report/report.json)
+- [report_manifest.json](examples/navigation_manipulation_demo/sample_output/report_manifest.json)
+- [safety_authority.md](examples/navigation_manipulation_demo/sample_output/safety_authority.md)
+- [safety_authority.json](examples/navigation_manipulation_demo/sample_output/safety_authority.json)
+- [ros2-qos-diagnostics.example.json](examples/navigation_manipulation_demo/ros2-qos-diagnostics.example.json)
+
+Regenerate the committed sample artifacts:
+
+```bash
+python examples/navigation_manipulation_demo/generate_sample_artifacts.py
+```
 
 Current smoke demo:
 
@@ -65,18 +91,22 @@ RoMi-native simulation: camera / depth / joints / odom / TF / goal
   -> mock policy
   -> dataset inspection report
   -> RoMi Studio policy comparison artifact
+  -> replay evaluation timeline artifact
+  -> safety authority artifact
 ```
 
 Optional ROS2 interop mode:
 
 ```text
-ROS2 camera / depth / joints / odom / TF / goal
+ROS2 camera / depth / joints / odom / TF / static TF / goal
   -> RoMi ROS2 bridge
   -> episode recorder
   -> replay source
   -> mock policy
   -> dataset inspection report
   -> RoMi Studio policy comparison artifact
+  -> replay evaluation timeline artifact
+  -> ROS2 bridge diagnostics artifact
 ```
 
 To exercise the ROS2 bridge instead:
@@ -84,6 +114,11 @@ To exercise the ROS2 bridge instead:
 ```bash
 ROMI_DEMO_SOURCE=ros2 examples/navigation_manipulation_demo/run_smoke_demo.sh
 ```
+
+Run that command inside a sourced ROS2 environment with the demo message
+packages available. The detailed scripted ROS2 runbook, expected files, and
+troubleshooting notes live in
+[bridges/ros2/rclpy_bridge](bridges/ros2/rclpy_bridge).
 
 ## What RoMi Is
 
@@ -104,6 +139,7 @@ RoMi is not a claim that ROS or ROS2 should be discarded. The first goal is inte
 The current repository contains a small end-to-end prototype path:
 
 - [ROS2 bridge prototype](bridges/ros2/rclpy_bridge)
+- [ROS2 bridge diagnostics sample](examples/navigation_manipulation_demo/ros2-qos-diagnostics.example.json)
 - [Episode recorder](tools/episode_recorder)
 - [Replay source](tools/replay_source)
 - [Mock policy](tools/mock_policy)

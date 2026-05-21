@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://romi.dev/schemas/robotics/image_summary.schema.json",
+  "title": "RoMi Image Payload Summary",
+  "description": "Compact image or depth-image payload summary used by demo stream samples.",
+  "type": "object",
+  "required": [
+    "height",
+    "width",
+    "encoding",
+    "is_bigendian",
+    "step",
+    "data_len",
+    "synthetic_scene"
+  ],
+  "properties": {
+    "height": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "width": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "encoding": {
+      "type": "string",
+      "enum": [
+        "rgb8",
+        "16UC1"
+      ]
+    },
+    "is_bigendian": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "step": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "data_len": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "synthetic_scene": {
+      "type": "object",
+      "required": [
+        "object_state",
+        "target_centroid_px"
+      ],
+      "properties": {
+        "object_state": {
+          "type": "string"
+        },
+        "target_centroid_px": {
+          "type": "object",
+          "required": [
+            "x",
+            "y"
+          ],
+          "properties": {
+            "x": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "y": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
+        },
+        "target_visible": {
+          "type": "boolean"
+        },
+        "progress_bar": {
+          "type": "number",
+          "minimum": 0
+        },
+        "background_depth_mm": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "target_depth_mm": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

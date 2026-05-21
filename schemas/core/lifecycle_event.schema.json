@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://romi.dev/schemas/core/lifecycle_event.schema.json",
+  "title": "RoMi Lifecycle Event",
+  "description": "Draft event envelope schema for start and stop events emitted by RoMi bridge, replay, policy, recorder, and tooling processes.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "wall_time_ns"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "0.1.0"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "bridge_start",
+        "bridge_stop",
+        "replay_start",
+        "replay_stop",
+        "policy_start",
+        "policy_stop",
+        "record_start",
+        "record_stop",
+        "report_start",
+        "report_stop"
+      ]
+    },
+    "wall_time_ns": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "bridge": {
+      "type": "string"
+    },
+    "node_name": {
+      "type": "string"
+    },
+    "stream_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "supported_message_types": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "streams": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "episode_id": {
+      "type": "string"
+    },
+    "episode_dir": {
+      "type": "string"
+    },
+    "stream_filter": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "event_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "first_event_time_ns": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "last_event_time_ns": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "recorded_duration_ns": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "speed": {
+      "type": "number",
+      "minimum": 0
+    },
+    "no_sleep": {
+      "type": "boolean"
+    },
+    "policy_id": {
+      "type": "string"
+    },
+    "input": {
+      "type": "string"
+    },
+    "trigger_streams": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "required_streams": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "freshness_max_age_ms": {
+      "type": "number",
+      "minimum": 0
+    },
+    "emitted_actions": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "observed_streams": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": true
+}

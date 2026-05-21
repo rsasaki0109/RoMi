@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -13,6 +14,8 @@ import tempfile
 import time
 from pathlib import Path
 from typing import Any
+
+from check_sample_artifact_schemas import validate_schema
 
 
 def require(condition: bool, message: str) -> None:
@@ -26,6 +29,38 @@ def load_json(path: Path) -> dict[str, Any]:
 
 def default_contract_path(repo_root: Path) -> Path:
     return repo_root / "examples" / "navigation_manipulation_demo" / "contract.example.json"
+
+
+def default_stream_sample_schema_path(repo_root: Path) -> Path:
+    return repo_root / "schemas" / "core" / "stream_sample.schema.json"
+
+
+def default_policy_schema_path(repo_root: Path) -> Path:
+    return repo_root / "schemas" / "ml" / "policy_io.schema.json"
+
+
+def default_chrome_bin() -> str:
+    path_bin = (
+        shutil.which("google-chrome")
+        or shutil.which("google-chrome-stable")
+        or shutil.which("chromium")
+        or shutil.which("chromium-browser")
+        or shutil.which("chrome")
+    )
+    if path_bin:
+        return path_bin
+
+    candidates = [
+        Path(os.environ.get("ProgramFiles", "")) / "Google/Chrome/Application/chrome.exe",
+        Path(os.environ.get("ProgramFiles(x86)", "")) / "Google/Chrome/Application/chrome.exe",
+        Path(os.environ.get("LOCALAPPDATA", "")) / "Google/Chrome/Application/chrome.exe",
+        Path(os.environ.get("ProgramFiles", "")) / "Microsoft/Edge/Application/msedge.exe",
+        Path(os.environ.get("ProgramFiles(x86)", "")) / "Microsoft/Edge/Application/msedge.exe",
+    ]
+    for candidate in candidates:
+        if candidate.is_file():
+            return str(candidate)
+    return "google-chrome"
 
 
 def required_stream_ids(contract: dict[str, Any]) -> list[str]:
@@ -46,6 +81,17 @@ def load_capture_helpers(repo_root: Path) -> Any:
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def check_browser_contract_prerequisites(chrome_bin: str, helpers: Any) -> None:
+    if Path(chrome_bin).is_file() or shutil.which(chrome_bin):
+        return
+    raise RuntimeError(
+        "Could not find Chrome or Chromium for browser/native contract checks. "
+        "Install Chrome/Chromium, or pass --chrome-bin with the executable path. "
+        "Install Python browser dependencies with: "
+        "python -m pip install -r requirements-browser.txt"
+    )
 
 
 def iter_jsonl(path: Path) -> list[dict[str, Any]]:
@@ -176,9 +222,24 @@ def browser_snapshot(cdp: Any, session_id: str, sim_time_sec: float, contract: d
     return json.loads(result["result"]["value"])
 
 
-def check_common_event_contract(browser_event: dict[str, Any], native_event: dict[str, Any], stream_id: str, contract: dict[str, Any]) -> None:
+def check_stream_sample_schema(event: dict[str, Any], schema: dict[str, Any], label: str) -> None:
+    validate_schema(event, schema, label)
+    require(event.get("schema_id"), f"{label} missing schema_id")
+    require(isinstance(event.get("payload_summary"), dict), f"{label} payload_summary must be an object")
+    require(isinstance(event.get("metadata"), dict), f"{label} metadata must be an object")
+
+
+def check_common_event_contract(
+    browser_event: dict[str, Any],
+    native_event: dict[str, Any],
+    stream_id: str,
+    contract: dict[str, Any],
+    stream_sample_schema: dict[str, Any],
+) -> None:
     stream = stream_contract(contract, stream_id)
     require(browser_event is not None, f"browser missing {stream_id}")
+    check_stream_sample_schema(browser_event, stream_sample_schema, f"browser.{stream_id}")
+    check_stream_sample_schema(native_event, stream_sample_schema, f"native.{stream_id}")
     require(browser_event.get("kind") == "stream_sample", f"browser {stream_id} must be a stream_sample")
     require(browser_event.get("stream_id") == stream_id, f"browser stream id mismatch: {stream_id}")
     require(browser_event.get("semantic_type") == native_event.get("semantic_type") == stream["semantic_type"], f"semantic_type mismatch for {stream_id}")
@@ -251,13 +312,20 @@ def check_stream_payload(browser_event: dict[str, Any], native_event: dict[str, 
         require(browser_payload.get("target_object") == native_payload.get("target_object") == invariants["target_object"], "task.goal target_object mismatch")
 
 
-def check_policy_event(browser_event: dict[str, Any], contract: dict[str, Any]) -> None:
+def check_policy_event(
+    browser_event: dict[str, Any],
+    contract: dict[str, Any],
+    stream_sample_schema: dict[str, Any],
+    policy_schema: dict[str, Any],
+) -> None:
     policy_contract = contract["policy"]
     require(browser_event is not None, "browser missing policy.proposed_action")
+    check_stream_sample_schema(browser_event, stream_sample_schema, "browser.policy.proposed_action")
     require(browser_event.get("stream_id") == policy_contract["stream_id"], "browser policy stream mismatch")
     require(browser_event.get("semantic_type") == policy_contract["semantic_type"], "browser policy semantic_type mismatch")
     require(browser_event.get("metadata", {}).get("authority") == policy_contract["authority"], "browser policy metadata authority mismatch")
     payload = browser_event.get("payload_summary") or {}
+    validate_schema(payload, policy_schema, "browser.policy.proposed_action.payload_summary")
     require(payload.get("metadata", {}).get("authority") == policy_contract["authority"], "browser policy payload authority mismatch")
     actions = payload.get("proposed_actions", [])
     require(len(actions) == policy_contract["proposed_action_count"], "browser policy proposed action count mismatch")
@@ -488,6 +556,9 @@ def check_studio_policy_compare(cdp: Any, session_id: str) -> None:
     require(all(policy["actuator_authority"] == "none" for policy in policies), "Studio policy compare actuator authority mismatch")
     require(all(policy["command_stream_emitted"] is False for policy in policies), "Studio policy compare command stream boundary mismatch")
     require(report["safety_boundary"]["command_stream_emitted"] is False, "Studio policy compare safety boundary should not emit commands")
+    require(report["runtime_graph"]["graph_id"] == "romi_studio_replay_eval_graph", "Studio policy compare runtime graph id mismatch")
+    require(report["runtime_graph"]["authority_boundary"]["actuator_authority"] == "none", "Studio policy compare runtime graph actuator boundary mismatch")
+    require("policy" in report["runtime_graph"]["active_path"], "Studio policy compare runtime graph missing policy path")
     require(len(report["diffs"]) >= 3, "Studio policy compare diff count mismatch")
     require(payload["markdown_export_present"] is True, "Studio policy compare markdown export button missing")
     require(payload["json_export_present"] is True, "Studio policy compare JSON export button missing")
@@ -514,9 +585,82 @@ def check_sample_policy_compare_artifacts(repo_root: Path) -> None:
     require(len(report["policies"]) == 2, "sample policy compare policy count mismatch")
     require(all(policy["authority"] == "proposed_only" for policy in report["policies"]), "sample policy compare authority mismatch")
     require(report["safety_boundary"]["command_stream_emitted"] is False, "sample policy compare command stream boundary mismatch")
+    require(report["runtime_graph"]["graph_id"] == "romi_studio_replay_eval_graph", "sample policy compare runtime graph id mismatch")
+    require(report["runtime_graph"]["authority_boundary"]["command_stream_emitted"] is False, "sample policy compare runtime graph command boundary mismatch")
     require("RoMi Policy Compare" in markdown, "sample policy compare markdown missing title")
     require("mock_policy_v2_guarded" in markdown, "sample policy compare markdown missing guarded policy")
     require("not_emitted" in markdown, "sample policy compare markdown missing command stream boundary")
+
+
+def check_studio_evaluation_timeline(cdp: Any, session_id: str) -> None:
+    expression = """
+      (() => {
+        document.body.classList.remove('capture-mode');
+        window.romiCapture.seekToSeconds(11.8);
+        window.romiCapture.setMode('timeline');
+        const report = window.romiCapture.evaluationTimelineReport();
+        const markdown = window.romiCapture.evaluationTimelineReportMarkdown();
+        const jsonReport = JSON.parse(window.romiCapture.evaluationTimelineReportJson());
+        return JSON.stringify({
+          report,
+          markdown,
+          json_report: jsonReport,
+          active_tab: document.querySelector('.mode-tab.active')?.dataset.mode,
+          timeline_text: document.getElementById('modeView').textContent,
+          markdown_export_present: Boolean(document.querySelector('[data-export-evaluation-timeline="markdown"]')),
+          json_export_present: Boolean(document.querySelector('[data-export-evaluation-timeline="json"]')),
+          row_count: document.querySelectorAll('.eval-row').length,
+          changed_count: document.querySelectorAll('.eval-row.changed').length,
+          scroll_width: document.documentElement.scrollWidth,
+          window_width: window.innerWidth,
+        });
+      })();
+    """
+    result = cdp.send(
+        "Runtime.evaluate",
+        {"expression": expression, "returnByValue": True},
+        session_id=session_id,
+    )
+    payload = json.loads(result["result"]["value"])
+    report = payload["report"]
+    stages = {entry["stage"] for entry in report["stage_summary"]}
+    require(payload["active_tab"] == "timeline", "Studio evaluation timeline tab did not activate")
+    require(report["report_kind"] == "romi.replay_evaluation_timeline", "Studio evaluation timeline report kind mismatch")
+    require(payload["json_report"]["report_kind"] == report["report_kind"], "Studio evaluation timeline JSON export kind mismatch")
+    require(report["clock_domain"] == "sim_time", "Studio evaluation timeline clock domain mismatch")
+    require(report["sample_count"] == len(report["samples"]), "Studio evaluation timeline sample count mismatch")
+    require(report["sample_count"] >= 10, "Studio evaluation timeline should sample across replay")
+    require({"navigate", "reach", "grasp", "place", "report"}.issubset(stages), "Studio evaluation timeline missing stage coverage")
+    require(any(sample["changed_actions"] > 0 for sample in report["samples"]), "Studio evaluation timeline missing changed action samples")
+    require(all(sample["command_stream_emitted"] is False for sample in report["samples"]), "Studio evaluation timeline command stream boundary mismatch")
+    require(report["safety_boundary"]["actuator_authority"] == "none", "Studio evaluation timeline actuator boundary mismatch")
+    require(report["runtime_graph"]["graph_id"] == "romi_studio_replay_eval_graph", "Studio evaluation timeline runtime graph id mismatch")
+    require(report["runtime_graph"]["authority_boundary"]["policy_authority"] == "proposed_only", "Studio evaluation timeline runtime graph policy authority mismatch")
+    require("evaluation" in report["runtime_graph"]["active_path"], "Studio evaluation timeline runtime graph missing evaluation path")
+    require(payload["markdown_export_present"] is True, "Studio evaluation timeline markdown export button missing")
+    require(payload["json_export_present"] is True, "Studio evaluation timeline JSON export button missing")
+    require(payload["row_count"] == report["sample_count"], "Studio evaluation timeline row count mismatch")
+    require(payload["changed_count"] >= 1, "Studio evaluation timeline UI should show changed samples")
+    require("evaluation_timeline.md" in payload["timeline_text"], "Studio evaluation timeline UI missing artifact names")
+    require("not_emitted" in payload["timeline_text"], "Studio evaluation timeline UI missing command stream boundary")
+    require("RoMi Replay Evaluation Timeline" in payload["markdown"], "Studio evaluation timeline markdown missing title")
+    require("not_emitted" in payload["markdown"], "Studio evaluation timeline markdown missing command stream boundary")
+    require(payload["scroll_width"] <= payload["window_width"], "Studio evaluation timeline introduced horizontal page overflow")
+
+
+def check_sample_evaluation_timeline_artifacts(repo_root: Path) -> None:
+    sample_dir = repo_root / "examples" / "navigation_manipulation_demo" / "sample_output"
+    report = load_json(sample_dir / "evaluation_timeline.json")
+    markdown = (sample_dir / "evaluation_timeline.md").read_text(encoding="utf-8")
+    require(report["report_kind"] == "romi.replay_evaluation_timeline", "sample evaluation timeline report kind mismatch")
+    require(report["clock_domain"] == "sim_time", "sample evaluation timeline clock domain mismatch")
+    require(report["sample_count"] == len(report["samples"]), "sample evaluation timeline sample count mismatch")
+    require(any(sample["changed_actions"] > 0 for sample in report["samples"]), "sample evaluation timeline missing changed samples")
+    require(report["safety_boundary"]["command_stream_emitted"] is False, "sample evaluation timeline command stream boundary mismatch")
+    require(report["runtime_graph"]["graph_id"] == "romi_studio_replay_eval_graph", "sample evaluation timeline runtime graph id mismatch")
+    require(report["runtime_graph"]["authority_boundary"]["actuator_authority"] == "none", "sample evaluation timeline runtime graph actuator boundary mismatch")
+    require("RoMi Replay Evaluation Timeline" in markdown, "sample evaluation timeline markdown missing title")
+    require("not_emitted" in markdown, "sample evaluation timeline markdown missing command stream boundary")
 
 
 def check_studio_safety_authority(cdp: Any, session_id: str) -> None:
@@ -598,9 +742,18 @@ def check_studio_runtime_graph(cdp: Any, session_id: str) -> None:
     require(payload["scroll_width"] <= payload["window_width"], "Studio runtime graph introduced horizontal page overflow")
 
 
-def check_browser_native_contract(repo_root: Path, chrome_bin: str, contract: dict[str, Any]) -> None:
-    helpers = load_capture_helpers(repo_root)
+def check_browser_native_contract(
+    repo_root: Path,
+    chrome_bin: str,
+    contract: dict[str, Any],
+    stream_sample_schema: dict[str, Any],
+    policy_schema: dict[str, Any],
+) -> None:
     check_sample_policy_compare_artifacts(repo_root)
+    check_sample_evaluation_timeline_artifacts(repo_root)
+    helpers = load_capture_helpers(repo_root)
+    helpers.require_websocket()
+    check_browser_contract_prerequisites(chrome_bin, helpers)
 
     with tempfile.TemporaryDirectory(prefix="romi-native-contract-") as tmp:
         native_events = run_native_source(repo_root, Path(tmp) / "native-events.jsonl")
@@ -619,16 +772,17 @@ def check_browser_native_contract(repo_root: Path, chrome_bin: str, contract: di
             for stream_id in required_stream_ids(contract):
                 native_event = latest_stream_at_or_before(native_events, stream_id, event_time_ns)
                 browser_event = snapshot[stream_id]
-                check_common_event_contract(browser_event, native_event, stream_id, contract)
+                check_common_event_contract(browser_event, native_event, stream_id, contract, stream_sample_schema)
                 check_stream_payload(browser_event, native_event, stream_id, contract)
 
         policy_snapshot = max(snapshots)
-        check_policy_event(snapshots[policy_snapshot][contract["policy"]["stream_id"]], contract)
+        check_policy_event(snapshots[policy_snapshot][contract["policy"]["stream_id"]], contract, stream_sample_schema, policy_schema)
         check_studio_seek_controls(cdp, session_id)
         check_studio_event_inspector(cdp, session_id)
         check_studio_dataset_report(cdp, session_id)
         check_studio_policy_observation_window(cdp, session_id)
         check_studio_policy_compare(cdp, session_id)
+        check_studio_evaluation_timeline(cdp, session_id)
         check_studio_safety_authority(cdp, session_id)
         check_studio_runtime_graph(cdp, session_id)
         print(
@@ -656,23 +810,24 @@ def check_browser_native_contract(repo_root: Path, chrome_bin: str, contract: di
 
 def parse_args() -> argparse.Namespace:
     repo_root = Path(__file__).resolve().parents[1]
-    default_chrome = (
-        shutil.which("google-chrome")
-        or shutil.which("google-chrome-stable")
-        or shutil.which("chromium")
-        or shutil.which("chromium-browser")
-        or "google-chrome"
-    )
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", type=Path, default=repo_root)
     parser.add_argument("--contract", type=Path, default=default_contract_path(repo_root))
-    parser.add_argument("--chrome-bin", default=default_chrome)
+    parser.add_argument("--stream-sample-schema", type=Path, default=default_stream_sample_schema_path(repo_root))
+    parser.add_argument("--policy-schema", type=Path, default=default_policy_schema_path(repo_root))
+    parser.add_argument("--chrome-bin", default=default_chrome_bin())
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
-    check_browser_native_contract(args.repo_root.resolve(), args.chrome_bin, load_json(args.contract))
+    check_browser_native_contract(
+        args.repo_root.resolve(),
+        args.chrome_bin,
+        load_json(args.contract),
+        load_json(args.stream_sample_schema),
+        load_json(args.policy_schema),
+    )
     return 0
 
 

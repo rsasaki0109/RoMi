@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://romi.dev/schemas/robotics/camera_info_summary.schema.json",
+  "title": "RoMi Camera Info Payload Summary",
+  "description": "Compact camera calibration payload summary used by demo stream samples.",
+  "type": "object",
+  "required": [
+    "height",
+    "width",
+    "distortion_model",
+    "d_len",
+    "k_len",
+    "p_len"
+  ],
+  "properties": {
+    "height": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "width": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "distortion_model": {
+      "type": "string"
+    },
+    "d_len": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "k_len": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "p_len": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "additionalProperties": false
+}
