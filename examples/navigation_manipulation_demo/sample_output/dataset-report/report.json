@@ -1,0 +1,1025 @@
+{
+  "diagnostics": {
+    "by_category": {
+      "native_sim": 32
+    },
+    "by_severity": {
+      "info": 32
+    },
+    "event_count": 32
+  },
+  "episode": {
+    "clock": {
+      "clock_domain": "sim_time",
+      "end_time_ns": 15916666603,
+      "replay_time_scale": 1.0,
+      "start_time_ns": 0
+    },
+    "episode_id": "nav_manip_demo_sample",
+    "runtime_graph": {
+      "graph_id": "nav_manip_demo_graph",
+      "nodes": [
+        "simulation_source",
+        "episode_recorder",
+        "replay_source",
+        "observation_synchronizer",
+        "mock_nav_manip_policy",
+        "diagnostics_reporter"
+      ]
+    },
+    "scenario": {
+      "mode": "simulation",
+      "name": "navigation_to_table_and_mock_pick",
+      "robot_id": "mobile_manipulator_demo",
+      "world_id": "demo_world"
+    }
+  },
+  "episode_dir": "examples/navigation_manipulation_demo/sample_output/dataset-report",
+  "generated_at_unix_ns": 0,
+  "kind": "dataset_inspection_report",
+  "observation_window": {
+    "available_stream_count": 7,
+    "missing_stream_count": 0,
+    "required_stream_count": 7,
+    "streams": [
+      {
+        "delta_abs_ms": 0.0,
+        "delta_ms": 0.0,
+        "event_time_ns": 0,
+        "frame_id": "odom",
+        "payload_schema_id": "https://romi.dev/schemas/robotics/odometry_summary.schema.json",
+        "payload_summary": {
+          "angular": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "child_frame_id": "base_link",
+          "linear": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "orientation": {
+            "w": 0.9996875162757026,
+            "x": 0.0,
+            "y": 0.0,
+            "z": -0.024997395914712332
+          },
+          "position": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "stage": "initialize"
+        },
+        "sample_index": 1,
+        "semantic_type": "odometry",
+        "source_message_type": "romi.robotics.OdometrySummary",
+        "source_topic": null,
+        "status": "ok",
+        "stream_id": "robot.base.odom"
+      },
+      {
+        "delta_abs_ms": 0.0,
+        "delta_ms": 0.0,
+        "event_time_ns": 0,
+        "frame_id": "camera_depth_optical_frame",
+        "payload_schema_id": "https://romi.dev/schemas/robotics/image_summary.schema.json",
+        "payload_summary": {
+          "data_len": 28800,
+          "encoding": "16UC1",
+          "height": 90,
+          "is_bigendian": 0,
+          "step": 320,
+          "synthetic_scene": {
+            "background_depth_mm": 1800,
+            "object_state": "on_table",
+            "target_centroid_px": {
+              "x": 118,
+              "y": 42
+            },
+            "target_depth_mm": 620
+          },
+          "width": 160
+        },
+        "sample_index": 1,
+        "semantic_type": "depth_image",
+        "source_message_type": "romi.robotics.ImageSummary",
+        "source_topic": null,
+        "status": "ok",
+        "stream_id": "robot.camera.depth"
+      },
+      {
+        "delta_abs_ms": 0.0,
+        "delta_ms": 0.0,
+        "event_time_ns": 0,
+        "frame_id": "camera_color_optical_frame",
+        "payload_schema_id": "https://romi.dev/schemas/robotics/camera_info_summary.schema.json",
+        "payload_summary": {
+          "d_len": 0,
+          "distortion_model": "plumb_bob",
+          "height": 90,
+          "k_len": 9,
+          "p_len": 12,
+          "width": 160
+        },
+        "sample_index": 1,
+        "semantic_type": "camera_info",
+        "source_message_type": "romi.robotics.CameraInfoSummary",
+        "source_topic": null,
+        "status": "ok",
+        "stream_id": "robot.camera.info"
+      },
+      {
+        "delta_abs_ms": 0.0,
+        "delta_ms": 0.0,
+        "event_time_ns": 0,
+        "frame_id": "camera_color_optical_frame",
+        "payload_schema_id": "https://romi.dev/schemas/robotics/image_summary.schema.json",
+        "payload_summary": {
+          "data_len": 43200,
+          "encoding": "rgb8",
+          "height": 90,
+          "is_bigendian": 0,
+          "step": 480,
+          "synthetic_scene": {
+            "object_state": "on_table",
+            "progress_bar": 0.0,
+            "target_centroid_px": {
+              "x": 118,
+              "y": 42
+            },
+            "target_visible": true
+          },
+          "width": 160
+        },
+        "sample_index": 1,
+        "semantic_type": "rgb_image",
+        "source_message_type": "romi.robotics.ImageSummary",
+        "source_topic": null,
+        "status": "ok",
+        "stream_id": "robot.camera.rgb"
+      },
+      {
+        "delta_abs_ms": 0.0,
+        "delta_ms": 0.0,
+        "event_time_ns": 0,
+        "frame_id": "map->odom",
+        "payload_schema_id": "https://romi.dev/schemas/robotics/transform_tree_summary.schema.json",
+        "payload_summary": {
+          "frames_sample": [
+            {
+              "child_frame_id": "odom",
+              "parent_frame_id": "map",
+              "stamp_ns": 0
+            },
+            {
+              "child_frame_id": "base_link",
+              "parent_frame_id": "odom",
+              "stamp_ns": 0
+            },
+            {
+              "child_frame_id": "camera_color_optical_frame",
+              "parent_frame_id": "base_link",
+              "stamp_ns": 0
+            },
+            {
+              "child_frame_id": "camera_depth_optical_frame",
+              "parent_frame_id": "base_link",
+              "stamp_ns": 0
+            },
+            {
+              "child_frame_id": "arm_base_link",
+              "parent_frame_id": "base_link",
+              "stamp_ns": 0
+            },
+            {
+              "child_frame_id": "tool0",
+              "parent_frame_id": "arm_base_link",
+              "stamp_ns": 0
+            }
+          ],
+          "synthetic_base_translation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "synthetic_object_position": {
+            "x": 1.9066666666666667,
+            "y": 0.3333333333333333,
+            "z": 0.0
+          },
+          "transform_count": 6
+        },
+        "sample_index": 1,
+        "semantic_type": "transform_tree",
+        "source_message_type": "romi.robotics.TransformTreeSummary",
+        "source_topic": null,
+        "status": "ok",
+        "stream_id": "robot.frames.tf"
+      },
+      {
+        "delta_abs_ms": 0.0,
+        "delta_ms": 0.0,
+        "event_time_ns": 0,
+        "frame_id": "base_link",
+        "payload_schema_id": "https://romi.dev/schemas/robotics/joint_state_summary.schema.json",
+        "payload_summary": {
+          "effort_count": 7,
+          "joint_count": 7,
+          "joint_names_sample": [
+            "waist_yaw",
+            "torso_lift",
+            "right_shoulder_pitch",
+            "right_elbow",
+            "right_wrist",
+            "gripper_left",
+            "gripper_right"
+          ],
+          "position_count": 7,
+          "position_sample": [
+            -0.05,
+            0.08,
+            -0.0,
+            0.0,
+            -0.0,
+            0.04,
+            0.04
+          ],
+          "velocity_count": 7
+        },
+        "sample_index": 1,
+        "semantic_type": "joint_state",
+        "source_message_type": "romi.robotics.JointStateSummary",
+        "source_topic": null,
+        "status": "ok",
+        "stream_id": "robot.joints.state"
+      },
+      {
+        "delta_abs_ms": 0.0,
+        "delta_ms": 0.0,
+        "event_time_ns": 0,
+        "frame_id": "map",
+        "payload_schema_id": "https://romi.dev/schemas/robotics/task_goal_summary.schema.json",
+        "payload_summary": {
+          "orientation": {
+            "w": 1.0,
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "position": {
+            "x": 1.6,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "scenario_id": "romi_2d_nav_manip_demo",
+          "target_object": "orange_cube"
+        },
+        "sample_index": 1,
+        "semantic_type": "task_goal",
+        "source_message_type": "romi.robotics.PoseGoalSummary",
+        "source_topic": null,
+        "status": "ok",
+        "stream_id": "task.goal"
+      }
+    ],
+    "target_time_ns": 0,
+    "window_end_time_ns": 250000000,
+    "window_ms": 250.0,
+    "window_start_time_ns": 0
+  },
+  "policy": {
+    "actions": [
+      {
+        "authority": "proposed_only",
+        "event_time_ns": 0,
+        "inference_latency_ms": 0.004,
+        "proposed_action_count": 3,
+        "proposed_actions": [
+          {
+            "action_type": "navigate_to_goal",
+            "authority": "proposed_only",
+            "target": "base",
+            "values": {
+              "frame_id": "map",
+              "goal_position": {
+                "x": 1.6,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "mode": "demo_navigation_goal"
+            }
+          },
+          {
+            "action_type": "hold_ready_pose",
+            "authority": "proposed_only",
+            "target": "end_effector",
+            "values": {
+              "frame_id": "base_link",
+              "reason": "mock_navigation_manipulation_demo"
+            }
+          },
+          {
+            "action_type": "hold_open",
+            "authority": "proposed_only",
+            "target": "gripper",
+            "values": {
+              "reason": "mock_policy_does_not_command_actuators"
+            }
+          }
+        ]
+      },
+      {
+        "authority": "proposed_only",
+        "event_time_ns": 999999996,
+        "inference_latency_ms": 0.004,
+        "proposed_action_count": 3,
+        "proposed_actions": [
+          {
+            "action_type": "navigate_to_goal",
+            "authority": "proposed_only",
+            "target": "base",
+            "values": {
+              "frame_id": "map",
+              "goal_position": {
+                "x": 1.6,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "mode": "demo_navigation_goal"
+            }
+          },
+          {
+            "action_type": "hold_ready_pose",
+            "authority": "proposed_only",
+            "target": "end_effector",
+            "values": {
+              "frame_id": "base_link",
+              "reason": "mock_navigation_manipulation_demo"
+            }
+          },
+          {
+            "action_type": "hold_open",
+            "authority": "proposed_only",
+            "target": "gripper",
+            "values": {
+              "reason": "mock_policy_does_not_command_actuators"
+            }
+          }
+        ]
+      },
+      {
+        "authority": "proposed_only",
+        "event_time_ns": 1999999992,
+        "inference_latency_ms": 0.004,
+        "proposed_action_count": 3,
+        "proposed_actions": [
+          {
+            "action_type": "navigate_to_goal",
+            "authority": "proposed_only",
+            "target": "base",
+            "values": {
+              "frame_id": "map",
+              "goal_position": {
+                "x": 1.6,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "mode": "demo_navigation_goal"
+            }
+          },
+          {
+            "action_type": "hold_ready_pose",
+            "authority": "proposed_only",
+            "target": "end_effector",
+            "values": {
+              "frame_id": "base_link",
+              "reason": "mock_navigation_manipulation_demo"
+            }
+          },
+          {
+            "action_type": "hold_open",
+            "authority": "proposed_only",
+            "target": "gripper",
+            "values": {
+              "reason": "mock_policy_does_not_command_actuators"
+            }
+          }
+        ]
+      },
+      {
+        "authority": "proposed_only",
+        "event_time_ns": 2999999988,
+        "inference_latency_ms": 0.004,
+        "proposed_action_count": 3,
+        "proposed_actions": [
+          {
+            "action_type": "navigate_to_goal",
+            "authority": "proposed_only",
+            "target": "base",
+            "values": {
+              "frame_id": "map",
+              "goal_position": {
+                "x": 1.6,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "mode": "demo_navigation_goal"
+            }
+          },
+          {
+            "action_type": "hold_ready_pose",
+            "authority": "proposed_only",
+            "target": "end_effector",
+            "values": {
+              "frame_id": "base_link",
+              "reason": "mock_navigation_manipulation_demo"
+            }
+          },
+          {
+            "action_type": "hold_open",
+            "authority": "proposed_only",
+            "target": "gripper",
+            "values": {
+              "reason": "mock_policy_does_not_command_actuators"
+            }
+          }
+        ]
+      },
+      {
+        "authority": "proposed_only",
+        "event_time_ns": 3999999984,
+        "inference_latency_ms": 0.004,
+        "proposed_action_count": 3,
+        "proposed_actions": [
+          {
+            "action_type": "navigate_to_goal",
+            "authority": "proposed_only",
+            "target": "base",
+            "values": {
+              "frame_id": "map",
+              "goal_position": {
+                "x": 1.6,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "mode": "demo_navigation_goal"
+            }
+          },
+          {
+            "action_type": "hold_ready_pose",
+            "authority": "proposed_only",
+            "target": "end_effector",
+            "values": {
+              "frame_id": "base_link",
+              "reason": "mock_navigation_manipulation_demo"
+            }
+          },
+          {
+            "action_type": "hold_open",
+            "authority": "proposed_only",
+            "target": "gripper",
+            "values": {
+              "reason": "mock_policy_does_not_command_actuators"
+            }
+          }
+        ]
+      },
+      {
+        "authority": "proposed_only",
+        "event_time_ns": 4999999980,
+        "inference_latency_ms": 0.004,
+        "proposed_action_count": 3,
+        "proposed_actions": [
+          {
+            "action_type": "navigate_to_goal",
+            "authority": "proposed_only",
+            "target": "base",
+            "values": {
+              "frame_id": "map",
+              "goal_position": {
+                "x": 1.6,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "mode": "demo_navigation_goal"
+            }
+          },
+          {
+            "action_type": "hold_ready_pose",
+            "authority": "proposed_only",
+            "target": "end_effector",
+            "values": {
+              "frame_id": "base_link",
+              "reason": "mock_navigation_manipulation_demo"
+            }
+          },
+          {
+            "action_type": "hold_open",
+            "authority": "proposed_only",
+            "target": "gripper",
+            "values": {
+              "reason": "mock_policy_does_not_command_actuators"
+            }
+          }
+        ]
+      },
+      {
+        "authority": "proposed_only",
+        "event_time_ns": 5999999976,
+        "inference_latency_ms": 0.004,
+        "proposed_action_count": 3,
+        "proposed_actions": [
+          {
+            "action_type": "navigate_to_goal",
+            "authority": "proposed_only",
+            "target": "base",
+            "values": {
+              "frame_id": "map",
+              "goal_position": {
+                "x": 1.6,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "mode": "demo_navigation_goal"
+            }
+          },
+          {
+            "action_type": "hold_ready_pose",
+            "authority": "proposed_only",
+            "target": "end_effector",
+            "values": {
+              "frame_id": "base_link",
+              "reason": "mock_navigation_manipulation_demo"
+            }
+          },
+          {
+            "action_type": "hold_open",
+            "authority": "proposed_only",
+            "target": "gripper",
+            "values": {
+              "reason": "mock_policy_does_not_command_actuators"
+            }
+          }
+        ]
+      },
+      {
+        "authority": "proposed_only",
+        "event_time_ns": 6999999972,
+        "inference_latency_ms": 0.004,
+        "proposed_action_count": 3,
+        "proposed_actions": [
+          {
+            "action_type": "navigate_to_goal",
+            "authority": "proposed_only",
+            "target": "base",
+            "values": {
+              "frame_id": "map",
+              "goal_position": {
+                "x": 1.6,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "mode": "demo_navigation_goal"
+            }
+          },
+          {
+            "action_type": "hold_ready_pose",
+            "authority": "proposed_only",
+            "target": "end_effector",
+            "values": {
+              "frame_id": "base_link",
+              "reason": "mock_navigation_manipulation_demo"
+            }
+          },
+          {
+            "action_type": "hold_open",
+            "authority": "proposed_only",
+            "target": "gripper",
+            "values": {
+              "reason": "mock_policy_does_not_command_actuators"
+            }
+          }
+        ]
+      },
+      {
+        "authority": "proposed_only",
+        "event_time_ns": 7999999968,
+        "inference_latency_ms": 0.004,
+        "proposed_action_count": 3,
+        "proposed_actions": [
+          {
+            "action_type": "navigate_to_goal",
+            "authority": "proposed_only",
+            "target": "base",
+            "values": {
+              "frame_id": "map",
+              "goal_position": {
+                "x": 1.6,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "mode": "demo_navigation_goal"
+            }
+          },
+          {
+            "action_type": "hold_ready_pose",
+            "authority": "proposed_only",
+            "target": "end_effector",
+            "values": {
+              "frame_id": "base_link",
+              "reason": "mock_navigation_manipulation_demo"
+            }
+          },
+          {
+            "action_type": "hold_open",
+            "authority": "proposed_only",
+            "target": "gripper",
+            "values": {
+              "reason": "mock_policy_does_not_command_actuators"
+            }
+          }
+        ]
+      },
+      {
+        "authority": "proposed_only",
+        "event_time_ns": 8999999964,
+        "inference_latency_ms": 0.004,
+        "proposed_action_count": 3,
+        "proposed_actions": [
+          {
+            "action_type": "navigate_to_goal",
+            "authority": "proposed_only",
+            "target": "base",
+            "values": {
+              "frame_id": "map",
+              "goal_position": {
+                "x": 1.6,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "mode": "demo_navigation_goal"
+            }
+          },
+          {
+            "action_type": "hold_ready_pose",
+            "authority": "proposed_only",
+            "target": "end_effector",
+            "values": {
+              "frame_id": "base_link",
+              "reason": "mock_navigation_manipulation_demo"
+            }
+          },
+          {
+            "action_type": "hold_open",
+            "authority": "proposed_only",
+            "target": "gripper",
+            "values": {
+              "reason": "mock_policy_does_not_command_actuators"
+            }
+          }
+        ]
+      },
+      {
+        "authority": "proposed_only",
+        "event_time_ns": 9999999960,
+        "inference_latency_ms": 0.004,
+        "proposed_action_count": 3,
+        "proposed_actions": [
+          {
+            "action_type": "navigate_to_goal",
+            "authority": "proposed_only",
+            "target": "base",
+            "values": {
+              "frame_id": "map",
+              "goal_position": {
+                "x": 1.6,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "mode": "demo_navigation_goal"
+            }
+          },
+          {
+            "action_type": "hold_ready_pose",
+            "authority": "proposed_only",
+            "target": "end_effector",
+            "values": {
+              "frame_id": "base_link",
+              "reason": "mock_navigation_manipulation_demo"
+            }
+          },
+          {
+            "action_type": "hold_open",
+            "authority": "proposed_only",
+            "target": "gripper",
+            "values": {
+              "reason": "mock_policy_does_not_command_actuators"
+            }
+          }
+        ]
+      },
+      {
+        "authority": "proposed_only",
+        "event_time_ns": 10999999956,
+        "inference_latency_ms": 0.004,
+        "proposed_action_count": 3,
+        "proposed_actions": [
+          {
+            "action_type": "navigate_to_goal",
+            "authority": "proposed_only",
+            "target": "base",
+            "values": {
+              "frame_id": "map",
+              "goal_position": {
+                "x": 1.6,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "mode": "demo_navigation_goal"
+            }
+          },
+          {
+            "action_type": "hold_ready_pose",
+            "authority": "proposed_only",
+            "target": "end_effector",
+            "values": {
+              "frame_id": "base_link",
+              "reason": "mock_navigation_manipulation_demo"
+            }
+          },
+          {
+            "action_type": "hold_open",
+            "authority": "proposed_only",
+            "target": "gripper",
+            "values": {
+              "reason": "mock_policy_does_not_command_actuators"
+            }
+          }
+        ]
+      },
+      {
+        "authority": "proposed_only",
+        "event_time_ns": 11999999952,
+        "inference_latency_ms": 0.004,
+        "proposed_action_count": 3,
+        "proposed_actions": [
+          {
+            "action_type": "navigate_to_goal",
+            "authority": "proposed_only",
+            "target": "base",
+            "values": {
+              "frame_id": "map",
+              "goal_position": {
+                "x": 1.6,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "mode": "demo_navigation_goal"
+            }
+          },
+          {
+            "action_type": "hold_ready_pose",
+            "authority": "proposed_only",
+            "target": "end_effector",
+            "values": {
+              "frame_id": "base_link",
+              "reason": "mock_navigation_manipulation_demo"
+            }
+          },
+          {
+            "action_type": "hold_open",
+            "authority": "proposed_only",
+            "target": "gripper",
+            "values": {
+              "reason": "mock_policy_does_not_command_actuators"
+            }
+          }
+        ]
+      },
+      {
+        "authority": "proposed_only",
+        "event_time_ns": 12999999948,
+        "inference_latency_ms": 0.004,
+        "proposed_action_count": 3,
+        "proposed_actions": [
+          {
+            "action_type": "navigate_to_goal",
+            "authority": "proposed_only",
+            "target": "base",
+            "values": {
+              "frame_id": "map",
+              "goal_position": {
+                "x": 1.6,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "mode": "demo_navigation_goal"
+            }
+          },
+          {
+            "action_type": "hold_ready_pose",
+            "authority": "proposed_only",
+            "target": "end_effector",
+            "values": {
+              "frame_id": "base_link",
+              "reason": "mock_navigation_manipulation_demo"
+            }
+          },
+          {
+            "action_type": "hold_open",
+            "authority": "proposed_only",
+            "target": "gripper",
+            "values": {
+              "reason": "mock_policy_does_not_command_actuators"
+            }
+          }
+        ]
+      },
+      {
+        "authority": "proposed_only",
+        "event_time_ns": 13999999944,
+        "inference_latency_ms": 0.004,
+        "proposed_action_count": 3,
+        "proposed_actions": [
+          {
+            "action_type": "navigate_to_goal",
+            "authority": "proposed_only",
+            "target": "base",
+            "values": {
+              "frame_id": "map",
+              "goal_position": {
+                "x": 1.6,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "mode": "demo_navigation_goal"
+            }
+          },
+          {
+            "action_type": "hold_ready_pose",
+            "authority": "proposed_only",
+            "target": "end_effector",
+            "values": {
+              "frame_id": "base_link",
+              "reason": "mock_navigation_manipulation_demo"
+            }
+          },
+          {
+            "action_type": "hold_open",
+            "authority": "proposed_only",
+            "target": "gripper",
+            "values": {
+              "reason": "mock_policy_does_not_command_actuators"
+            }
+          }
+        ]
+      },
+      {
+        "authority": "proposed_only",
+        "event_time_ns": 14999999940,
+        "inference_latency_ms": 0.004,
+        "proposed_action_count": 3,
+        "proposed_actions": [
+          {
+            "action_type": "navigate_to_goal",
+            "authority": "proposed_only",
+            "target": "base",
+            "values": {
+              "frame_id": "map",
+              "goal_position": {
+                "x": 1.6,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "mode": "demo_navigation_goal"
+            }
+          },
+          {
+            "action_type": "hold_ready_pose",
+            "authority": "proposed_only",
+            "target": "end_effector",
+            "values": {
+              "frame_id": "base_link",
+              "reason": "mock_navigation_manipulation_demo"
+            }
+          },
+          {
+            "action_type": "hold_open",
+            "authority": "proposed_only",
+            "target": "gripper",
+            "values": {
+              "reason": "mock_policy_does_not_command_actuators"
+            }
+          }
+        ]
+      }
+    ],
+    "freshness_status": {
+      "robot.base.odom:ok": 16,
+      "robot.camera.depth:ok": 16,
+      "robot.camera.info:ok": 16,
+      "robot.camera.rgb:ok": 16,
+      "robot.frames.tf:ok": 16,
+      "robot.joints.state:ok": 16,
+      "task.goal:ok": 16
+    },
+    "sample_count": 16
+  },
+  "schema_version": "0.1.0",
+  "streams": [
+    {
+      "clock_domain": "sim_time",
+      "first_event_time_ns": 0,
+      "frame_ids": [
+        "odom"
+      ],
+      "last_event_time_ns": 15916666603,
+      "message_count": 192,
+      "semantic_type": "odometry",
+      "source_message_type": "romi.robotics.OdometrySummary",
+      "source_topic": null,
+      "stream_id": "robot.base.odom"
+    },
+    {
+      "clock_domain": "sim_time",
+      "first_event_time_ns": 0,
+      "frame_ids": [
+        "camera_depth_optical_frame"
+      ],
+      "last_event_time_ns": 15916666603,
+      "message_count": 192,
+      "semantic_type": "depth_image",
+      "source_message_type": "romi.robotics.ImageSummary",
+      "source_topic": null,
+      "stream_id": "robot.camera.depth"
+    },
+    {
+      "clock_domain": "sim_time",
+      "first_event_time_ns": 0,
+      "frame_ids": [
+        "camera_color_optical_frame"
+      ],
+      "last_event_time_ns": 15916666603,
+      "message_count": 192,
+      "semantic_type": "camera_info",
+      "source_message_type": "romi.robotics.CameraInfoSummary",
+      "source_topic": null,
+      "stream_id": "robot.camera.info"
+    },
+    {
+      "clock_domain": "sim_time",
+      "first_event_time_ns": 0,
+      "frame_ids": [
+        "camera_color_optical_frame"
+      ],
+      "last_event_time_ns": 15916666603,
+      "message_count": 192,
+      "semantic_type": "rgb_image",
+      "source_message_type": "romi.robotics.ImageSummary",
+      "source_topic": null,
+      "stream_id": "robot.camera.rgb"
+    },
+    {
+      "clock_domain": "sim_time",
+      "first_event_time_ns": 0,
+      "frame_ids": [
+        "map->odom"
+      ],
+      "last_event_time_ns": 15916666603,
+      "message_count": 192,
+      "semantic_type": "transform_tree",
+      "source_message_type": "romi.robotics.TransformTreeSummary",
+      "source_topic": null,
+      "stream_id": "robot.frames.tf"
+    },
+    {
+      "clock_domain": "sim_time",
+      "first_event_time_ns": 0,
+      "frame_ids": [
+        "base_link"
+      ],
+      "last_event_time_ns": 15916666603,
+      "message_count": 192,
+      "semantic_type": "joint_state",
+      "source_message_type": "romi.robotics.JointStateSummary",
+      "source_topic": null,
+      "stream_id": "robot.joints.state"
+    },
+    {
+      "clock_domain": "sim_time",
+      "first_event_time_ns": 0,
+      "frame_ids": [
+        "map"
+      ],
+      "last_event_time_ns": 14999999940,
+      "message_count": 16,
+      "semantic_type": "task_goal",
+      "source_message_type": "romi.robotics.PoseGoalSummary",
+      "source_topic": null,
+      "stream_id": "task.goal"
+    }
+  ]
+}

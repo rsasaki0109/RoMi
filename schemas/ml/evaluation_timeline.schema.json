@@ -1,0 +1,297 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://romi.dev/schemas/ml/evaluation_timeline.schema.json",
+  "title": "RoMi Replay Evaluation Timeline Report",
+  "description": "Draft schema for replay-wide policy comparison summaries sampled over episode time.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "report_kind",
+    "episode_id",
+    "clock_domain",
+    "duration_sec",
+    "policy_ids",
+    "sample_count",
+    "samples",
+    "stage_summary",
+    "safety_boundary",
+    "runtime_graph"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "0.1.0"
+    },
+    "report_kind": {
+      "type": "string",
+      "const": "romi.replay_evaluation_timeline"
+    },
+    "episode_id": {
+      "type": "string"
+    },
+    "clock_domain": {
+      "type": "string",
+      "const": "sim_time"
+    },
+    "duration_sec": {
+      "type": "number",
+      "minimum": 0
+    },
+    "policy_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "sample_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "samples": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "time_sec",
+          "stage",
+          "fresh_inputs",
+          "required_inputs",
+          "policy_latency_ms",
+          "changed_actions",
+          "changed_targets",
+          "command_stream_emitted",
+          "actuator_authority"
+        ],
+        "properties": {
+          "time_sec": {
+            "type": "number",
+            "minimum": 0
+          },
+          "stage": {
+            "type": "string"
+          },
+          "fresh_inputs": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "required_inputs": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "policy_latency_ms": {
+            "type": "number",
+            "minimum": 0
+          },
+          "changed_actions": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "changed_targets": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "command_stream_emitted": {
+            "type": "boolean",
+            "const": false
+          },
+          "actuator_authority": {
+            "type": "string",
+            "const": "none"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "stage_summary": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "stage",
+          "samples",
+          "changed_action_samples",
+          "min_fresh_inputs",
+          "max_latency_ms",
+          "command_stream_emitted"
+        ],
+        "properties": {
+          "stage": {
+            "type": "string"
+          },
+          "samples": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "changed_action_samples": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "min_fresh_inputs": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "max_latency_ms": {
+            "type": "number",
+            "minimum": 0
+          },
+          "command_stream_emitted": {
+            "type": "boolean",
+            "const": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "safety_boundary": {
+      "type": "object",
+      "required": [
+        "actuator_authority",
+        "promotion_required",
+        "command_stream_emitted"
+      ],
+      "properties": {
+        "actuator_authority": {
+          "type": "string",
+          "const": "none"
+        },
+        "promotion_required": {
+          "type": "string"
+        },
+        "command_stream_emitted": {
+          "type": "boolean",
+          "const": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "runtime_graph": {
+      "type": "object",
+      "required": [
+        "graph_id",
+        "source_graph",
+        "mode",
+        "active_path",
+        "nodes",
+        "edges",
+        "authority_boundary"
+      ],
+      "properties": {
+        "graph_id": {
+          "type": "string"
+        },
+        "source_graph": {
+          "type": "string"
+        },
+        "mode": {
+          "type": "string",
+          "const": "replay_evaluation"
+        },
+        "active_path": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "node_id",
+              "role",
+              "label",
+              "inputs",
+              "outputs",
+              "status",
+              "authority"
+            ],
+            "properties": {
+              "node_id": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "inputs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "outputs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "status": {
+                "type": "string"
+              },
+              "authority": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "from",
+              "to",
+              "stream_id"
+            ],
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              },
+              "stream_id": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "authority_boundary": {
+          "type": "object",
+          "required": [
+            "policy_authority",
+            "actuator_authority",
+            "command_stream_emitted",
+            "promotion_required"
+          ],
+          "properties": {
+            "policy_authority": {
+              "type": "string",
+              "const": "proposed_only"
+            },
+            "actuator_authority": {
+              "type": "string",
+              "const": "none"
+            },
+            "command_stream_emitted": {
+              "type": "boolean",
+              "const": false
+            },
+            "promotion_required": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

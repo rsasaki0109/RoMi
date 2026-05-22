@@ -1,0 +1,457 @@
+{
+  "schema_version": "0.1.0",
+  "report_kind": "romi.replay_evaluation_timeline",
+  "episode_id": "romi_2d_nav_manip_demo",
+  "clock_domain": "sim_time",
+  "duration_sec": 16,
+  "policy_ids": [
+    "mock_policy_v1",
+    "mock_policy_v2_guarded"
+  ],
+  "sample_count": 17,
+  "samples": [
+    {
+      "time_sec": 0,
+      "stage": "initialize",
+      "fresh_inputs": 6,
+      "required_inputs": 6,
+      "policy_latency_ms": 2.15,
+      "changed_actions": 2,
+      "changed_targets": [
+        "end_effector",
+        "gripper"
+      ],
+      "command_stream_emitted": false,
+      "actuator_authority": "none"
+    },
+    {
+      "time_sec": 0.4,
+      "stage": "initialize",
+      "fresh_inputs": 5,
+      "required_inputs": 6,
+      "policy_latency_ms": 2.35,
+      "changed_actions": 2,
+      "changed_targets": [
+        "end_effector",
+        "gripper"
+      ],
+      "command_stream_emitted": false,
+      "actuator_authority": "none"
+    },
+    {
+      "time_sec": 1.6,
+      "stage": "navigate",
+      "fresh_inputs": 5,
+      "required_inputs": 6,
+      "policy_latency_ms": 2.63,
+      "changed_actions": 3,
+      "changed_targets": [
+        "base",
+        "end_effector",
+        "gripper"
+      ],
+      "command_stream_emitted": false,
+      "actuator_authority": "none"
+    },
+    {
+      "time_sec": 3.2,
+      "stage": "navigate",
+      "fresh_inputs": 6,
+      "required_inputs": 6,
+      "policy_latency_ms": 2.61,
+      "changed_actions": 3,
+      "changed_targets": [
+        "base",
+        "end_effector",
+        "gripper"
+      ],
+      "command_stream_emitted": false,
+      "actuator_authority": "none"
+    },
+    {
+      "time_sec": 4.8,
+      "stage": "navigate",
+      "fresh_inputs": 5,
+      "required_inputs": 6,
+      "policy_latency_ms": 2.84,
+      "changed_actions": 3,
+      "changed_targets": [
+        "base",
+        "end_effector",
+        "gripper"
+      ],
+      "command_stream_emitted": false,
+      "actuator_authority": "none"
+    },
+    {
+      "time_sec": 5.04,
+      "stage": "navigate",
+      "fresh_inputs": 6,
+      "required_inputs": 6,
+      "policy_latency_ms": 2.64,
+      "changed_actions": 3,
+      "changed_targets": [
+        "base",
+        "end_effector",
+        "gripper"
+      ],
+      "command_stream_emitted": false,
+      "actuator_authority": "none"
+    },
+    {
+      "time_sec": 6.4,
+      "stage": "navigate",
+      "fresh_inputs": 5,
+      "required_inputs": 6,
+      "policy_latency_ms": 2.7,
+      "changed_actions": 3,
+      "changed_targets": [
+        "base",
+        "end_effector",
+        "gripper"
+      ],
+      "command_stream_emitted": false,
+      "actuator_authority": "none"
+    },
+    {
+      "time_sec": 8,
+      "stage": "navigate",
+      "fresh_inputs": 6,
+      "required_inputs": 6,
+      "policy_latency_ms": 2.25,
+      "changed_actions": 3,
+      "changed_targets": [
+        "base",
+        "end_effector",
+        "gripper"
+      ],
+      "command_stream_emitted": false,
+      "actuator_authority": "none"
+    },
+    {
+      "time_sec": 9.6,
+      "stage": "reach",
+      "fresh_inputs": 5,
+      "required_inputs": 6,
+      "policy_latency_ms": 2.16,
+      "changed_actions": 3,
+      "changed_targets": [
+        "base",
+        "end_effector",
+        "gripper"
+      ],
+      "command_stream_emitted": false,
+      "actuator_authority": "none"
+    },
+    {
+      "time_sec": 10.4,
+      "stage": "reach",
+      "fresh_inputs": 5,
+      "required_inputs": 6,
+      "policy_latency_ms": 2.16,
+      "changed_actions": 3,
+      "changed_targets": [
+        "base",
+        "end_effector",
+        "gripper"
+      ],
+      "command_stream_emitted": false,
+      "actuator_authority": "none"
+    },
+    {
+      "time_sec": 11.2,
+      "stage": "reach",
+      "fresh_inputs": 6,
+      "required_inputs": 6,
+      "policy_latency_ms": 1.68,
+      "changed_actions": 2,
+      "changed_targets": [
+        "end_effector",
+        "gripper"
+      ],
+      "command_stream_emitted": false,
+      "actuator_authority": "none"
+    },
+    {
+      "time_sec": 12.16,
+      "stage": "grasp",
+      "fresh_inputs": 6,
+      "required_inputs": 6,
+      "policy_latency_ms": 1.65,
+      "changed_actions": 2,
+      "changed_targets": [
+        "end_effector",
+        "gripper"
+      ],
+      "command_stream_emitted": false,
+      "actuator_authority": "none"
+    },
+    {
+      "time_sec": 12.8,
+      "stage": "place",
+      "fresh_inputs": 5,
+      "required_inputs": 6,
+      "policy_latency_ms": 1.87,
+      "changed_actions": 2,
+      "changed_targets": [
+        "end_effector",
+        "gripper"
+      ],
+      "command_stream_emitted": false,
+      "actuator_authority": "none"
+    },
+    {
+      "time_sec": 13.76,
+      "stage": "place",
+      "fresh_inputs": 5,
+      "required_inputs": 6,
+      "policy_latency_ms": 1.96,
+      "changed_actions": 2,
+      "changed_targets": [
+        "end_effector",
+        "gripper"
+      ],
+      "command_stream_emitted": false,
+      "actuator_authority": "none"
+    },
+    {
+      "time_sec": 14.4,
+      "stage": "place",
+      "fresh_inputs": 5,
+      "required_inputs": 6,
+      "policy_latency_ms": 2.05,
+      "changed_actions": 2,
+      "changed_targets": [
+        "end_effector",
+        "gripper"
+      ],
+      "command_stream_emitted": false,
+      "actuator_authority": "none"
+    },
+    {
+      "time_sec": 15.36,
+      "stage": "report",
+      "fresh_inputs": 5,
+      "required_inputs": 6,
+      "policy_latency_ms": 2.22,
+      "changed_actions": 2,
+      "changed_targets": [
+        "end_effector",
+        "gripper"
+      ],
+      "command_stream_emitted": false,
+      "actuator_authority": "none"
+    },
+    {
+      "time_sec": 16,
+      "stage": "report",
+      "fresh_inputs": 6,
+      "required_inputs": 6,
+      "policy_latency_ms": 2.15,
+      "changed_actions": 2,
+      "changed_targets": [
+        "end_effector",
+        "gripper"
+      ],
+      "command_stream_emitted": false,
+      "actuator_authority": "none"
+    }
+  ],
+  "stage_summary": [
+    {
+      "stage": "initialize",
+      "samples": 2,
+      "changed_action_samples": 2,
+      "min_fresh_inputs": 5,
+      "max_latency_ms": 2.35,
+      "command_stream_emitted": false
+    },
+    {
+      "stage": "navigate",
+      "samples": 6,
+      "changed_action_samples": 6,
+      "min_fresh_inputs": 5,
+      "max_latency_ms": 2.84,
+      "command_stream_emitted": false
+    },
+    {
+      "stage": "reach",
+      "samples": 3,
+      "changed_action_samples": 3,
+      "min_fresh_inputs": 5,
+      "max_latency_ms": 2.16,
+      "command_stream_emitted": false
+    },
+    {
+      "stage": "grasp",
+      "samples": 1,
+      "changed_action_samples": 1,
+      "min_fresh_inputs": 6,
+      "max_latency_ms": 1.65,
+      "command_stream_emitted": false
+    },
+    {
+      "stage": "place",
+      "samples": 3,
+      "changed_action_samples": 3,
+      "min_fresh_inputs": 5,
+      "max_latency_ms": 2.05,
+      "command_stream_emitted": false
+    },
+    {
+      "stage": "report",
+      "samples": 2,
+      "changed_action_samples": 2,
+      "min_fresh_inputs": 5,
+      "max_latency_ms": 2.22,
+      "command_stream_emitted": false
+    }
+  ],
+  "safety_boundary": {
+    "actuator_authority": "none",
+    "promotion_required": "external_supervisor",
+    "command_stream_emitted": false
+  },
+  "runtime_graph": {
+    "graph_id": "romi_studio_replay_eval_graph",
+    "source_graph": "examples/navigation_manipulation_demo/runtime-graph.example.json",
+    "mode": "replay_evaluation",
+    "active_path": [
+      "source",
+      "record",
+      "replay",
+      "policy",
+      "evaluation",
+      "safety"
+    ],
+    "nodes": [
+      {
+        "node_id": "source",
+        "role": "source",
+        "label": "native simulator",
+        "inputs": [
+          "scenario.json"
+        ],
+        "outputs": [
+          "robot.camera.rgb",
+          "robot.camera.depth",
+          "robot.camera.info",
+          "robot.joints.state",
+          "robot.base.odom",
+          "robot.frames.tf",
+          "task.goal",
+          "runtime.diagnostics"
+        ],
+        "status": "available",
+        "authority": "observation_only"
+      },
+      {
+        "node_id": "record",
+        "role": "log/dataset plane",
+        "label": "episode recorder",
+        "inputs": [
+          "robot.*",
+          "task.goal",
+          "runtime.diagnostics"
+        ],
+        "outputs": [
+          "episode.jsonl",
+          "episode_metadata"
+        ],
+        "status": "available",
+        "authority": "observation_only"
+      },
+      {
+        "node_id": "replay",
+        "role": "replay plane",
+        "label": "replay source",
+        "inputs": [
+          "episode.jsonl"
+        ],
+        "outputs": [
+          "robot.*",
+          "task.goal",
+          "runtime.diagnostics"
+        ],
+        "status": "seekable",
+        "authority": "observation_only"
+      },
+      {
+        "node_id": "policy",
+        "role": "policy runtime",
+        "label": "mock policy",
+        "inputs": [
+          "robot.camera.rgb",
+          "robot.camera.depth",
+          "robot.joints.state",
+          "robot.base.odom",
+          "robot.frames.tf",
+          "task.goal"
+        ],
+        "outputs": [
+          "policy.proposed_action"
+        ],
+        "status": "proposing",
+        "authority": "proposed_only"
+      },
+      {
+        "node_id": "evaluation",
+        "role": "evaluation/report plane",
+        "label": "replay evaluation timeline",
+        "inputs": [
+          "episode.jsonl",
+          "policy.proposed_action"
+        ],
+        "outputs": [
+          "evaluation_timeline.json"
+        ],
+        "status": "generated",
+        "authority": "observation_only"
+      },
+      {
+        "node_id": "safety",
+        "role": "safety boundary",
+        "label": "actuator authority boundary",
+        "inputs": [
+          "policy.proposed_action"
+        ],
+        "outputs": [],
+        "status": "blocking_commands",
+        "authority": "none"
+      }
+    ],
+    "edges": [
+      {
+        "from": "source",
+        "to": "record",
+        "stream_id": "robot.*"
+      },
+      {
+        "from": "record",
+        "to": "replay",
+        "stream_id": "episode.jsonl"
+      },
+      {
+        "from": "replay",
+        "to": "policy",
+        "stream_id": "policy.observation_window"
+      },
+      {
+        "from": "policy",
+        "to": "evaluation",
+        "stream_id": "policy.proposed_action"
+      },
+      {
+        "from": "policy",
+        "to": "safety",
+        "stream_id": "policy.proposed_action"
+      }
+    ],
+    "authority_boundary": {
+      "policy_authority": "proposed_only",
+      "actuator_authority": "none",
+      "command_stream_emitted": false,
+      "promotion_required": "external_supervisor"
+    }
+  }
+}

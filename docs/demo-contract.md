@@ -98,9 +98,34 @@ Current stream samples use a JSONL envelope with these fields:
 
 The envelope is intentionally transport-agnostic. A ROS2 bridge, simulator bridge, replay source, or future MCAP reader should map into the same logical stream identity.
 
+The shared event envelope schema is
+[`schemas/core/stream_sample.schema.json`](../schemas/core/stream_sample.schema.json).
+It is validated against RoMi-native source events, browser simulator events,
+replay events, policy events, and a representative ROS2 bridge `/tf_static`
+sample in CI.
+
+Start and stop lifecycle events use
+[`schemas/core/lifecycle_event.schema.json`](../schemas/core/lifecycle_event.schema.json).
+Committed report artifacts are indexed by
+[`sample_output/report_manifest.json`](../examples/navigation_manipulation_demo/sample_output/report_manifest.json),
+validated by
+[`schemas/core/report_manifest.schema.json`](../schemas/core/report_manifest.schema.json).
+
 ## Payload Summary Contract
 
 The demo uses compact summaries instead of full sensor payloads.
+
+The current payload summary schemas are:
+
+- [`image_summary.schema.json`](../schemas/robotics/image_summary.schema.json)
+- [`camera_info_summary.schema.json`](../schemas/robotics/camera_info_summary.schema.json)
+- [`joint_state_summary.schema.json`](../schemas/robotics/joint_state_summary.schema.json)
+- [`odometry_summary.schema.json`](../schemas/robotics/odometry_summary.schema.json)
+- [`transform_tree_summary.schema.json`](../schemas/robotics/transform_tree_summary.schema.json)
+- [`task_goal_summary.schema.json`](../schemas/robotics/task_goal_summary.schema.json)
+
+`tests/check_demo_contract.py` validates these schemas against source and replay
+payload summaries from smoke runs.
 
 Required image summary fields:
 
@@ -183,6 +208,9 @@ The mock policy reads replayed observations and emits `policy.proposed_action`.
 Policy samples must:
 
 - use stream ID `policy.proposed_action`
+- validate the payload summary against
+  [`schemas/ml/policy_io.schema.json`](../schemas/ml/policy_io.schema.json)
+- include payload time, input stream list, and structured freshness entries
 - include input freshness metadata
 - include `inference_latency_ms`
 - include proposed base, end-effector, and gripper actions
@@ -208,6 +236,10 @@ The report must include:
 - synchronized observation window
 
 The observation window must include all required source streams with status `ok`.
+Each window row also carries semantic type, source message type,
+`payload_schema_id`, event time, frame, sample index, and signed/absolute delta
+from the target time. For current required streams, the row payload summaries are
+validated against the robotics payload schemas listed above.
 
 A committed example is available at [sample_output/dataset-report/report.md](../examples/navigation_manipulation_demo/sample_output/dataset-report/report.md).
 
@@ -223,6 +255,8 @@ The workflow in [.github/workflows/ci.yml](../.github/workflows/ci.yml) currentl
 - browser/native stream contract alignment in [tests/check_browser_native_contract.py](../tests/check_browser_native_contract.py)
 
 Both contract checkers load [contract.example.json](../examples/navigation_manipulation_demo/contract.example.json).
+The browser/native checker also requires Chrome or Chromium plus the dependencies
+in [requirements-browser.txt](../requirements-browser.txt).
 
 The contract checker verifies:
 
@@ -233,8 +267,11 @@ The contract checker verifies:
 - replay samples use `source_system: replay`
 - policy output is `policy.proposed_action`
 - policy authority remains `proposed_only`
+- policy payload summaries match `ml/policy_io.schema.json`
 - dataset report includes the required streams
 - observation window streams are `ok`
+- observation window counts, bounds, payload schema IDs, and payload summaries
+  match the current robotics payload schemas
 
 The browser/native checker verifies:
 

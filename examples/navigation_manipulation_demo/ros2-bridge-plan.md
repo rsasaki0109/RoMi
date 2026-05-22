@@ -1,6 +1,6 @@
 # ROS2 Bridge Plan For Navigation + Manipulation Demo
 
-This plan connects the demo specification to the ROS2 bridge boundary. It is not an implementation yet.
+This plan connects the demo specification to the ROS2 bridge boundary. A narrow `rclpy` JSONL prototype exists under `bridges/ros2/rclpy_bridge/`; this document keeps the demo boundary and diagnostic expectations visible.
 
 ## Goal
 
@@ -76,6 +76,12 @@ The bridge should report:
 - `/tf` and `/tf_static` availability
 - QoS metadata where available
 - Missing or stale stream warnings
+
+The committed diagnostics sample lives at
+`examples/navigation_manipulation_demo/ros2-qos-diagnostics.example.json`.
+It captures topic status, QoS metadata, bridge timing, frame status, `/tf` and
+`/tf_static` handling, policy authority, actuator authority, and current bridge
+limitations. CI validates this sample without requiring a ROS2 installation.
 
 ## First Success Criteria
 

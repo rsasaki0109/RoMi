@@ -5,10 +5,10 @@ Prototype RoMi dataset inspection report.
 This committed sample shows the shape of the report produced by:
 
 ```bash
-examples/navigation_manipulation_demo/run_smoke_demo.sh
+examples/navigation_manipulation_demo/generate_sample_artifacts.py
 ```
 
-It is a static reference artifact for README review. Fresh local runs write ignored output under `examples/navigation_manipulation_demo/artifacts/`.
+Fresh local smoke runs write ignored output under `examples/navigation_manipulation_demo/artifacts/`.
 
 ## Episode
 
@@ -56,12 +56,16 @@ It is a static reference artifact for README review. Fresh local runs write igno
 | 7999999968 | 3 | proposed_only | 0.004 |
 | 8999999964 | 3 | proposed_only | 0.004 |
 
-## Policy Compare Artifact
+## Policy And Timeline Artifacts
 
 RoMi Studio can replay the episode state, compare the baseline mock policy against a guarded counterfactual policy, and export review artifacts:
 
-- Markdown: [`../policy_compare.md`](../policy_compare.md)
-- JSON: [`../policy_compare.json`](../policy_compare.json)
+- Policy compare Markdown: [`../policy_compare.md`](../policy_compare.md)
+- Policy compare JSON: [`../policy_compare.json`](../policy_compare.json)
+- Evaluation timeline Markdown: [`../evaluation_timeline.md`](../evaluation_timeline.md)
+- Evaluation timeline JSON: [`../evaluation_timeline.json`](../evaluation_timeline.json)
+- Safety authority Markdown: [`../safety_authority.md`](../safety_authority.md)
+- Safety authority JSON: [`../safety_authority.json`](../safety_authority.json)
 - Safety boundary: `proposed_only`, actuator authority `none`, command stream `not_emitted`
 
 ## Observation Window
@@ -71,12 +75,12 @@ RoMi Studio can replay the episode state, compare the baseline mock policy again
 
 | Stream | Status | Delta ms | Frame | Payload Summary |
 | --- | --- | ---: | --- | --- |
-| robot.base.odom | ok | 0.0 | odom | `{"child_frame_id": "base_link", "position": {"x": 0.0, "y": 0.0, "z": 0.0}, "stage": "initialize"}` |
-| robot.camera.depth | ok | 0.0 | camera_depth_optical_frame | `{"data_len": 28800, "encoding": "16UC1", "height": 90, "step": 320, "synthetic_scene": {"object_state": "on_table", "target_depth_mm": 620}, "width": 160}` |
+| robot.base.odom | ok | 0.0 | odom | `{"angular": {"x": 0.0, "y": 0.0, "z": 0.0}, "child_frame_id": "base_link", "linear": {"x": 0.0, "y": 0.0, "z": 0.0}, "orientation": {"w": 0.9996875162757026, "x` |
+| robot.camera.depth | ok | 0.0 | camera_depth_optical_frame | `{"data_len": 28800, "encoding": "16UC1", "height": 90, "is_bigendian": 0, "step": 320, "synthetic_scene": {"background_depth_mm": 1800, "object_state": "on_tabl` |
 | robot.camera.info | ok | 0.0 | camera_color_optical_frame | `{"d_len": 0, "distortion_model": "plumb_bob", "height": 90, "k_len": 9, "p_len": 12, "width": 160}` |
-| robot.camera.rgb | ok | 0.0 | camera_color_optical_frame | `{"data_len": 43200, "encoding": "rgb8", "height": 90, "step": 480, "synthetic_scene": {"object_state": "on_table", "target_visible": true}, "width": 160}` |
-| robot.frames.tf | ok | 0.0 | map->odom | `{"transform_count": 6, "frames_sample": [{"parent_frame_id": "map", "child_frame_id": "odom", "stamp_ns": 0}], "synthetic_base_translation": {"x": 0.0, "y": 0.0, "z": 0.0}}` |
-| robot.joints.state | ok | 0.0 | base_link | `{"joint_count": 7, "position_count": 7, "velocity_count": 7, "effort_count": 7, "joint_names_sample": ["waist_yaw", "torso_lift", "right_shoulder_pitch", "right_elbow", "right_wrist", "gripper_left", "gripper_right"]}` |
-| task.goal | ok | 0.0 | map | `{"position": {"x": 1.6, "y": 0.0, "z": 0.0}, "scenario_id": "romi_2d_nav_manip_demo", "target_object": "orange_cube"}` |
+| robot.camera.rgb | ok | 0.0 | camera_color_optical_frame | `{"data_len": 43200, "encoding": "rgb8", "height": 90, "is_bigendian": 0, "step": 480, "synthetic_scene": {"object_state": "on_table", "progress_bar": 0.0, "targ` |
+| robot.frames.tf | ok | 0.0 | map->odom | `{"frames_sample": [{"child_frame_id": "odom", "parent_frame_id": "map", "stamp_ns": 0}, {"child_frame_id": "base_link", "parent_frame_id": "odom", "stamp_ns": 0` |
+| robot.joints.state | ok | 0.0 | base_link | `{"effort_count": 7, "joint_count": 7, "joint_names_sample": ["waist_yaw", "torso_lift", "right_shoulder_pitch", "right_elbow", "right_wrist", "gripper_left", "g` |
+| task.goal | ok | 0.0 | map | `{"orientation": {"w": 1.0, "x": 0.0, "y": 0.0, "z": 0.0}, "position": {"x": 1.6, "y": 0.0, "z": 0.0}, "scenario_id": "romi_2d_nav_manip_demo", "target_object": ` |
 
 This report is a prototype dataset view. It preserves stream, time, frame, diagnostics, and policy metadata for inspection.

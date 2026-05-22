@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://romi.dev/schemas/robotics/joint_state_summary.schema.json",
+  "title": "RoMi Joint State Payload Summary",
+  "description": "Compact joint-state payload summary used by demo stream samples.",
+  "type": "object",
+  "required": [
+    "joint_count",
+    "joint_names_sample",
+    "position_sample",
+    "position_count",
+    "velocity_count",
+    "effort_count"
+  ],
+  "properties": {
+    "joint_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "joint_names_sample": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "position_sample": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "position_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "velocity_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "effort_count": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "additionalProperties": false
+}

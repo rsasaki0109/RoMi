@@ -8,9 +8,24 @@ import json
 from pathlib import Path
 from typing import Any
 
+from check_sample_artifact_schemas import validate_schema
+
 
 def default_contract_path() -> Path:
     return Path(__file__).resolve().parents[1] / "examples" / "navigation_manipulation_demo" / "contract.example.json"
+
+
+def payload_schema_paths(repo_root: Path) -> dict[str, Path]:
+    robotics = repo_root / "schemas" / "robotics"
+    return {
+        "robot.camera.rgb": robotics / "image_summary.schema.json",
+        "robot.camera.depth": robotics / "image_summary.schema.json",
+        "robot.camera.info": robotics / "camera_info_summary.schema.json",
+        "robot.joints.state": robotics / "joint_state_summary.schema.json",
+        "robot.base.odom": robotics / "odometry_summary.schema.json",
+        "robot.frames.tf": robotics / "transform_tree_summary.schema.json",
+        "task.goal": robotics / "task_goal_summary.schema.json",
+    }
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -42,6 +57,44 @@ def stream_contract(contract: dict[str, Any], stream_id: str) -> dict[str, Any]:
         if stream["stream_id"] == stream_id:
             return stream
     raise AssertionError(f"missing stream contract: {stream_id}")
+
+
+def check_stream_sample_schema(events: list[dict[str, Any]], schema: dict[str, Any], label: str) -> None:
+    samples = [event for event in events if event.get("kind") == "stream_sample"]
+    require(samples, f"{label} must include stream_sample events")
+    for index, event in enumerate(samples):
+        validate_schema(event, schema, f"{label}[{index}]")
+        require(event.get("schema_id"), f"{label}[{index}] missing schema_id")
+        require(event.get("event_time_ns") >= 0, f"{label}[{index}] event_time_ns must be non-negative")
+        require(isinstance(event.get("payload_summary"), dict), f"{label}[{index}] payload_summary must be an object")
+        require(isinstance(event.get("metadata"), dict), f"{label}[{index}] metadata must be an object")
+
+
+def check_lifecycle_events(
+    events: list[dict[str, Any]],
+    schema: dict[str, Any],
+    label: str,
+    expected_kinds: set[str],
+) -> None:
+    lifecycle_events = [event for event in events if str(event.get("kind", "")).endswith(("_start", "_stop"))]
+    kinds = {event.get("kind") for event in lifecycle_events}
+    missing = expected_kinds - kinds
+    require(not missing, f"{label} missing lifecycle events: {sorted(missing)}")
+    for index, event in enumerate(lifecycle_events):
+        validate_schema(event, schema, f"{label}.lifecycle[{index}]")
+        require(event.get("wall_time_ns") >= 0, f"{label}.lifecycle[{index}] wall_time_ns must be non-negative")
+
+
+def check_payload_summary_schemas(
+    events: list[dict[str, Any]],
+    schemas: dict[str, dict[str, Any]],
+    label: str,
+) -> None:
+    for stream_id, schema in schemas.items():
+        event = first_stream(events, stream_id)
+        payload = event.get("payload_summary")
+        require(isinstance(payload, dict), f"{label}.{stream_id} payload_summary must be an object")
+        validate_schema(payload, schema, f"{label}.{stream_id}.payload_summary")
 
 
 def check_joint_contract(source_events: list[dict[str, Any]], contract: dict[str, Any]) -> None:
@@ -112,6 +165,26 @@ def check_policy_contract(policy_events: list[dict[str, Any]], report: dict[str,
             require(action.get("authority") == policy_contract["authority"], "each proposed action authority mismatch")
 
 
+def check_policy_payload_schema(
+    policy_events: list[dict[str, Any]],
+    policy_schema: dict[str, Any],
+    contract: dict[str, Any],
+) -> None:
+    policy_contract = contract["policy"]
+    policy_samples = [event for event in policy_events if event.get("stream_id") == policy_contract["stream_id"]]
+    require(policy_samples, "policy-events.jsonl must include policy.proposed_action")
+    for index, event in enumerate(policy_samples):
+        payload = event.get("payload_summary")
+        require(isinstance(payload, dict), f"policy-events.jsonl[{index}] payload_summary must be an object")
+        validate_schema(payload, policy_schema, f"policy-events.jsonl[{index}].payload_summary")
+        require(payload.get("policy_id") == event.get("metadata", {}).get("policy_id"), f"policy-events.jsonl[{index}] policy_id mismatch")
+        require(payload.get("time", {}).get("event_time_ns") == event.get("event_time_ns"), f"policy-events.jsonl[{index}] payload time mismatch")
+        require(payload.get("time", {}).get("clock_domain") == event.get("clock_domain"), f"policy-events.jsonl[{index}] payload clock mismatch")
+        require(len(payload.get("proposed_actions", [])) == policy_contract["proposed_action_count"], f"policy-events.jsonl[{index}] proposed action count mismatch")
+        required_freshness = [stream_id for stream_id, freshness in payload.get("freshness", {}).items() if freshness.get("required")]
+        require(required_freshness, f"policy-events.jsonl[{index}] must mark at least one freshness input as required")
+
+
 def check_replay_contract(replay_events: list[dict[str, Any]], contract: dict[str, Any]) -> None:
     replay_streams = [event for event in replay_events if event.get("kind") == "stream_sample"]
     require(replay_streams, "replay-events.jsonl must include stream samples")
@@ -119,7 +192,11 @@ def check_replay_contract(replay_events: list[dict[str, Any]], contract: dict[st
     require(all(event.get("source_system") == expected_source for event in replay_streams[:20]), f"replay samples must set source_system to {expected_source}")
 
 
-def check_report_contract(report: dict[str, Any], contract: dict[str, Any]) -> None:
+def check_report_contract(
+    report: dict[str, Any],
+    contract: dict[str, Any],
+    payload_schemas: dict[str, dict[str, Any]],
+) -> None:
     for section in contract["dataset_report"]["required_sections"]:
         require(section in report, f"dataset report missing section: {section}")
 
@@ -127,24 +204,60 @@ def check_report_contract(report: dict[str, Any], contract: dict[str, Any]) -> N
     missing = required_stream_ids(contract) - report_streams
     require(not missing, f"dataset report missing streams: {sorted(missing)}")
 
-    window_streams = {stream.get("stream_id"): stream for stream in report.get("observation_window", {}).get("streams", [])}
+    observation_window = report.get("observation_window", {})
+    window_streams = {stream.get("stream_id"): stream for stream in observation_window.get("streams", [])}
     missing_window = required_stream_ids(contract) - set(window_streams)
     require(not missing_window, f"observation window missing streams: {sorted(missing_window)}")
+    require(
+        observation_window.get("required_stream_count") == len(window_streams),
+        "observation window required_stream_count mismatch",
+    )
+    require(
+        observation_window.get("available_stream_count") == sum(1 for stream in window_streams.values() if stream.get("status") == "ok"),
+        "observation window available_stream_count mismatch",
+    )
+    require(
+        observation_window.get("missing_stream_count")
+        == sum(1 for stream in window_streams.values() if stream.get("status") == "missing_in_window"),
+        "observation window missing_stream_count mismatch",
+    )
     expected_status = contract["dataset_report"]["observation_window_status"]
     require(all(stream.get("status") == expected_status for stream in window_streams.values()), f"observation window streams must be {expected_status}")
+    for stream_id, schema in payload_schemas.items():
+        stream = window_streams.get(stream_id)
+        require(stream is not None, f"observation window missing payload stream: {stream_id}")
+        require(stream.get("payload_schema_id") == schema.get("$id"), f"observation window payload schema id mismatch: {stream_id}")
+        payload = stream.get("payload_summary")
+        require(isinstance(payload, dict), f"observation window payload_summary must be an object: {stream_id}")
+        validate_schema(payload, schema, f"dataset_report.observation_window.{stream_id}.payload_summary")
 
 
-def check_run(run_dir: Path, contract: dict[str, Any]) -> None:
+def check_run(
+    run_dir: Path,
+    contract: dict[str, Any],
+    stream_sample_schema: dict[str, Any],
+    lifecycle_schema: dict[str, Any],
+    payload_schemas: dict[str, dict[str, Any]],
+    policy_schema: dict[str, Any],
+) -> None:
     report = load_json(run_dir / "dataset-report" / "report.json")
     source_events = iter_jsonl(run_dir / "source-events.jsonl")
     replay_events = iter_jsonl(run_dir / "replay-events.jsonl")
     policy_events = iter_jsonl(run_dir / "policy-events.jsonl")
 
+    check_stream_sample_schema(source_events, stream_sample_schema, "source-events.jsonl")
+    check_stream_sample_schema(replay_events, stream_sample_schema, "replay-events.jsonl")
+    check_stream_sample_schema(policy_events, stream_sample_schema, "policy-events.jsonl")
+    check_lifecycle_events(replay_events, lifecycle_schema, "replay-events.jsonl", {"replay_start", "replay_stop"})
+    check_lifecycle_events(policy_events, lifecycle_schema, "policy-events.jsonl", {"policy_start", "policy_stop"})
+    check_payload_summary_schemas(source_events, payload_schemas, "source-events.jsonl")
+    check_payload_summary_schemas(replay_events, payload_schemas, "replay-events.jsonl")
     check_source_contract(source_events, contract)
     check_joint_contract(source_events, contract)
     check_replay_contract(replay_events, contract)
     check_policy_contract(policy_events, report, contract)
-    check_report_contract(report, contract)
+    check_policy_payload_schema(policy_events, policy_schema, contract)
+    check_report_contract(report, contract, payload_schemas)
 
     print(
         json.dumps(
@@ -169,7 +282,12 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    check_run(args.run_dir, load_json(args.contract))
+    repo_root = Path(__file__).resolve().parents[1]
+    stream_sample_schema = load_json(repo_root / "schemas" / "core" / "stream_sample.schema.json")
+    lifecycle_schema = load_json(repo_root / "schemas" / "core" / "lifecycle_event.schema.json")
+    policy_schema = load_json(repo_root / "schemas" / "ml" / "policy_io.schema.json")
+    payload_schemas = {stream_id: load_json(path) for stream_id, path in payload_schema_paths(repo_root).items()}
+    check_run(args.run_dir, load_json(args.contract), stream_sample_schema, lifecycle_schema, payload_schemas, policy_schema)
     return 0
 
 

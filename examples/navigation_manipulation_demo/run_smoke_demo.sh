@@ -64,8 +64,16 @@ case "${DEMO_SOURCE}" in
     python3 - <<'PY'
 try:
     import rclpy  # noqa: F401
+    import numpy  # noqa: F401
+    from geometry_msgs.msg import PoseStamped  # noqa: F401
+    from nav_msgs.msg import Odometry  # noqa: F401
+    from sensor_msgs.msg import CameraInfo, Image, JointState  # noqa: F401
+    from tf2_msgs.msg import TFMessage  # noqa: F401
 except Exception as exc:
-    raise SystemExit(f"error: rclpy is not available: {exc}")
+    raise SystemExit(
+        "error: ROS2 demo source dependencies are not available. "
+        f"Source a ROS2 environment and install numpy if needed: {exc}"
+    )
 PY
 
     echo "[romi demo] starting ROS2 bridge for ${BRIDGE_DURATION_SEC}s"
