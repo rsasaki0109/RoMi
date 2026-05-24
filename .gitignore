@@ -7,4 +7,8 @@ __pycache__/
 
 # RoMi local demo output
 examples/**/artifacts/
+examples/lerobot_vla_eval/out/
 *.jsonl
+
+# Keep committed sample artifacts for the LeRobot VLA eval example
+!examples/lerobot_vla_eval/sample_output/*.jsonl

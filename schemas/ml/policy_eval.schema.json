@@ -1,0 +1,212 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://romi.dev/schemas/ml/policy_eval.schema.json",
+  "title": "RoMi Counterfactual Policy Evaluation",
+  "description": "Draft schema for a counterfactual evaluation of proposed policy actions against recorded expert actions over a replayed episode.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "report_kind",
+    "episode_id",
+    "policy_id",
+    "backend",
+    "clock_domain",
+    "reference",
+    "action_space",
+    "tolerance_px",
+    "matched_steps",
+    "summary",
+    "safety_boundary",
+    "samples"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "0.1.0"
+    },
+    "report_kind": {
+      "type": "string",
+      "const": "romi.counterfactual_policy_eval"
+    },
+    "episode_id": {
+      "type": "string"
+    },
+    "dataset": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "policy_id": {
+      "type": "string"
+    },
+    "backend": {
+      "type": "string"
+    },
+    "clock_domain": {
+      "type": "string"
+    },
+    "reference": {
+      "type": "string",
+      "const": "recorded_expert_action"
+    },
+    "action_space": {
+      "type": "string"
+    },
+    "tolerance_px": {
+      "type": "number",
+      "minimum": 0
+    },
+    "matched_steps": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "expert_steps": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "proposal_steps": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "mean_action_error_px",
+        "median_action_error_px",
+        "p95_action_error_px",
+        "max_action_error_px",
+        "agreement_rate_within_tolerance",
+        "max_divergence"
+      ],
+      "properties": {
+        "mean_action_error_px": {
+          "type": "number",
+          "minimum": 0
+        },
+        "median_action_error_px": {
+          "type": "number",
+          "minimum": 0
+        },
+        "p95_action_error_px": {
+          "type": "number",
+          "minimum": 0
+        },
+        "max_action_error_px": {
+          "type": "number",
+          "minimum": 0
+        },
+        "agreement_rate_within_tolerance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "max_divergence": {
+          "type": "object",
+          "required": [
+            "time_sec",
+            "error_px"
+          ],
+          "properties": {
+            "time_sec": {
+              "type": "number"
+            },
+            "error_px": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
+        },
+        "mean_inference_latency_ms": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "safety_boundary": {
+      "type": "object",
+      "required": [
+        "policy_authority",
+        "actuator_authority",
+        "command_stream_emitted",
+        "blocked_reason"
+      ],
+      "properties": {
+        "policy_authority": {
+          "type": "string",
+          "const": "proposed_only"
+        },
+        "actuator_authority": {
+          "type": "string",
+          "const": "none"
+        },
+        "command_stream_emitted": {
+          "type": "boolean",
+          "const": false
+        },
+        "blocked_reason": {
+          "type": "string",
+          "const": "proposal_not_actuator_authority"
+        }
+      },
+      "additionalProperties": false
+    },
+    "samples": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "time_sec",
+          "expert_goal",
+          "proposed_goal",
+          "error_px",
+          "within_tolerance"
+        ],
+        "properties": {
+          "time_sec": {
+            "type": "number"
+          },
+          "expert_goal": {
+            "$ref": "#/$defs/xy"
+          },
+          "proposed_goal": {
+            "$ref": "#/$defs/xy"
+          },
+          "error_px": {
+            "type": "number",
+            "minimum": 0
+          },
+          "within_tolerance": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "xy": {
+      "type": "object",
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

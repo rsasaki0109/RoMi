@@ -1,0 +1,11 @@
+# Dependencies for schema-validation contract checks and dataset import.
+#
+# Install with:
+#   python -m pip install -r requirements-dev.txt
+#
+# jsonschema: used by tests/check_lerobot_vla_eval.py to validate committed
+#   artifacts against the draft schemas.
+# pyarrow:    used by tools/lerobot_import to read LeRobot v3 parquet over HTTP.
+#   Not required to run the offline eval example or its contract check.
+jsonschema>=4.0,<5
+pyarrow>=14

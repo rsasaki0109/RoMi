@@ -22,6 +22,32 @@ RoMi stands for **Robotics Middleware**. It is an early pre-MVP project explorin
   <sub>Actual RoMi 2D simulator capture: ROS2-free navigation/manipulation with RoMi Studio for replay, policy comparison, timeline evaluation, safety boundaries, and dataset state.</sub>
 </p>
 
+## Evaluate a policy on real robot data
+
+Point RoMi at a public [LeRobot](https://github.com/huggingface/lerobot) episode,
+run a policy over the replay, and measure how far its proposed actions are from
+the recorded expert demonstration — before any actuator is touched.
+
+```bash
+# Offline, no API key, no GPU: uses a committed lerobot/pusht sample episode
+examples/lerobot_vla_eval/run_eval.sh --offline
+
+# Fetch fresh data from HuggingFace, or use the Claude reasoning policy
+examples/lerobot_vla_eval/run_eval.sh
+BACKEND=claude examples/lerobot_vla_eval/run_eval.sh --offline   # needs ANTHROPIC_API_KEY
+```
+
+```text
+LeRobot episode -> RoMi import -> replay -> policy proposal
+  -> counterfactual eval vs recorded expert actions -> policy_eval.md/json
+  -> actuator authority stays "none"
+```
+
+The policy backend is pluggable: a deterministic offline `heuristic` baseline, a
+`claude` reasoning policy, or a real local VLA behind the same envelope later.
+See [`examples/lerobot_vla_eval`](examples/lerobot_vla_eval) and the sample
+report [`policy_eval.md`](examples/lerobot_vla_eval/sample_output/policy_eval.md).
+
 ## Try It
 
 Current visual target: **RoMi 2D semi-humanoid navigation + manipulation simulator**.
@@ -143,7 +169,11 @@ The current repository contains a small end-to-end prototype path:
 - [Episode recorder](tools/episode_recorder)
 - [Replay source](tools/replay_source)
 - [Mock policy](tools/mock_policy)
+- [Pluggable VLA-style policy (heuristic / Claude)](tools/vla_policy)
+- [LeRobot dataset importer](tools/lerobot_import)
+- [Counterfactual policy evaluation](tools/policy_eval)
 - [Dataset inspector](tools/dataset_inspector)
+- [LeRobot VLA counterfactual evaluation example](examples/lerobot_vla_eval)
 - [Navigation + manipulation demo](examples/navigation_manipulation_demo)
 - [RoMi Studio mini browser simulator](examples/navigation_manipulation_demo/romi_2d_sim)
 - [Capture guide](examples/navigation_manipulation_demo/capture-guide.md)

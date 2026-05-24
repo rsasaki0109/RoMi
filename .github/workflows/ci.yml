@@ -32,6 +32,9 @@ jobs:
       - name: Install browser contract dependencies
         run: python3 -m pip install -r requirements-browser.txt
 
+      - name: Install eval contract dependencies
+        run: python3 -m pip install jsonschema
+
       - name: Python syntax check
         run: |
           find bridges examples tools tests -name '*.py' -not -path '*/artifacts/*' -print0 \
@@ -62,3 +65,6 @@ jobs:
 
       - name: Check browser/native contract
         run: python3 tests/check_browser_native_contract.py
+
+      - name: Check LeRobot VLA eval contract
+        run: python3 tests/check_lerobot_vla_eval.py
