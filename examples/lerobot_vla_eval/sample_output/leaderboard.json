@@ -1,5 +1,5 @@
 {
-  "best_policy": "bc_knn",
+  "best_policy": "neural_bc",
   "dataset": "lerobot/pusht",
   "held_out_episodes": [
     0,
@@ -9,6 +9,44 @@
     24
   ],
   "leaderboard": [
+    {
+      "episodes": 5,
+      "mean_action_error_px": 22.3201,
+      "mean_agreement_rate": 0.5192,
+      "per_episode": [
+        {
+          "agreement_rate": 0.6025,
+          "episode": 0,
+          "matched_steps": 161,
+          "mean_action_error_px": 18.2534
+        },
+        {
+          "agreement_rate": 0.4783,
+          "episode": 21,
+          "matched_steps": 115,
+          "mean_action_error_px": 23.5069
+        },
+        {
+          "agreement_rate": 0.4495,
+          "episode": 22,
+          "matched_steps": 109,
+          "mean_action_error_px": 24.2324
+        },
+        {
+          "agreement_rate": 0.4636,
+          "episode": 23,
+          "matched_steps": 110,
+          "mean_action_error_px": 23.0876
+        },
+        {
+          "agreement_rate": 0.602,
+          "episode": 24,
+          "matched_steps": 98,
+          "mean_action_error_px": 22.5203
+        }
+      ],
+      "policy_id": "neural_bc"
+    },
     {
       "episodes": 5,
       "mean_action_error_px": 25.4992,

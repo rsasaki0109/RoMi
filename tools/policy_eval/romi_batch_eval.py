@@ -41,6 +41,12 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         default=None,
         help="bc_knn memory JSON. When set, a bc_knn policy is added to the leaderboard.",
     )
+    parser.add_argument(
+        "--neural-weights",
+        type=Path,
+        default=None,
+        help="neural_bc weights JSON. When set, a neural_bc policy is added to the leaderboard.",
+    )
     parser.add_argument("--json-output", type=Path, default=None, help="Leaderboard JSON path.")
     parser.add_argument("--md-output", type=Path, default=None, help="Leaderboard Markdown path.")
     parser.add_argument("--png-output", type=Path, default=None, help="Leaderboard bar-chart PNG path.")
@@ -73,6 +79,13 @@ def policy_specs(args: argparse.Namespace) -> list[dict[str, Any]]:
             {
                 "name": "bc_knn",
                 "extra": ["--backend", "bc_knn", "--bc-memory", str(args.bc_memory)],
+            }
+        )
+    if args.neural_weights is not None:
+        specs.append(
+            {
+                "name": "neural_bc",
+                "extra": ["--backend", "neural_bc", "--neural-weights", str(args.neural_weights), "--device", "cpu"],
             }
         )
     return specs

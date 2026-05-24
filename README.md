@@ -54,15 +54,16 @@ LeRobot episode -> RoMi import -> replay -> policy proposal
   -> actuator authority stays "none"
 ```
 
-The policy backend is pluggable. The same harness scores a naive baseline and a
-learned policy against the recorded expert on a held-out `pusht` episode:
+The policy backend is pluggable. The same harness scores every policy against
+the recorded expert across 5 held-out `pusht` episodes and ranks them:
 
 | Policy | Mean action error | Agreement within 20 px |
 | --- | --- | --- |
-| `heuristic` (go-to-center) | 55.6 px | 8.7% |
-| `bc_knn` (learned from 20 demo episodes) | 21.3 px | 56.5% |
+| `heuristic` (go-to-center) | 56.9 px | 3.6% |
+| `bc_knn` (k-NN imitation from demos) | 25.5 px | 44.3% |
+| `neural_bc` (GPU-trained MLP on demos) | 22.3 px | 51.9% |
 
-A `claude` reasoning policy or a real local VLA can slot in behind the same
+A `claude` reasoning policy or a real vision VLA can slot in behind the same
 envelope. The episode and proposals also export to a Foxglove-ready
 [MCAP](https://mcap.dev) file. See
 [`examples/lerobot_vla_eval`](examples/lerobot_vla_eval) and the sample report
@@ -189,7 +190,7 @@ The current repository contains a small end-to-end prototype path:
 - [Episode recorder](tools/episode_recorder)
 - [Replay source](tools/replay_source)
 - [Mock policy](tools/mock_policy)
-- [Pluggable VLA-style policy (heuristic / bc_knn / Claude)](tools/vla_policy)
+- [Pluggable policy (heuristic / bc_knn / GPU-trained neural_bc / Claude)](tools/vla_policy)
 - [LeRobot dataset importer](tools/lerobot_import)
 - [Counterfactual policy evaluation](tools/policy_eval)
 - [MCAP export for Foxglove](tools/mcap_export)

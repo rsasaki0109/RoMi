@@ -61,7 +61,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--output", type=Path, default=None, help="Policy JSONL. Defaults to stdout.")
     parser.add_argument(
         "--backend",
-        choices=["heuristic", "bc_knn", "claude"],
+        choices=["heuristic", "bc_knn", "neural_bc", "claude"],
         default="heuristic",
         help="Policy backend. Defaults to heuristic (offline).",
     )
@@ -103,6 +103,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     )
     parser.add_argument("--bc-memory", type=Path, default=None, help="bc_knn training memory JSON (from build_bc_memory.py).")
     parser.add_argument("--bc-k", type=int, default=5, help="bc_knn number of nearest demonstrations.")
+    parser.add_argument("--neural-weights", type=Path, default=None, help="neural_bc weights JSON (from train_bc_mlp.py).")
+    parser.add_argument("--device", default="cpu", help="neural_bc inference device (cpu keeps results deterministic).")
     parser.add_argument("--claude-model", default="claude-haiku-4-5-20251001", help="Claude model id.")
     parser.add_argument("--max-actions", type=int, default=None, help="Cap proposed actions.")
     return parser.parse_args(argv)
@@ -236,6 +238,57 @@ class BCKnnBackend:
         return {"x": float(goal[0]), "y": float(goal[1])}
 
 
+class NeuralBCBackend:
+    """A GPU-trained neural behavior-cloning policy (MLP) run for inference.
+
+    Loads weights produced by train_bc_mlp.py and maps the agent state to a
+    proposed action through a small MLP. Inference defaults to CPU so results are
+    deterministic and reproducible regardless of GPU availability.
+    """
+
+    policy_id = "romi_neural_bc"
+
+    def __init__(self, *, weights_path: Path, device: str) -> None:
+        try:
+            import torch  # local import: optional dependency
+        except ImportError as exc:
+            raise RuntimeError("The neural_bc backend needs torch: pip install torch") from exc
+        if weights_path is None or not weights_path.exists():
+            raise RuntimeError(
+                "The neural_bc backend needs --neural-weights pointing to a weights JSON "
+                "(train one with tools/vla_policy/train_bc_mlp.py)."
+            )
+        weights = json.loads(weights_path.read_text(encoding="utf-8"))
+        arch = weights["arch"]
+        self.torch = torch
+        self.device = torch.device(device)
+
+        import torch.nn as nn
+
+        self.model = nn.Sequential(
+            nn.Linear(arch["in_dim"], arch["hidden"]), nn.ReLU(),
+            nn.Linear(arch["hidden"], arch["hidden"]), nn.ReLU(),
+            nn.Linear(arch["hidden"], arch["out_dim"]),
+        )
+        state_dict = {name: torch.tensor(value, dtype=torch.float32) for name, value in weights["state_dict"].items()}
+        self.model.load_state_dict(state_dict)
+        self.model.to(self.device).eval()
+        norm = weights["norm"]
+        self.state_mean = torch.tensor(norm["state_mean"], dtype=torch.float32, device=self.device)
+        self.state_std = torch.tensor(norm["state_std"], dtype=torch.float32, device=self.device)
+        self.action_mean = torch.tensor(norm["action_mean"], dtype=torch.float32, device=self.device)
+        self.action_std = torch.tensor(norm["action_std"], dtype=torch.float32, device=self.device)
+
+    def propose(self, *, position: dict[str, float], history: list[dict[str, float]]) -> dict[str, float]:
+        torch = self.torch
+        with torch.no_grad():
+            state = torch.tensor([position["x"], position["y"]], dtype=torch.float32, device=self.device)
+            normalized = (state - self.state_mean) / self.state_std
+            output = self.model(normalized.unsqueeze(0)).squeeze(0)
+            goal = output * self.action_std + self.action_mean
+        return {"x": float(goal[0]), "y": float(goal[1])}
+
+
 class ClaudeBackend:
     """Real-reasoning policy backed by the Anthropic SDK."""
 
@@ -295,6 +348,8 @@ def build_backend(args: argparse.Namespace, task: str | None) -> Any:
         return HeuristicBackend(anchor=(ax, ay), gain=args.gain, max_step=args.max_step)
     if args.backend == "bc_knn":
         return BCKnnBackend(memory_path=args.bc_memory, k=args.bc_k)
+    if args.backend == "neural_bc":
+        return NeuralBCBackend(weights_path=args.neural_weights, device=args.device)
     return ClaudeBackend(model=args.claude_model, task=task)
 
 

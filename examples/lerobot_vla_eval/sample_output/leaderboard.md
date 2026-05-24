@@ -1,13 +1,14 @@
 # RoMi Policy Evaluation Leaderboard
 
-Counterfactual scoring of 2 policies against recorded expert actions across 5 held-out `lerobot/pusht` episodes (0, 21, 22, 23, 24).
+Counterfactual scoring of 3 policies against recorded expert actions across 5 held-out `lerobot/pusht` episodes (0, 21, 22, 23, 24).
 
 | Rank | Policy | Mean action error | Mean agreement | Episodes |
 | --- | --- | --- | --- | --- |
-| 1 | `bc_knn` | 25.4992 px | 44.3% | 5 |
-| 2 | `heuristic` | 56.8648 px | 3.6% | 5 |
+| 1 | `neural_bc` | 22.3201 px | 51.9% | 5 |
+| 2 | `bc_knn` | 25.4992 px | 44.3% | 5 |
+| 3 | `heuristic` | 56.8648 px | 3.6% | 5 |
 
-**Best policy: `bc_knn`** (lowest mean action error vs expert).
+**Best policy: `neural_bc`** (lowest mean action error vs expert).
 
 All policies stay `proposed_only`; actuator authority is `none`. Scoring a policy against held-out expert demonstrations never commands an actuator.
 

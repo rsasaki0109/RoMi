@@ -68,27 +68,35 @@ go-to-center baseline on `pusht` episode 0 diverges substantially from the exper
 The Markdown report also renders an action-error sparkline across the replay so
 you can see *when* the policy diverges, not just by how much.
 
-## Compare a naive baseline against a learned policy
+## Compare a naive baseline against learned policies
 
-The same harness evaluates any policy. Here a **k-NN behavior-cloning policy**
-(`bc_knn`), learned only from 20 *other* `pusht` episodes and evaluated on the
-held-out episode 0, is compared against the naive go-to-center baseline:
+The same harness evaluates any policy. Here two learned policies — a **k-NN
+behavior-cloning policy** (`bc_knn`) and a **GPU-trained neural MLP** (`neural_bc`),
+both learned only from *other* `pusht` episodes — are compared against the naive
+go-to-center baseline on the held-out episode 0:
 
 | Policy | Mean action error | Agreement within 20 px |
 | --- | --- | --- |
 | `heuristic` (go-to-center) | 55.6 px | 8.7% |
-| **`bc_knn`** (learned from demos) | **21.3 px** | **56.5%** |
+| `bc_knn` (k-NN imitation) | 21.3 px | 56.5% |
+| **`neural_bc`** (GPU-trained MLP) | **18.3 px** | **60.2%** |
 
 <p align="center">
-  <img src="../../docs/assets/lerobot-vla-eval-bc-knn.gif" alt="Learned bc_knn policy tracking the expert demonstration" width="860">
+  <img src="../../docs/assets/lerobot-vla-eval-neural-bc.gif" alt="GPU-trained neural_bc policy tracking the expert demonstration" width="860">
 </p>
 
-The learned policy tracks the recorded expert far more closely — and the report
-shows exactly where it still diverges. Build the imitation memory with:
+The learned policies track the recorded expert far more closely than the
+baseline — and the report shows exactly where they still diverge. Build the
+imitation memory and train the neural policy with:
 
 ```bash
+# k-NN imitation memory (numpy only)
 python3 ../../tools/vla_policy/build_bc_memory.py \
   --episodes 1-20 --output sample_output/bc_memory.json
+
+# GPU-trained neural behavior-cloning policy (torch; uses CUDA when available)
+python3 ../../tools/vla_policy/train_bc_mlp.py \
+  --episodes 1-50 --epochs 600 --output sample_output/bc_mlp_weights.json
 ```
 
 ## Dataset-scale leaderboard
@@ -105,7 +113,9 @@ across episodes `0,21,22,23,24` (held out from the `bc_knn` training set) with:
 
 ```bash
 python3 ../../tools/policy_eval/romi_batch_eval.py \
-  --episodes 0,21-24 --bc-memory sample_output/bc_memory.json \
+  --episodes 0,21-24 \
+  --bc-memory sample_output/bc_memory.json \
+  --neural-weights sample_output/bc_mlp_weights.json \
   --json-output sample_output/leaderboard.json \
   --md-output sample_output/leaderboard.md \
   --png-output ../../docs/assets/lerobot-vla-leaderboard.png
@@ -134,8 +144,9 @@ MCAP-compatible, not MCAP-only.
 | Tool | Role |
 | --- | --- |
 | [`tools/lerobot_import`](../../tools/lerobot_import) | LeRobot v3 episode → RoMi episode JSONL (parquet over HTTP, no torch) |
-| [`tools/vla_policy`](../../tools/vla_policy) | Pluggable policy: `heuristic` (offline), `bc_knn` (learned), or `claude` |
+| [`tools/vla_policy`](../../tools/vla_policy) | Pluggable policy: `heuristic`, `bc_knn`, `neural_bc` (GPU-trained), or `claude` |
 | [`tools/vla_policy/build_bc_memory.py`](../../tools/vla_policy) | Build the imitation memory for `bc_knn` from demonstration episodes |
+| [`tools/vla_policy/train_bc_mlp.py`](../../tools/vla_policy) | Train the `neural_bc` MLP policy on demonstrations (GPU when available) |
 | [`tools/policy_eval`](../../tools/policy_eval) | Counterfactual eval: proposals vs recorded expert actions |
 | [`tools/policy_eval/romi_batch_eval.py`](../../tools/policy_eval) | Score and rank policies across held-out episodes (leaderboard) |
 | [`tools/policy_eval/romi_eval_visualize.py`](../../tools/policy_eval) | Render the eval report into the animation above (GIF + poster PNG) |
@@ -181,8 +192,12 @@ This evaluation never does so.
 
 - validates committed envelopes against `schemas/core/stream_sample.schema.json`
   and `schemas/ml/policy_io.schema.json`,
-- validates both reports against `schemas/ml/policy_eval.schema.json`,
-- re-runs the `heuristic` and `bc_knn` policies + eval and asserts the
-  deterministic results reproduce the committed reports,
+- validates the reports against `schemas/ml/policy_eval.schema.json` and the
+  leaderboard against `schemas/ml/policy_eval_leaderboard.schema.json`,
+- re-runs the `heuristic` and `bc_knn` policies + eval (and `neural_bc` when
+  torch is installed) and asserts the deterministic results reproduce the
+  committed reports,
+- round-trips the MCAP export and checks its Foxglove channels,
 - asserts the actuator-authority boundary stays explicit,
-- asserts the learned `bc_knn` policy beats the naive baseline.
+- asserts the learned `bc_knn` and `neural_bc` policies beat the naive baseline
+  and that `neural_bc` tops the held-out leaderboard.

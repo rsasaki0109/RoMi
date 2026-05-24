@@ -1,0 +1,2128 @@
+{
+  "action_space": "navigate_to_goal_2d_pixel",
+  "backend": "neural_bc",
+  "clock_domain": "episode_time",
+  "dataset": "lerobot/pusht",
+  "episode_id": "lerobot_pusht_ep000000",
+  "expert_steps": 161,
+  "matched_steps": 161,
+  "policy_id": "romi_neural_bc",
+  "proposal_steps": 161,
+  "reference": "recorded_expert_action",
+  "report_kind": "romi.counterfactual_policy_eval",
+  "safety_boundary": {
+    "actuator_authority": "none",
+    "blocked_reason": "proposal_not_actuator_authority",
+    "command_stream_emitted": false,
+    "policy_authority": "proposed_only"
+  },
+  "samples": [
+    {
+      "error_px": 28.3575,
+      "expert_goal": {
+        "x": 233.0,
+        "y": 71.0
+      },
+      "proposed_goal": {
+        "x": 216.942,
+        "y": 94.373
+      },
+      "time_sec": 0.0,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 8.3551,
+      "expert_goal": {
+        "x": 229.0,
+        "y": 83.0
+      },
+      "proposed_goal": {
+        "x": 221.236,
+        "y": 86.087
+      },
+      "time_sec": 0.1,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 6.8447,
+      "expert_goal": {
+        "x": 229.0,
+        "y": 86.0
+      },
+      "proposed_goal": {
+        "x": 224.374,
+        "y": 80.955
+      },
+      "time_sec": 0.2,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 6.9598,
+      "expert_goal": {
+        "x": 230.0,
+        "y": 86.0
+      },
+      "proposed_goal": {
+        "x": 225.473,
+        "y": 80.714
+      },
+      "time_sec": 0.3,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 14.7722,
+      "expert_goal": {
+        "x": 239.0,
+        "y": 89.0
+      },
+      "proposed_goal": {
+        "x": 226.286,
+        "y": 81.478
+      },
+      "time_sec": 0.4,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 23.7394,
+      "expert_goal": {
+        "x": 251.0,
+        "y": 95.0
+      },
+      "proposed_goal": {
+        "x": 230.403,
+        "y": 83.197
+      },
+      "time_sec": 0.5,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 28.1313,
+      "expert_goal": {
+        "x": 263.0,
+        "y": 102.0
+      },
+      "proposed_goal": {
+        "x": 239.239,
+        "y": 86.941
+      },
+      "time_sec": 0.6,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 26.7377,
+      "expert_goal": {
+        "x": 273.0,
+        "y": 108.0
+      },
+      "proposed_goal": {
+        "x": 250.977,
+        "y": 92.838
+      },
+      "time_sec": 0.7,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 26.162,
+      "expert_goal": {
+        "x": 283.0,
+        "y": 116.0
+      },
+      "proposed_goal": {
+        "x": 262.624,
+        "y": 99.59
+      },
+      "time_sec": 0.8,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 29.8699,
+      "expert_goal": {
+        "x": 294.0,
+        "y": 127.0
+      },
+      "proposed_goal": {
+        "x": 271.899,
+        "y": 106.907
+      },
+      "time_sec": 0.9,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 29.9985,
+      "expert_goal": {
+        "x": 302.0,
+        "y": 137.0
+      },
+      "proposed_goal": {
+        "x": 280.736,
+        "y": 115.84
+      },
+      "time_sec": 1.0,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 21.9964,
+      "expert_goal": {
+        "x": 305.0,
+        "y": 141.0
+      },
+      "proposed_goal": {
+        "x": 288.735,
+        "y": 126.192
+      },
+      "time_sec": 1.1,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 20.9693,
+      "expert_goal": {
+        "x": 311.0,
+        "y": 148.0
+      },
+      "proposed_goal": {
+        "x": 294.939,
+        "y": 134.519
+      },
+      "time_sec": 1.2,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 20.8966,
+      "expert_goal": {
+        "x": 318.0,
+        "y": 152.0
+      },
+      "proposed_goal": {
+        "x": 299.961,
+        "y": 141.452
+      },
+      "time_sec": 1.3,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 21.7433,
+      "expert_goal": {
+        "x": 324.0,
+        "y": 158.0
+      },
+      "proposed_goal": {
+        "x": 304.958,
+        "y": 147.504
+      },
+      "time_sec": 1.4,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 23.8893,
+      "expert_goal": {
+        "x": 332.0,
+        "y": 163.0
+      },
+      "proposed_goal": {
+        "x": 310.131,
+        "y": 153.385
+      },
+      "time_sec": 1.5,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 25.6901,
+      "expert_goal": {
+        "x": 339.0,
+        "y": 170.0
+      },
+      "proposed_goal": {
+        "x": 315.624,
+        "y": 159.345
+      },
+      "time_sec": 1.6,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 30.0421,
+      "expert_goal": {
+        "x": 346.0,
+        "y": 182.0
+      },
+      "proposed_goal": {
+        "x": 320.808,
+        "y": 165.632
+      },
+      "time_sec": 1.7,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 34.0451,
+      "expert_goal": {
+        "x": 352.0,
+        "y": 195.0
+      },
+      "proposed_goal": {
+        "x": 326.135,
+        "y": 172.862
+      },
+      "time_sec": 1.8,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 36.6632,
+      "expert_goal": {
+        "x": 357.0,
+        "y": 209.0
+      },
+      "proposed_goal": {
+        "x": 332.004,
+        "y": 182.178
+      },
+      "time_sec": 1.9,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 36.8675,
+      "expert_goal": {
+        "x": 360.0,
+        "y": 221.0
+      },
+      "proposed_goal": {
+        "x": 337.363,
+        "y": 191.9
+      },
+      "time_sec": 2.0,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 45.6902,
+      "expert_goal": {
+        "x": 365.0,
+        "y": 242.0
+      },
+      "proposed_goal": {
+        "x": 342.489,
+        "y": 202.24
+      },
+      "time_sec": 2.1,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 49.0659,
+      "expert_goal": {
+        "x": 368.0,
+        "y": 260.0
+      },
+      "proposed_goal": {
+        "x": 348.488,
+        "y": 214.981
+      },
+      "time_sec": 2.2,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 47.5071,
+      "expert_goal": {
+        "x": 370.0,
+        "y": 275.0
+      },
+      "proposed_goal": {
+        "x": 354.591,
+        "y": 230.061
+      },
+      "time_sec": 2.3,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 46.4741,
+      "expert_goal": {
+        "x": 372.0,
+        "y": 290.0
+      },
+      "proposed_goal": {
+        "x": 359.928,
+        "y": 245.121
+      },
+      "time_sec": 2.4,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 45.441,
+      "expert_goal": {
+        "x": 373.0,
+        "y": 305.0
+      },
+      "proposed_goal": {
+        "x": 363.966,
+        "y": 260.466
+      },
+      "time_sec": 2.5,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 48.6666,
+      "expert_goal": {
+        "x": 375.0,
+        "y": 324.0
+      },
+      "proposed_goal": {
+        "x": 366.855,
+        "y": 276.02
+      },
+      "time_sec": 2.6,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 46.8408,
+      "expert_goal": {
+        "x": 375.0,
+        "y": 339.0
+      },
+      "proposed_goal": {
+        "x": 370.146,
+        "y": 292.411
+      },
+      "time_sec": 2.7,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 41.9006,
+      "expert_goal": {
+        "x": 373.0,
+        "y": 351.0
+      },
+      "proposed_goal": {
+        "x": 372.667,
+        "y": 309.101
+      },
+      "time_sec": 2.8,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 44.0183,
+      "expert_goal": {
+        "x": 369.0,
+        "y": 368.0
+      },
+      "proposed_goal": {
+        "x": 373.798,
+        "y": 324.244
+      },
+      "time_sec": 2.9,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 45.0582,
+      "expert_goal": {
+        "x": 363.0,
+        "y": 384.0
+      },
+      "proposed_goal": {
+        "x": 371.911,
+        "y": 339.832
+      },
+      "time_sec": 3.0,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 44.8322,
+      "expert_goal": {
+        "x": 355.0,
+        "y": 399.0
+      },
+      "proposed_goal": {
+        "x": 368.075,
+        "y": 356.117
+      },
+      "time_sec": 3.1,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 41.954,
+      "expert_goal": {
+        "x": 345.0,
+        "y": 410.0
+      },
+      "proposed_goal": {
+        "x": 362.526,
+        "y": 371.882
+      },
+      "time_sec": 3.2,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 41.4755,
+      "expert_goal": {
+        "x": 333.0,
+        "y": 423.0
+      },
+      "proposed_goal": {
+        "x": 354.125,
+        "y": 387.308
+      },
+      "time_sec": 3.3,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 43.0295,
+      "expert_goal": {
+        "x": 316.0,
+        "y": 434.0
+      },
+      "proposed_goal": {
+        "x": 344.257,
+        "y": 401.549
+      },
+      "time_sec": 3.4,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 40.3677,
+      "expert_goal": {
+        "x": 303.0,
+        "y": 441.0
+      },
+      "proposed_goal": {
+        "x": 332.951,
+        "y": 413.935
+      },
+      "time_sec": 3.5,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 35.3984,
+      "expert_goal": {
+        "x": 292.0,
+        "y": 445.0
+      },
+      "proposed_goal": {
+        "x": 320.688,
+        "y": 424.263
+      },
+      "time_sec": 3.6,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 28.8339,
+      "expert_goal": {
+        "x": 282.0,
+        "y": 447.0
+      },
+      "proposed_goal": {
+        "x": 307.562,
+        "y": 433.66
+      },
+      "time_sec": 3.7,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 21.6271,
+      "expert_goal": {
+        "x": 275.0,
+        "y": 448.0
+      },
+      "proposed_goal": {
+        "x": 294.611,
+        "y": 438.883
+      },
+      "time_sec": 3.8,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 15.7412,
+      "expert_goal": {
+        "x": 269.0,
+        "y": 448.0
+      },
+      "proposed_goal": {
+        "x": 283.533,
+        "y": 441.953
+      },
+      "time_sec": 3.9,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 13.8411,
+      "expert_goal": {
+        "x": 262.0,
+        "y": 449.0
+      },
+      "proposed_goal": {
+        "x": 274.606,
+        "y": 443.285
+      },
+      "time_sec": 4.0,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 9.3344,
+      "expert_goal": {
+        "x": 259.0,
+        "y": 449.0
+      },
+      "proposed_goal": {
+        "x": 266.788,
+        "y": 443.854
+      },
+      "time_sec": 4.1,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 5.0616,
+      "expert_goal": {
+        "x": 256.0,
+        "y": 446.0
+      },
+      "proposed_goal": {
+        "x": 260.662,
+        "y": 444.029
+      },
+      "time_sec": 4.2,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 7.1764,
+      "expert_goal": {
+        "x": 253.0,
+        "y": 437.0
+      },
+      "proposed_goal": {
+        "x": 256.495,
+        "y": 443.268
+      },
+      "time_sec": 4.3,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 12.7531,
+      "expert_goal": {
+        "x": 253.0,
+        "y": 427.0
+      },
+      "proposed_goal": {
+        "x": 253.566,
+        "y": 439.741
+      },
+      "time_sec": 4.4,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 14.2685,
+      "expert_goal": {
+        "x": 253.0,
+        "y": 419.0
+      },
+      "proposed_goal": {
+        "x": 251.953,
+        "y": 433.23
+      },
+      "time_sec": 4.5,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 16.4973,
+      "expert_goal": {
+        "x": 253.0,
+        "y": 409.0
+      },
+      "proposed_goal": {
+        "x": 251.606,
+        "y": 425.438
+      },
+      "time_sec": 4.6,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 17.9092,
+      "expert_goal": {
+        "x": 255.0,
+        "y": 399.0
+      },
+      "proposed_goal": {
+        "x": 252.174,
+        "y": 416.685
+      },
+      "time_sec": 4.7,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 18.8046,
+      "expert_goal": {
+        "x": 257.0,
+        "y": 389.0
+      },
+      "proposed_goal": {
+        "x": 253.505,
+        "y": 407.477
+      },
+      "time_sec": 4.8,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 13.1377,
+      "expert_goal": {
+        "x": 259.0,
+        "y": 385.0
+      },
+      "proposed_goal": {
+        "x": 255.747,
+        "y": 397.729
+      },
+      "time_sec": 4.9,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 7.8833,
+      "expert_goal": {
+        "x": 259.0,
+        "y": 383.0
+      },
+      "proposed_goal": {
+        "x": 257.421,
+        "y": 390.723
+      },
+      "time_sec": 5.0,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 7.0942,
+      "expert_goal": {
+        "x": 260.0,
+        "y": 379.0
+      },
+      "proposed_goal": {
+        "x": 258.455,
+        "y": 385.924
+      },
+      "time_sec": 5.1,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 8.9933,
+      "expert_goal": {
+        "x": 263.0,
+        "y": 374.0
+      },
+      "proposed_goal": {
+        "x": 259.193,
+        "y": 382.148
+      },
+      "time_sec": 5.2,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 14.0283,
+      "expert_goal": {
+        "x": 263.0,
+        "y": 365.0
+      },
+      "proposed_goal": {
+        "x": 259.838,
+        "y": 378.667
+      },
+      "time_sec": 5.3,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 19.0684,
+      "expert_goal": {
+        "x": 264.0,
+        "y": 355.0
+      },
+      "proposed_goal": {
+        "x": 260.813,
+        "y": 373.8
+      },
+      "time_sec": 5.4,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 22.2766,
+      "expert_goal": {
+        "x": 265.0,
+        "y": 345.0
+      },
+      "proposed_goal": {
+        "x": 261.787,
+        "y": 367.044
+      },
+      "time_sec": 5.5,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 20.4987,
+      "expert_goal": {
+        "x": 266.0,
+        "y": 339.0
+      },
+      "proposed_goal": {
+        "x": 262.73,
+        "y": 359.236
+      },
+      "time_sec": 5.6,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 16.7104,
+      "expert_goal": {
+        "x": 266.0,
+        "y": 335.0
+      },
+      "proposed_goal": {
+        "x": 264.284,
+        "y": 351.622
+      },
+      "time_sec": 5.7,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 14.1813,
+      "expert_goal": {
+        "x": 267.0,
+        "y": 331.0
+      },
+      "proposed_goal": {
+        "x": 265.992,
+        "y": 345.145
+      },
+      "time_sec": 5.8,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 15.7379,
+      "expert_goal": {
+        "x": 268.0,
+        "y": 324.0
+      },
+      "proposed_goal": {
+        "x": 267.361,
+        "y": 339.725
+      },
+      "time_sec": 5.9,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 17.2865,
+      "expert_goal": {
+        "x": 268.0,
+        "y": 317.0
+      },
+      "proposed_goal": {
+        "x": 268.827,
+        "y": 334.267
+      },
+      "time_sec": 6.0,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 17.4748,
+      "expert_goal": {
+        "x": 267.0,
+        "y": 311.0
+      },
+      "proposed_goal": {
+        "x": 269.835,
+        "y": 328.243
+      },
+      "time_sec": 6.1,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 22.1199,
+      "expert_goal": {
+        "x": 266.0,
+        "y": 300.0
+      },
+      "proposed_goal": {
+        "x": 269.952,
+        "y": 321.764
+      },
+      "time_sec": 6.2,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 23.2007,
+      "expert_goal": {
+        "x": 265.0,
+        "y": 291.0
+      },
+      "proposed_goal": {
+        "x": 269.437,
+        "y": 313.772
+      },
+      "time_sec": 6.3,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 22.7155,
+      "expert_goal": {
+        "x": 264.0,
+        "y": 283.0
+      },
+      "proposed_goal": {
+        "x": 268.426,
+        "y": 305.28
+      },
+      "time_sec": 6.4,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 24.3423,
+      "expert_goal": {
+        "x": 264.0,
+        "y": 273.0
+      },
+      "proposed_goal": {
+        "x": 266.545,
+        "y": 297.209
+      },
+      "time_sec": 6.5,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 19.5835,
+      "expert_goal": {
+        "x": 264.0,
+        "y": 269.0
+      },
+      "proposed_goal": {
+        "x": 264.729,
+        "y": 288.57
+      },
+      "time_sec": 6.6,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 15.6273,
+      "expert_goal": {
+        "x": 263.0,
+        "y": 265.0
+      },
+      "proposed_goal": {
+        "x": 263.801,
+        "y": 280.607
+      },
+      "time_sec": 6.7,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 13.3826,
+      "expert_goal": {
+        "x": 262.0,
+        "y": 261.0
+      },
+      "proposed_goal": {
+        "x": 262.86,
+        "y": 274.355
+      },
+      "time_sec": 6.8,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 10.312,
+      "expert_goal": {
+        "x": 260.0,
+        "y": 259.0
+      },
+      "proposed_goal": {
+        "x": 261.744,
+        "y": 269.163
+      },
+      "time_sec": 6.9,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 9.1997,
+      "expert_goal": {
+        "x": 256.0,
+        "y": 257.0
+      },
+      "proposed_goal": {
+        "x": 260.32,
+        "y": 265.122
+      },
+      "time_sec": 7.0,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 10.0295,
+      "expert_goal": {
+        "x": 252.0,
+        "y": 254.0
+      },
+      "proposed_goal": {
+        "x": 257.982,
+        "y": 262.051
+      },
+      "time_sec": 7.1,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 10.6645,
+      "expert_goal": {
+        "x": 248.0,
+        "y": 251.0
+      },
+      "proposed_goal": {
+        "x": 254.767,
+        "y": 259.243
+      },
+      "time_sec": 7.2,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 10.9833,
+      "expert_goal": {
+        "x": 245.0,
+        "y": 248.0
+      },
+      "proposed_goal": {
+        "x": 251.961,
+        "y": 256.496
+      },
+      "time_sec": 7.3,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 13.2268,
+      "expert_goal": {
+        "x": 241.0,
+        "y": 243.0
+      },
+      "proposed_goal": {
+        "x": 249.099,
+        "y": 253.457
+      },
+      "time_sec": 7.4,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 8.9165,
+      "expert_goal": {
+        "x": 241.0,
+        "y": 242.0
+      },
+      "proposed_goal": {
+        "x": 245.848,
+        "y": 249.483
+      },
+      "time_sec": 7.5,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 25.4826,
+      "expert_goal": {
+        "x": 254.0,
+        "y": 223.0
+      },
+      "proposed_goal": {
+        "x": 243.457,
+        "y": 246.199
+      },
+      "time_sec": 7.6,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 22.8772,
+      "expert_goal": {
+        "x": 254.0,
+        "y": 218.0
+      },
+      "proposed_goal": {
+        "x": 245.057,
+        "y": 239.057
+      },
+      "time_sec": 7.7,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 15.0986,
+      "expert_goal": {
+        "x": 254.0,
+        "y": 217.0
+      },
+      "proposed_goal": {
+        "x": 247.448,
+        "y": 230.603
+      },
+      "time_sec": 7.8,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 21.5548,
+      "expert_goal": {
+        "x": 258.0,
+        "y": 205.0
+      },
+      "proposed_goal": {
+        "x": 249.015,
+        "y": 224.593
+      },
+      "time_sec": 7.9,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 27.9979,
+      "expert_goal": {
+        "x": 260.0,
+        "y": 191.0
+      },
+      "proposed_goal": {
+        "x": 250.502,
+        "y": 217.338
+      },
+      "time_sec": 8.0,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 33.904,
+      "expert_goal": {
+        "x": 260.0,
+        "y": 175.0
+      },
+      "proposed_goal": {
+        "x": 251.528,
+        "y": 207.829
+      },
+      "time_sec": 8.1,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 29.7339,
+      "expert_goal": {
+        "x": 257.0,
+        "y": 167.0
+      },
+      "proposed_goal": {
+        "x": 252.592,
+        "y": 196.405
+      },
+      "time_sec": 8.2,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 28.6884,
+      "expert_goal": {
+        "x": 250.0,
+        "y": 157.0
+      },
+      "proposed_goal": {
+        "x": 253.062,
+        "y": 185.524
+      },
+      "time_sec": 8.3,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 35.1546,
+      "expert_goal": {
+        "x": 236.0,
+        "y": 144.0
+      },
+      "proposed_goal": {
+        "x": 251.203,
+        "y": 175.697
+      },
+      "time_sec": 8.4,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 37.4904,
+      "expert_goal": {
+        "x": 218.0,
+        "y": 138.0
+      },
+      "proposed_goal": {
+        "x": 244.893,
+        "y": 164.121
+      },
+      "time_sec": 8.5,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 43.051,
+      "expert_goal": {
+        "x": 196.0,
+        "y": 133.0
+      },
+      "proposed_goal": {
+        "x": 234.104,
+        "y": 153.037
+      },
+      "time_sec": 8.6,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 51.7998,
+      "expert_goal": {
+        "x": 166.0,
+        "y": 133.0
+      },
+      "proposed_goal": {
+        "x": 216.918,
+        "y": 142.518
+      },
+      "time_sec": 8.7,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 44.8572,
+      "expert_goal": {
+        "x": 150.0,
+        "y": 142.0
+      },
+      "proposed_goal": {
+        "x": 194.731,
+        "y": 138.642
+      },
+      "time_sec": 8.8,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 36.453,
+      "expert_goal": {
+        "x": 140.0,
+        "y": 152.0
+      },
+      "proposed_goal": {
+        "x": 174.828,
+        "y": 141.239
+      },
+      "time_sec": 8.9,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 24.1811,
+      "expert_goal": {
+        "x": 137.0,
+        "y": 158.0
+      },
+      "proposed_goal": {
+        "x": 158.871,
+        "y": 147.687
+      },
+      "time_sec": 9.0,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 17.33,
+      "expert_goal": {
+        "x": 134.0,
+        "y": 165.0
+      },
+      "proposed_goal": {
+        "x": 148.183,
+        "y": 155.042
+      },
+      "time_sec": 9.1,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 11.1019,
+      "expert_goal": {
+        "x": 133.0,
+        "y": 170.0
+      },
+      "proposed_goal": {
+        "x": 141.21,
+        "y": 162.527
+      },
+      "time_sec": 9.2,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 12.1164,
+      "expert_goal": {
+        "x": 131.0,
+        "y": 180.0
+      },
+      "proposed_goal": {
+        "x": 136.941,
+        "y": 169.44
+      },
+      "time_sec": 9.3,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 14.483,
+      "expert_goal": {
+        "x": 129.0,
+        "y": 190.0
+      },
+      "proposed_goal": {
+        "x": 134.622,
+        "y": 176.653
+      },
+      "time_sec": 9.4,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 20.2294,
+      "expert_goal": {
+        "x": 123.0,
+        "y": 202.0
+      },
+      "proposed_goal": {
+        "x": 133.215,
+        "y": 184.539
+      },
+      "time_sec": 9.5,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 28.3868,
+      "expert_goal": {
+        "x": 111.0,
+        "y": 215.0
+      },
+      "proposed_goal": {
+        "x": 130.48,
+        "y": 194.352
+      },
+      "time_sec": 9.6,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 27.1416,
+      "expert_goal": {
+        "x": 103.0,
+        "y": 223.0
+      },
+      "proposed_goal": {
+        "x": 124.7,
+        "y": 206.697
+      },
+      "time_sec": 9.7,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 21.8944,
+      "expert_goal": {
+        "x": 99.0,
+        "y": 229.0
+      },
+      "proposed_goal": {
+        "x": 117.635,
+        "y": 217.507
+      },
+      "time_sec": 9.8,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 16.6509,
+      "expert_goal": {
+        "x": 96.0,
+        "y": 233.0
+      },
+      "proposed_goal": {
+        "x": 111.414,
+        "y": 226.703
+      },
+      "time_sec": 9.9,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 9.929,
+      "expert_goal": {
+        "x": 96.0,
+        "y": 235.0
+      },
+      "proposed_goal": {
+        "x": 105.816,
+        "y": 233.503
+      },
+      "time_sec": 10.0,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 7.988,
+      "expert_goal": {
+        "x": 95.0,
+        "y": 237.0
+      },
+      "proposed_goal": {
+        "x": 102.98,
+        "y": 237.353
+      },
+      "time_sec": 10.1,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 6.5615,
+      "expert_goal": {
+        "x": 95.0,
+        "y": 241.0
+      },
+      "proposed_goal": {
+        "x": 101.454,
+        "y": 239.814
+      },
+      "time_sec": 10.2,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 7.2269,
+      "expert_goal": {
+        "x": 94.0,
+        "y": 245.0
+      },
+      "proposed_goal": {
+        "x": 100.675,
+        "y": 242.229
+      },
+      "time_sec": 10.3,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 8.8133,
+      "expert_goal": {
+        "x": 93.0,
+        "y": 250.0
+      },
+      "proposed_goal": {
+        "x": 100.165,
+        "y": 244.868
+      },
+      "time_sec": 10.4,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 8.6159,
+      "expert_goal": {
+        "x": 93.0,
+        "y": 254.0
+      },
+      "proposed_goal": {
+        "x": 99.322,
+        "y": 248.146
+      },
+      "time_sec": 10.5,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 6.1871,
+      "expert_goal": {
+        "x": 95.0,
+        "y": 257.0
+      },
+      "proposed_goal": {
+        "x": 98.365,
+        "y": 251.808
+      },
+      "time_sec": 10.6,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 6.0305,
+      "expert_goal": {
+        "x": 96.0,
+        "y": 261.0
+      },
+      "proposed_goal": {
+        "x": 98.211,
+        "y": 255.389
+      },
+      "time_sec": 10.7,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 5.6842,
+      "expert_goal": {
+        "x": 99.0,
+        "y": 265.0
+      },
+      "proposed_goal": {
+        "x": 98.752,
+        "y": 259.321
+      },
+      "time_sec": 10.8,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 10.7311,
+      "expert_goal": {
+        "x": 102.0,
+        "y": 274.0
+      },
+      "proposed_goal": {
+        "x": 100.062,
+        "y": 263.445
+      },
+      "time_sec": 10.9,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 10.2503,
+      "expert_goal": {
+        "x": 105.0,
+        "y": 279.0
+      },
+      "proposed_goal": {
+        "x": 101.988,
+        "y": 269.202
+      },
+      "time_sec": 11.0,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 10.7593,
+      "expert_goal": {
+        "x": 107.0,
+        "y": 286.0
+      },
+      "proposed_goal": {
+        "x": 104.636,
+        "y": 275.504
+      },
+      "time_sec": 11.1,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 15.7931,
+      "expert_goal": {
+        "x": 111.0,
+        "y": 297.0
+      },
+      "proposed_goal": {
+        "x": 106.974,
+        "y": 281.729
+      },
+      "time_sec": 11.2,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 21.938,
+      "expert_goal": {
+        "x": 115.0,
+        "y": 310.0
+      },
+      "proposed_goal": {
+        "x": 108.961,
+        "y": 288.91
+      },
+      "time_sec": 11.3,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 15.6118,
+      "expert_goal": {
+        "x": 116.0,
+        "y": 313.0
+      },
+      "proposed_goal": {
+        "x": 111.224,
+        "y": 298.137
+      },
+      "time_sec": 11.4,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 7.0644,
+      "expert_goal": {
+        "x": 116.0,
+        "y": 313.0
+      },
+      "proposed_goal": {
+        "x": 113.008,
+        "y": 306.6
+      },
+      "time_sec": 11.5,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 2.96,
+      "expert_goal": {
+        "x": 116.0,
+        "y": 314.0
+      },
+      "proposed_goal": {
+        "x": 114.344,
+        "y": 311.546
+      },
+      "time_sec": 11.6,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 1.1036,
+      "expert_goal": {
+        "x": 116.0,
+        "y": 314.0
+      },
+      "proposed_goal": {
+        "x": 115.024,
+        "y": 314.516
+      },
+      "time_sec": 11.7,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 2.2501,
+      "expert_goal": {
+        "x": 116.0,
+        "y": 314.0
+      },
+      "proposed_goal": {
+        "x": 115.347,
+        "y": 316.153
+      },
+      "time_sec": 11.8,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 3.019,
+      "expert_goal": {
+        "x": 116.0,
+        "y": 314.0
+      },
+      "proposed_goal": {
+        "x": 115.5,
+        "y": 316.977
+      },
+      "time_sec": 11.9,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 7.8165,
+      "expert_goal": {
+        "x": 121.0,
+        "y": 323.0
+      },
+      "proposed_goal": {
+        "x": 115.571,
+        "y": 317.376
+      },
+      "time_sec": 12.0,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 8.2339,
+      "expert_goal": {
+        "x": 123.0,
+        "y": 326.0
+      },
+      "proposed_goal": {
+        "x": 117.038,
+        "y": 320.321
+      },
+      "time_sec": 12.1,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 4.1646,
+      "expert_goal": {
+        "x": 123.0,
+        "y": 326.0
+      },
+      "proposed_goal": {
+        "x": 119.244,
+        "y": 324.201
+      },
+      "time_sec": 12.2,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 4.3338,
+      "expert_goal": {
+        "x": 125.0,
+        "y": 328.0
+      },
+      "proposed_goal": {
+        "x": 120.863,
+        "y": 326.708
+      },
+      "time_sec": 12.3,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 2.7039,
+      "expert_goal": {
+        "x": 125.0,
+        "y": 328.0
+      },
+      "proposed_goal": {
+        "x": 122.36,
+        "y": 328.585
+      },
+      "time_sec": 12.4,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 2.3554,
+      "expert_goal": {
+        "x": 125.0,
+        "y": 328.0
+      },
+      "proposed_goal": {
+        "x": 123.454,
+        "y": 329.777
+      },
+      "time_sec": 12.5,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 2.5931,
+      "expert_goal": {
+        "x": 125.0,
+        "y": 328.0
+      },
+      "proposed_goal": {
+        "x": 124.059,
+        "y": 330.416
+      },
+      "time_sec": 12.6,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 2.8073,
+      "expert_goal": {
+        "x": 125.0,
+        "y": 328.0
+      },
+      "proposed_goal": {
+        "x": 124.363,
+        "y": 330.734
+      },
+      "time_sec": 12.7,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 2.9285,
+      "expert_goal": {
+        "x": 125.0,
+        "y": 328.0
+      },
+      "proposed_goal": {
+        "x": 124.51,
+        "y": 330.887
+      },
+      "time_sec": 12.8,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 2.4852,
+      "expert_goal": {
+        "x": 126.0,
+        "y": 333.0
+      },
+      "proposed_goal": {
+        "x": 124.58,
+        "y": 330.96
+      },
+      "time_sec": 12.9,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 3.4341,
+      "expert_goal": {
+        "x": 127.0,
+        "y": 335.0
+      },
+      "proposed_goal": {
+        "x": 124.869,
+        "y": 332.307
+      },
+      "time_sec": 13.0,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 2.2853,
+      "expert_goal": {
+        "x": 127.0,
+        "y": 336.0
+      },
+      "proposed_goal": {
+        "x": 125.647,
+        "y": 334.158
+      },
+      "time_sec": 13.1,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 0.7435,
+      "expert_goal": {
+        "x": 127.0,
+        "y": 336.0
+      },
+      "proposed_goal": {
+        "x": 126.301,
+        "y": 335.748
+      },
+      "time_sec": 13.2,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 0.8212,
+      "expert_goal": {
+        "x": 127.0,
+        "y": 336.0
+      },
+      "proposed_goal": {
+        "x": 126.678,
+        "y": 336.756
+      },
+      "time_sec": 13.3,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 14.5166,
+      "expert_goal": {
+        "x": 114.0,
+        "y": 344.0
+      },
+      "proposed_goal": {
+        "x": 126.872,
+        "y": 337.288
+      },
+      "time_sec": 13.4,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 21.6003,
+      "expert_goal": {
+        "x": 107.0,
+        "y": 354.0
+      },
+      "proposed_goal": {
+        "x": 123.138,
+        "y": 339.643
+      },
+      "time_sec": 13.5,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 28.1255,
+      "expert_goal": {
+        "x": 97.0,
+        "y": 364.0
+      },
+      "proposed_goal": {
+        "x": 117.241,
+        "y": 344.472
+      },
+      "time_sec": 13.6,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 22.3973,
+      "expert_goal": {
+        "x": 94.0,
+        "y": 367.0
+      },
+      "proposed_goal": {
+        "x": 110.1,
+        "y": 351.429
+      },
+      "time_sec": 13.7,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 19.1954,
+      "expert_goal": {
+        "x": 93.0,
+        "y": 375.0
+      },
+      "proposed_goal": {
+        "x": 103.347,
+        "y": 358.832
+      },
+      "time_sec": 13.8,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 20.6521,
+      "expert_goal": {
+        "x": 95.0,
+        "y": 386.0
+      },
+      "proposed_goal": {
+        "x": 99.114,
+        "y": 365.762
+      },
+      "time_sec": 13.9,
+      "within_tolerance": false
+    },
+    {
+      "error_px": 17.7384,
+      "expert_goal": {
+        "x": 101.0,
+        "y": 391.0
+      },
+      "proposed_goal": {
+        "x": 98.041,
+        "y": 373.51
+      },
+      "time_sec": 14.0,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 10.1288,
+      "expert_goal": {
+        "x": 106.0,
+        "y": 389.0
+      },
+      "proposed_goal": {
+        "x": 99.95,
+        "y": 380.876
+      },
+      "time_sec": 14.1,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 8.7129,
+      "expert_goal": {
+        "x": 112.0,
+        "y": 383.0
+      },
+      "proposed_goal": {
+        "x": 103.423,
+        "y": 384.535
+      },
+      "time_sec": 14.2,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 10.9156,
+      "expert_goal": {
+        "x": 117.0,
+        "y": 378.0
+      },
+      "proposed_goal": {
+        "x": 108.006,
+        "y": 384.186
+      },
+      "time_sec": 14.3,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 8.841,
+      "expert_goal": {
+        "x": 118.0,
+        "y": 374.0
+      },
+      "proposed_goal": {
+        "x": 112.96,
+        "y": 381.264
+      },
+      "time_sec": 14.4,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 5.5853,
+      "expert_goal": {
+        "x": 120.0,
+        "y": 373.0
+      },
+      "proposed_goal": {
+        "x": 116.735,
+        "y": 377.531
+      },
+      "time_sec": 14.5,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 5.6491,
+      "expert_goal": {
+        "x": 124.0,
+        "y": 371.0
+      },
+      "proposed_goal": {
+        "x": 119.529,
+        "y": 374.453
+      },
+      "time_sec": 14.6,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 6.2042,
+      "expert_goal": {
+        "x": 128.0,
+        "y": 369.0
+      },
+      "proposed_goal": {
+        "x": 122.496,
+        "y": 371.863
+      },
+      "time_sec": 14.7,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 8.7707,
+      "expert_goal": {
+        "x": 134.0,
+        "y": 366.0
+      },
+      "proposed_goal": {
+        "x": 125.918,
+        "y": 369.408
+      },
+      "time_sec": 14.8,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 5.9924,
+      "expert_goal": {
+        "x": 136.0,
+        "y": 365.0
+      },
+      "proposed_goal": {
+        "x": 130.237,
+        "y": 366.641
+      },
+      "time_sec": 14.9,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 5.8357,
+      "expert_goal": {
+        "x": 140.0,
+        "y": 364.0
+      },
+      "proposed_goal": {
+        "x": 134.168,
+        "y": 364.213
+      },
+      "time_sec": 15.0,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 7.1559,
+      "expert_goal": {
+        "x": 145.0,
+        "y": 363.0
+      },
+      "proposed_goal": {
+        "x": 137.882,
+        "y": 362.268
+      },
+      "time_sec": 15.1,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 8.4225,
+      "expert_goal": {
+        "x": 150.0,
+        "y": 363.0
+      },
+      "proposed_goal": {
+        "x": 141.828,
+        "y": 360.961
+      },
+      "time_sec": 15.2,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 7.9383,
+      "expert_goal": {
+        "x": 153.0,
+        "y": 364.0
+      },
+      "proposed_goal": {
+        "x": 145.96,
+        "y": 360.333
+      },
+      "time_sec": 15.3,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 4.9606,
+      "expert_goal": {
+        "x": 153.0,
+        "y": 364.0
+      },
+      "proposed_goal": {
+        "x": 149.599,
+        "y": 360.389
+      },
+      "time_sec": 15.4,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 3.8942,
+      "expert_goal": {
+        "x": 154.0,
+        "y": 364.0
+      },
+      "proposed_goal": {
+        "x": 151.87,
+        "y": 360.74
+      },
+      "time_sec": 15.5,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 4.028,
+      "expert_goal": {
+        "x": 156.0,
+        "y": 364.0
+      },
+      "proposed_goal": {
+        "x": 153.328,
+        "y": 360.986
+      },
+      "time_sec": 15.6,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 2.9406,
+      "expert_goal": {
+        "x": 157.0,
+        "y": 363.0
+      },
+      "proposed_goal": {
+        "x": 154.684,
+        "y": 361.188
+      },
+      "time_sec": 15.7,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 3.2474,
+      "expert_goal": {
+        "x": 159.0,
+        "y": 360.0
+      },
+      "proposed_goal": {
+        "x": 155.94,
+        "y": 361.087
+      },
+      "time_sec": 15.8,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 4.2301,
+      "expert_goal": {
+        "x": 161.0,
+        "y": 358.0
+      },
+      "proposed_goal": {
+        "x": 157.365,
+        "y": 360.163
+      },
+      "time_sec": 15.9,
+      "within_tolerance": true
+    },
+    {
+      "error_px": 6.2578,
+      "expert_goal": {
+        "x": 164.0,
+        "y": 355.0
+      },
+      "proposed_goal": {
+        "x": 159.005,
+        "y": 358.77
+      },
+      "time_sec": 16.0,
+      "within_tolerance": true
+    }
+  ],
+  "schema_version": "0.1.0",
+  "summary": {
+    "agreement_rate_within_tolerance": 0.6025,
+    "max_action_error_px": 51.7998,
+    "max_divergence": {
+      "error_px": 51.7998,
+      "time_sec": 8.7
+    },
+    "mean_action_error_px": 18.2534,
+    "mean_inference_latency_ms": 0.172031,
+    "median_action_error_px": 15.6118,
+    "p95_action_error_px": 45.0582
+  },
+  "tolerance_px": 20.0
+}

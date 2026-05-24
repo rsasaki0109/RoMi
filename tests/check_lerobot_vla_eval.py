@@ -16,6 +16,7 @@ Runs fully offline against committed sample artifacts. It:
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import subprocess
 import sys
@@ -79,7 +80,16 @@ def check(repo_root: Path) -> None:
             "report": "policy_eval.bc_knn.json",
             "extra": ["--backend", "bc_knn", "--bc-memory", str(sample / "bc_memory.json"), "--bc-k", "5"],
         },
+        {
+            "name": "neural_bc",
+            "policy": "policy.neural_bc.jsonl",
+            "report": "policy_eval.neural_bc.json",
+            "extra": ["--backend", "neural_bc", "--neural-weights", str(sample / "bc_mlp_weights.json"), "--device", "cpu"],
+            "needs_torch": True,
+        },
     ]
+
+    torch_available = importlib.util.find_spec("torch") is not None
 
     mean_error: dict[str, float] = {}
     for case in cases:
@@ -106,6 +116,12 @@ def check(repo_root: Path) -> None:
             f"{case['name']}: report safety boundary must stay proposed_only / actuator none",
         )
 
+        mean_error[case["name"]] = report["summary"]["mean_action_error_px"]
+
+        # deterministic reproduction (neural_bc needs torch; skip cleanly without it)
+        if case.get("needs_torch") and not torch_available:
+            print(f"  (skip {case['name']} reproduction: torch not installed)")
+            continue
         with tempfile.TemporaryDirectory() as tmp:
             tmp_dir = Path(tmp)
             repro_policy = tmp_dir / "policy.jsonl"
@@ -126,13 +142,12 @@ def check(repo_root: Path) -> None:
                 f"{case['name']}: re-running policy + eval did not reproduce the committed report",
             )
 
-        mean_error[case["name"]] = report["summary"]["mean_action_error_px"]
-
-    # 5. the learned policy should track the expert better than the naive baseline
-    require(
-        mean_error["bc_knn"] < mean_error["heuristic"],
-        f"bc_knn mean error ({mean_error['bc_knn']}) should beat heuristic ({mean_error['heuristic']})",
-    )
+    # 5. the learned policies should track the expert better than the naive baseline
+    for learned in ("bc_knn", "neural_bc"):
+        require(
+            mean_error[learned] < mean_error["heuristic"],
+            f"{learned} mean error ({mean_error[learned]}) should beat heuristic ({mean_error['heuristic']})",
+        )
 
     # 6. dataset-scale leaderboard: schema, safety, and ranking invariants
     leaderboard_schema = load_json(schemas / "ml" / "policy_eval_leaderboard.schema.json")
@@ -149,8 +164,12 @@ def check(repo_root: Path) -> None:
         "leaderboard entries must be sorted by mean action error",
     )
     require(
-        leaderboard["best_policy"] == ranked[0]["policy_id"] == "bc_knn",
-        "bc_knn should top the held-out leaderboard",
+        leaderboard["best_policy"] == ranked[0]["policy_id"] == "neural_bc",
+        "neural_bc should top the held-out leaderboard",
+    )
+    require(
+        {"heuristic", "bc_knn", "neural_bc"} <= {e["policy_id"] for e in ranked},
+        "leaderboard should rank all three policies",
     )
 
     # 7. MCAP export round-trips to valid Foxglove-schema channels
@@ -181,8 +200,9 @@ def check(repo_root: Path) -> None:
 
     print(
         "OK lerobot_vla_eval: "
-        f"{len(stream_samples)} stream samples; "
-        f"heuristic mean={mean_error['heuristic']}px, bc_knn mean={mean_error['bc_knn']}px; "
+        f"{len(stream_samples)} stream samples; ep0 mean error "
+        f"heuristic={mean_error['heuristic']}px > bc_knn={mean_error['bc_knn']}px > "
+        f"neural_bc={mean_error['neural_bc']}px; "
         f"leaderboard best={leaderboard['best_policy']} over "
         f"{len(leaderboard['held_out_episodes'])} held-out episodes; "
         "MCAP export valid (foxglove.PoseInFrame)"
