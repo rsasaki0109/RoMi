@@ -10,8 +10,9 @@
 # matplotlib/imageio: used by tools/policy_eval/romi_eval_visualize.py to render
 #   the evaluation animation. Not required for the eval itself or CI.
 # mcap: used by tools/mcap_export to write Foxglove-compatible MCAP files.
-# torch: used by tools/vla_policy/train_bc_mlp.py and the neural_bc backend.
-#   Optional - the heuristic and bc_knn backends and CI need no torch.
+# torch/torchvision: used by the neural_bc, vision_cnn, and vision_resnet
+#   backends and their training tools. Optional - the heuristic and bc_knn
+#   backends and CI need no torch.
 jsonschema>=4.0,<5
 numpy>=1.24
 mcap>=1.0
@@ -19,3 +20,4 @@ pyarrow>=14
 matplotlib>=3.7
 imageio>=2.30
 torch>=2.0
+torchvision>=0.15

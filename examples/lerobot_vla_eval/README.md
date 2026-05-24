@@ -81,6 +81,7 @@ go-to-center baseline on the held-out episode 0:
 | `bc_knn` (k-NN imitation) | state | 21.3 px | 56.5% |
 | **`neural_bc`** (GPU-trained MLP) | state | **18.3 px** | **60.2%** |
 | `vision_cnn` (GPU-trained CNN) | **camera image** | 26.5 px | 45.3% |
+| `vision_resnet` (frozen ImageNet ResNet-18 + head) | **camera image** | 39.2 px | 31.1% |
 
 <p align="center">
   <img src="../../docs/assets/lerobot-vla-eval-neural-bc.gif" alt="GPU-trained neural_bc policy tracking the expert demonstration" width="860">
@@ -127,8 +128,28 @@ python3 ../../tools/vla_policy/romi_vla_policy.py --input sample_output/episode.
   --frames sample_output/frames_ep0.npz --device cpu --output /tmp/policy.vision_cnn.jsonl
 ```
 
-A real vision-language VLA (OpenVLA / SmolVLA) can replace this CNN behind the
-same `propose()` interface.
+### Pretrained backbone, and what the harness reveals
+
+`vision_resnet` puts a **real pretrained foundation vision model** in the loop —
+a frozen torchvision ResNet-18 (ImageNet) backbone with a small trained action
+head (the pretrained vision encoder a VLA also uses):
+
+```bash
+python3 ../../tools/vla_policy/train_resnet_bc.py \
+  --episodes 1-30 --epochs 300 --output sample_output/resnet_bc_head.npz
+```
+
+Tellingly, it scores *worse* than the small from-scratch `vision_cnn` on the
+held-out episode (39.2 px vs 26.5 px) despite a lower training loss: frozen
+ImageNet features transfer poorly to these tiny synthetic frames, and a
+task-specific CNN trained end-to-end generalizes better. "Pretrained and bigger"
+is not automatically better — and the eval harness makes that measurable on the
+same footing. A real vision-language VLA (OpenVLA / SmolVLA) can slot in behind
+the same `propose()` interface.
+
+<p align="center">
+  <img src="../../docs/assets/lerobot-vla-eval-vision-resnet.gif" alt="Frozen-ResNet vision_resnet policy vs the expert demonstration" width="860">
+</p>
 
 ## Dataset-scale leaderboard
 
@@ -176,10 +197,11 @@ MCAP-compatible, not MCAP-only.
 | --- | --- |
 | [`tools/lerobot_import`](../../tools/lerobot_import) | LeRobot v3 episode → RoMi episode JSONL (parquet over HTTP, no torch) |
 | [`tools/lerobot_import/extract_frames.py`](../../tools/lerobot_import) | Decode an episode's camera frames to an NPZ (software AV1 via ffmpeg) |
-| [`tools/vla_policy`](../../tools/vla_policy) | Pluggable policy: `heuristic`, `bc_knn`, `neural_bc`, `vision_cnn`, or `claude` |
+| [`tools/vla_policy`](../../tools/vla_policy) | Pluggable policy: `heuristic`, `bc_knn`, `neural_bc`, `vision_cnn`, `vision_resnet`, or `claude` |
 | [`tools/vla_policy/build_bc_memory.py`](../../tools/vla_policy) | Build the imitation memory for `bc_knn` from demonstration episodes |
 | [`tools/vla_policy/train_bc_mlp.py`](../../tools/vla_policy) | Train the `neural_bc` MLP policy on demonstrations (GPU when available) |
 | [`tools/vla_policy/train_cnn_bc.py`](../../tools/vla_policy) | Train the `vision_cnn` image policy on demonstration frames (GPU when available) |
+| [`tools/vla_policy/train_resnet_bc.py`](../../tools/vla_policy) | Train the `vision_resnet` head on a frozen pretrained ResNet-18 backbone |
 | [`tools/policy_eval`](../../tools/policy_eval) | Counterfactual eval: proposals vs recorded expert actions |
 | [`tools/policy_eval/romi_batch_eval.py`](../../tools/policy_eval) | Score and rank policies across held-out episodes (leaderboard) |
 | [`tools/policy_eval/romi_eval_visualize.py`](../../tools/policy_eval) | Render the eval report into the animation above (GIF + poster PNG) |

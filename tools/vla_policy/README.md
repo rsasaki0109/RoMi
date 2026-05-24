@@ -23,6 +23,11 @@ python3 train_cnn_bc.py --episodes 1-30 --epochs 40 --output cnn_bc_weights.npz
 python3 romi_vla_policy.py --input episode.jsonl --backend vision_cnn \
   --vision-weights cnn_bc_weights.npz --frames frames_ep0.npz --device cpu --output policy.jsonl
 
+# Pretrained ResNet-18 backbone (frozen) + trained head (torch + torchvision)
+python3 train_resnet_bc.py --episodes 1-30 --epochs 300 --output resnet_bc_head.npz
+python3 romi_vla_policy.py --input episode.jsonl --backend vision_resnet \
+  --resnet-head resnet_bc_head.npz --frames frames_ep0.npz --device cpu --output policy.jsonl
+
 # Real reasoning policy (needs ANTHROPIC_API_KEY)
 python3 romi_vla_policy.py --input episode.jsonl --backend claude --output policy.jsonl
 ```
@@ -35,6 +40,7 @@ python3 romi_vla_policy.py --input episode.jsonl --backend claude --output polic
 | `bc_knn` | Non-parametric behavior cloning: proposes a distance-weighted average of the actions taken in the nearest demonstrated states. Learned from data, deterministic, numpy only. Build its memory with `build_bc_memory.py`. |
 | `neural_bc` | A small MLP trained by gradient descent on the 2D state (GPU via `train_bc_mlp.py`). Inference defaults to CPU and is deterministic. The learned-action core that VLAs also share. |
 | `vision_cnn` | A small CNN trained on the **camera frame** (GPU via `train_cnn_bc.py`; frames from `extract_frames.py`). A real vision behavior-cloning policy. Inference defaults to CPU and is deterministic. |
+| `vision_resnet` | A trained head on a **frozen pretrained ResNet-18 (ImageNet)** backbone (GPU via `train_resnet_bc.py`). A real pretrained vision foundation model in the loop; the backbone is downloaded at inference, only the head is committed. |
 | `claude` | Lets a Claude model reason over a compact textual observation and propose the next target. Requires `ANTHROPIC_API_KEY`. |
 
 All backends share one observation/output envelope. `vision_cnn` consumes pixels

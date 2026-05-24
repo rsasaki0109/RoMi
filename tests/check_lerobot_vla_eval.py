@@ -95,6 +95,13 @@ def check(repo_root: Path) -> None:
                       "--frames", str(sample / "frames_ep0.npz"), "--device", "cpu"],
             "needs_torch": True,
         },
+        {
+            # Validate-only: reproducing this would download a ~45MB ImageNet backbone.
+            "name": "vision_resnet",
+            "policy": "policy.vision_resnet.jsonl",
+            "report": "policy_eval.vision_resnet.json",
+            "reproduce": False,
+        },
     ]
 
     torch_available = importlib.util.find_spec("torch") is not None
@@ -127,6 +134,8 @@ def check(repo_root: Path) -> None:
         mean_error[case["name"]] = report["summary"]["mean_action_error_px"]
 
         # deterministic reproduction (neural_bc needs torch; skip cleanly without it)
+        if not case.get("reproduce", True):
+            continue
         if case.get("needs_torch") and not torch_available:
             print(f"  (skip {case['name']} reproduction: torch not installed)")
             continue
@@ -151,7 +160,7 @@ def check(repo_root: Path) -> None:
             )
 
     # 5. the learned policies should track the expert better than the naive baseline
-    for learned in ("bc_knn", "neural_bc", "vision_cnn"):
+    for learned in ("bc_knn", "neural_bc", "vision_cnn", "vision_resnet"):
         require(
             mean_error[learned] < mean_error["heuristic"],
             f"{learned} mean error ({mean_error[learned]}) should beat heuristic ({mean_error['heuristic']})",
@@ -210,7 +219,8 @@ def check(repo_root: Path) -> None:
         "OK lerobot_vla_eval: "
         f"{len(stream_samples)} stream samples; ep0 mean error "
         f"heuristic={mean_error['heuristic']} bc_knn={mean_error['bc_knn']} "
-        f"neural_bc={mean_error['neural_bc']} vision_cnn={mean_error['vision_cnn']} px; "
+        f"neural_bc={mean_error['neural_bc']} vision_cnn={mean_error['vision_cnn']} "
+        f"vision_resnet={mean_error['vision_resnet']} px; "
         f"leaderboard best={leaderboard['best_policy']} over "
         f"{len(leaderboard['held_out_episodes'])} held-out episodes; "
         "MCAP export valid (foxglove.PoseInFrame)"

@@ -61,7 +61,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--output", type=Path, default=None, help="Policy JSONL. Defaults to stdout.")
     parser.add_argument(
         "--backend",
-        choices=["heuristic", "bc_knn", "neural_bc", "vision_cnn", "claude"],
+        choices=["heuristic", "bc_knn", "neural_bc", "vision_cnn", "vision_resnet", "claude"],
         default="heuristic",
         help="Policy backend. Defaults to heuristic (offline).",
     )
@@ -105,7 +105,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--bc-k", type=int, default=5, help="bc_knn number of nearest demonstrations.")
     parser.add_argument("--neural-weights", type=Path, default=None, help="neural_bc weights JSON (from train_bc_mlp.py).")
     parser.add_argument("--vision-weights", type=Path, default=None, help="vision_cnn weights NPZ (from train_cnn_bc.py).")
-    parser.add_argument("--frames", type=Path, default=None, help="vision_cnn episode frames NPZ (from extract_frames.py).")
+    parser.add_argument("--resnet-head", type=Path, default=None, help="vision_resnet head weights NPZ (from train_resnet_bc.py).")
+    parser.add_argument("--frames", type=Path, default=None, help="vision_cnn/vision_resnet episode frames NPZ (from extract_frames.py).")
     parser.add_argument("--device", default="cpu", help="neural_bc/vision_cnn inference device (cpu keeps results deterministic).")
     parser.add_argument("--claude-model", default="claude-haiku-4-5-20251001", help="Claude model id.")
     parser.add_argument("--max-actions", type=int, default=None, help="Cap proposed actions.")
@@ -356,6 +357,72 @@ class VisionCnnBackend:
         return {"x": float(goal[0]), "y": float(goal[1])}
 
 
+class VisionResnetBackend:
+    """A vision policy on a pretrained (frozen) ResNet-18 backbone + learned head.
+
+    Uses a real pretrained foundation vision model (torchvision ResNet-18,
+    ImageNet weights) as a frozen feature extractor and a small trained head to
+    regress the action. The backbone is downloaded on first use; only the head is
+    committed. Frames come from an episode NPZ; inference defaults to CPU.
+    """
+
+    policy_id = "romi_vision_resnet"
+    IMAGENET_MEAN = [0.485, 0.456, 0.406]
+    IMAGENET_STD = [0.229, 0.224, 0.225]
+
+    def __init__(self, *, head_path: Path, frames_path: Path, device: str) -> None:
+        try:
+            import numpy as np
+            import torch
+            import torch.nn as nn
+            import torchvision
+        except ImportError as exc:
+            raise RuntimeError("The vision_resnet backend needs torch and torchvision.") from exc
+        if head_path is None or not head_path.exists():
+            raise RuntimeError("The vision_resnet backend needs --resnet-head (train with train_resnet_bc.py).")
+        if frames_path is None or not frames_path.exists():
+            raise RuntimeError("The vision_resnet backend needs --frames (build with extract_frames.py).")
+
+        self.torch = torch
+        self.device = torch.device(device)
+        blob = np.load(frames_path)
+        self.frames = blob["frames"]
+
+        backbone = torchvision.models.resnet18(weights=torchvision.models.ResNet18_Weights.IMAGENET1K_V1)
+        backbone.fc = nn.Identity()
+        backbone.eval().to(self.device)
+        for param in backbone.parameters():
+            param.requires_grad_(False)
+        self.backbone = backbone
+
+        weights = np.load(head_path)
+        self.head = nn.Sequential(nn.Linear(512, 128), nn.ReLU(), nn.Linear(128, 2))
+        state_dict = {
+            key[len("param::"):]: torch.tensor(weights[key], dtype=torch.float32)
+            for key in weights.files if key.startswith("param::")
+        }
+        self.head.load_state_dict(state_dict)
+        self.head.to(self.device).eval()
+        self.action_mean = torch.tensor(weights["action_mean"], dtype=torch.float32, device=self.device)
+        self.action_std = torch.tensor(weights["action_std"], dtype=torch.float32, device=self.device)
+        self.mean = torch.tensor(self.IMAGENET_MEAN, device=self.device).view(1, 3, 1, 1)
+        self.std = torch.tensor(self.IMAGENET_STD, device=self.device).view(1, 3, 1, 1)
+        self.index = 0
+
+    def propose(self, *, position: dict[str, float], history: list[dict[str, float]]) -> dict[str, float]:
+        torch = self.torch
+        frame_index = min(self.index, len(self.frames) - 1)
+        self.index += 1
+        with torch.no_grad():
+            frame = torch.tensor(self.frames[frame_index], dtype=torch.float32, device=self.device)
+            image = (frame.permute(2, 0, 1) / 255.0).unsqueeze(0)
+            image = (image - self.mean) / self.std
+            features = self.backbone(image)
+            output = self.head(features).squeeze(0)
+            goal = output * self.action_std + self.action_mean
+        return {"x": float(goal[0]), "y": float(goal[1])}
+
+
 class ClaudeBackend:
     """Real-reasoning policy backed by the Anthropic SDK."""
 
@@ -419,6 +486,8 @@ def build_backend(args: argparse.Namespace, task: str | None) -> Any:
         return NeuralBCBackend(weights_path=args.neural_weights, device=args.device)
     if args.backend == "vision_cnn":
         return VisionCnnBackend(weights_path=args.vision_weights, frames_path=args.frames, device=args.device)
+    if args.backend == "vision_resnet":
+        return VisionResnetBackend(head_path=args.resnet_head, frames_path=args.frames, device=args.device)
     return ClaudeBackend(model=args.claude_model, task=task)
 
 
