@@ -24,6 +24,16 @@ RoMi stands for **Robotics Middleware**. It is an early pre-MVP project explorin
 
 ## Evaluate a policy on real robot data
 
+<p align="center">
+  <a href="docs/assets/lerobot-vla-eval.gif">
+    <img src="docs/assets/lerobot-vla-eval.gif" alt="RoMi counterfactual policy evaluation on a LeRobot pusht episode: expert vs proposed goal trajectories and action error over the replay" width="900">
+  </a>
+</p>
+
+<p align="center">
+  <sub>Counterfactual policy evaluation on <code>lerobot/pusht</code>: the recorded expert goal trajectory (green) vs the policy's proposed goals (orange), with action error over the replay. Actuator authority stays <code>none</code>.</sub>
+</p>
+
 Point RoMi at a public [LeRobot](https://github.com/huggingface/lerobot) episode,
 run a policy over the replay, and measure how far its proposed actions are from
 the recorded expert demonstration — before any actuator is touched.

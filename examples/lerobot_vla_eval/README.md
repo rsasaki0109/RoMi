@@ -10,6 +10,10 @@ contract, runs a non-authoritative policy over the replay, and produces a
 counterfactual evaluation report comparing the policy's proposed navigation
 goals against the recorded expert actions.
 
+<p align="center">
+  <img src="../../docs/assets/lerobot-vla-eval.gif" alt="Counterfactual policy evaluation animation" width="860">
+</p>
+
 ```text
 LeRobot episode (real public data)
   -> RoMi import (stream-sample envelopes, no torch/lerobot needed)
@@ -68,6 +72,16 @@ you can see *when* the policy diverges, not just by how much.
 | [`tools/lerobot_import`](../../tools/lerobot_import) | LeRobot v3 episode → RoMi episode JSONL (parquet over HTTP, no torch) |
 | [`tools/vla_policy`](../../tools/vla_policy) | Pluggable policy: `heuristic` (offline) or `claude` (real reasoning) |
 | [`tools/policy_eval`](../../tools/policy_eval) | Counterfactual eval: proposals vs recorded expert actions |
+| [`tools/policy_eval/romi_eval_visualize.py`](../../tools/policy_eval) | Render the eval report into the animation above (GIF + poster PNG) |
+
+Regenerate the animation from a committed report with:
+
+```bash
+python3 ../../tools/policy_eval/romi_eval_visualize.py \
+  --report sample_output/policy_eval.json \
+  --gif-output ../../docs/assets/lerobot-vla-eval.gif \
+  --png-output ../../docs/assets/lerobot-vla-eval-poster.png
+```
 
 The policy backends share one observation/output envelope, so a real local VLA
 (OpenVLA / SmolVLA) can be dropped in behind the same interface later.

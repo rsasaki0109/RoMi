@@ -7,5 +7,9 @@
 #   artifacts against the draft schemas.
 # pyarrow:    used by tools/lerobot_import to read LeRobot v3 parquet over HTTP.
 #   Not required to run the offline eval example or its contract check.
+# matplotlib/imageio: used by tools/policy_eval/romi_eval_visualize.py to render
+#   the evaluation animation. Not required for the eval itself or CI.
 jsonschema>=4.0,<5
 pyarrow>=14
+matplotlib>=3.7
+imageio>=2.30

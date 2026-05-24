@@ -26,5 +26,19 @@ A structured JSON report (`romi.counterfactual_policy_eval`, validated against
 
 This tool only evaluates proposals; it never promotes them to commands.
 
+## Visualization
+
+`romi_eval_visualize.py` renders a report into a shareable animated GIF (expert
+vs proposed goal trajectories and action error over the replay) plus a poster
+PNG. It reads only the evaluation report and needs `matplotlib` + `imageio`
+(no ffmpeg).
+
+```bash
+python3 romi_eval_visualize.py \
+  --report policy_eval.json \
+  --gif-output eval.gif \
+  --png-output eval.png
+```
+
 See [`examples/lerobot_vla_eval`](../../examples/lerobot_vla_eval) for an
 end-to-end run on `lerobot/pusht`.
