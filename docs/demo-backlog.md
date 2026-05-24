@@ -28,7 +28,7 @@ Acceptance criteria:
 
 Labels: `schema`, `demo`
 
-Status: partially implemented in `schemas/`.
+Status: implemented for the current prototype surface in `schemas/`.
 
 Problem:
 
@@ -48,10 +48,18 @@ Acceptance criteria:
 
 Current note:
 
-- `schemas/ml/policy_compare.schema.json` and
-  `schemas/ml/evaluation_timeline.schema.json` now validate the committed
-  Studio report samples.
-- Event envelope, dataset report, and safety authority schemas remain open.
+- `schemas/ml/policy_compare.schema.json`,
+  `schemas/ml/evaluation_timeline.schema.json`, and
+  `schemas/ml/policy_io.schema.json` validate the committed Studio report and
+  policy payload samples.
+- `schemas/core/stream_sample.schema.json`,
+  `schemas/core/lifecycle_event.schema.json`,
+  `schemas/core/dataset_report.schema.json`,
+  `schemas/core/safety_authority.schema.json`, and
+  `schemas/core/report_manifest.schema.json` cover the current event envelope
+  and report artifact surface.
+- `schemas/robotics/` contains compact payload summary schemas for the current
+  demo streams.
 
 ## 3. Create Example Episode Metadata
 
@@ -530,13 +538,15 @@ Scope:
 
 Acceptance criteria:
 
-- RGB and depth summaries require shape, encoding, byte count, and synthetic
-  scene metadata.
+- RGB and depth summaries require shape, encoding, and byte count; native
+  simulator samples also carry synthetic scene metadata.
 - Camera info summaries require calibration vector lengths.
 - Joint state summaries require count fields and sampled names/positions.
-- Odometry summaries require pose, twist, child frame, and stage fields.
+- Odometry summaries require pose, twist, and child frame; native simulator
+  samples also carry stage fields.
 - TF summaries require stamped parent/child frame samples.
-- Task goal summaries require scenario, target object, pose, and orientation.
+- Task goal summaries require pose and orientation; native simulator samples
+  also carry scenario and target-object fields.
 
 Implemented:
 
@@ -664,12 +674,13 @@ Scope:
 - Summarize the problem, interoperability impact, replayability impact,
   observability changes, transport assumptions, and safety authority boundaries.
 - List the highest-value files to review.
-- Record the known local test commands and the fact that ROS2 live smoke was not
-  run.
+- Record known local test commands and ROS2 live-smoke status.
 
 Implemented:
 
 - Added `docs/schema-report-review-package.md` with a PR-ready review package.
+- Updated the package after a 2026-05-25 local ROS2 Jazzy smoke run passed the
+  demo contract checker.
 
 ## 25. Prepare Commit And PR Metadata
 

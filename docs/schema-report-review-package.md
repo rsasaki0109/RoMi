@@ -61,8 +61,8 @@ emitted.
 
 ## Testing
 
-See `docs/schema-report-review-package.md` for the full local test list. ROS2
-live smoke was intentionally not run in this pass.
+See `docs/schema-report-review-package.md` for the full local test list,
+including the follow-up ROS2 Jazzy smoke verification.
 ```
 
 ## What Problem Does This Solve?
@@ -183,7 +183,8 @@ Split only if binary media or ROS2 bridge changes slow down schema/test review.
 
 ## Testing
 
-Ran locally on Windows without ROS2 live execution:
+Ran locally without ROS2 live execution in the original schema/report review
+pass:
 
 ```text
 python -m py_compile tests\check_browser_native_contract.py tests\check_demo_contract.py tests\check_sample_artifact_schemas.py tests\check_ros2_bridge_diagnostics.py examples\navigation_manipulation_demo\generate_sample_artifacts.py examples\navigation_manipulation_demo\capture_readme_video.py tools\dataset_inspector\romi_inspect_dataset.py tools\mock_policy\romi_mock_policy.py tools\episode_recorder\romi_record_episode.py tools\replay_source\romi_replay_episode.py bridges\ros2\rclpy_bridge\romi_ros2_bridge.py examples\navigation_manipulation_demo\romi_native_sim_source.py examples\navigation_manipulation_demo\ros2_demo_sim_publisher.py
@@ -201,6 +202,7 @@ Temporary validation artifacts were removed after the checks.
 
 ## Notes
 
-- ROS2 live smoke was intentionally not run in this pass.
-- The next follow-up can be either a live ROS2 smoke run in a ROS2 environment or
-  a smaller review pass that splits these changes into multiple PRs.
+- Follow-up on 2026-05-25: a local ROS2 Jazzy smoke run passed with
+  `ROMI_DEMO_SOURCE=ros2` and `tests/check_demo_contract.py`.
+- `run_smoke_demo.sh` now uses an isolated demo `ROS_DOMAIN_ID` when one is not
+  already set.

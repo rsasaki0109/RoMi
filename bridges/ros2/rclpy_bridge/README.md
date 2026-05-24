@@ -34,6 +34,9 @@ The script starts the RoMi ROS2 bridge, publishes a scripted ROS2 navigation +
 manipulation episode, records the bridge output, replays it, runs the mock
 policy, and writes a dataset report.
 
+If `ROS_DOMAIN_ID` is not set, the script uses an isolated demo domain so a
+local ROS graph is less likely to leak unrelated topics into the smoke output.
+
 Expected outputs:
 
 ```text

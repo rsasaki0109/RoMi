@@ -17,8 +17,9 @@ The repository now contains:
 - Counterfactual policy comparison artifacts.
 - Replay evaluation timeline artifacts.
 - Sample artifact regeneration.
-- Draft schemas and CI validation for policy compare and evaluation timeline
-  samples.
+- Schema-backed CI validation for stream samples, lifecycle events, robotics
+  payload summaries, policy payloads, report manifests, dataset reports, safety
+  reports, policy compare artifacts, and evaluation timeline artifacts.
 - A ROS2 bridge prototype path.
 
 This is enough to communicate the intended contract. It is not production
@@ -93,7 +94,7 @@ Done:
 Next:
 
 - Keep media current when Studio UI changes.
-- Add graph metadata to generated report artifacts.
+- Keep generated report metadata aligned with the browser Studio graph.
 
 ## Milestone 3: Minimal Live Bridge
 
@@ -149,9 +150,8 @@ Done:
 
 Next:
 
-- Consolidate event envelope schema.
 - Document MCAP mapping direction.
-- Add graph metadata to replay and evaluation artifacts.
+- Keep replay artifacts aligned with the shared stream sample envelope.
 
 ## Milestone 5: Policy Runtime And Evaluation
 
@@ -172,10 +172,10 @@ Done:
 
 Next:
 
-- Add report schema coverage beyond policy compare and timeline.
-- Add graph contract metadata to policy and evaluation artifacts.
 - Keep actuator authority promotion explicitly out of scope until supervised by
   an external boundary.
+- Add richer policy evaluation only after the current report contract remains
+  stable across more examples.
 
 ## Milestone 6: Contracts And Schemas
 
@@ -213,8 +213,10 @@ Done:
 
 Next:
 
-- Commit/open the PR or split the large change set if review size needs to be
-  reduced.
+- Add MCAP mapping documentation when the stream envelope has another real
+  example behind it.
+- Re-run the live ROS2 smoke path when bridge mappings or ROS2 message handling
+  change.
 - Keep schemas small until the prototype proves the contract shape.
 
 ## Milestone 7: README Demo Video

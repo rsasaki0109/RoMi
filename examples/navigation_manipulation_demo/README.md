@@ -209,6 +209,9 @@ To run the same contract through the ROS2 bridge:
 ROMI_DEMO_SOURCE=ros2 examples/navigation_manipulation_demo/run_smoke_demo.sh
 ```
 
+When `ROS_DOMAIN_ID` is unset, the script uses an isolated demo domain to keep
+the smoke output separate from other local ROS graphs.
+
 ## Episode Recording Prototype
 
 After collecting source JSONL output, create a prototype episode directory:

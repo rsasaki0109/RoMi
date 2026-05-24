@@ -9,8 +9,7 @@
     "position",
     "orientation",
     "linear",
-    "angular",
-    "stage"
+    "angular"
   ],
   "properties": {
     "child_frame_id": {

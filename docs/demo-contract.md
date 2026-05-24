@@ -134,21 +134,20 @@ Required image summary fields:
 - `encoding`
 - `step`
 - `data_len`
-- `synthetic_scene`
 
-Required depth summary behavior:
+Native/browser depth summary behavior:
 
 - `data_len == height * width * 2`
 - `synthetic_scene.target_depth_mm` is present
 - `synthetic_scene.object_state` is present
 
-Required RGB summary behavior:
+Native/browser RGB summary behavior:
 
 - `data_len == height * width * 3`
 - `synthetic_scene.target_visible` is present
 - `synthetic_scene.object_state` is present
 
-Required TF summary behavior:
+Native/browser TF summary behavior:
 
 - `transform_count == 6`
 - each sampled transform includes `stamp_ns`

@@ -20,6 +20,15 @@ PAYLOAD_SCHEMA_IDS = {
     "romi.robotics.TransformTreeSummary": "https://romi.dev/schemas/robotics/transform_tree_summary.schema.json",
     "romi.robotics.PoseGoalSummary": "https://romi.dev/schemas/robotics/task_goal_summary.schema.json",
 }
+STREAM_PAYLOAD_SCHEMA_IDS = {
+    "robot.camera.rgb": "https://romi.dev/schemas/robotics/image_summary.schema.json",
+    "robot.camera.depth": "https://romi.dev/schemas/robotics/image_summary.schema.json",
+    "robot.camera.info": "https://romi.dev/schemas/robotics/camera_info_summary.schema.json",
+    "robot.joints.state": "https://romi.dev/schemas/robotics/joint_state_summary.schema.json",
+    "robot.base.odom": "https://romi.dev/schemas/robotics/odometry_summary.schema.json",
+    "robot.frames.tf": "https://romi.dev/schemas/robotics/transform_tree_summary.schema.json",
+    "task.goal": "https://romi.dev/schemas/robotics/task_goal_summary.schema.json",
+}
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
@@ -158,7 +167,9 @@ def sample_for_window(
     return best
 
 
-def payload_schema_id(source_message_type: Any) -> str | None:
+def payload_schema_id(stream_id: str, source_message_type: Any) -> str | None:
+    if stream_id in STREAM_PAYLOAD_SCHEMA_IDS:
+        return STREAM_PAYLOAD_SCHEMA_IDS[stream_id]
     if not isinstance(source_message_type, str):
         return None
     return PAYLOAD_SCHEMA_IDS.get(source_message_type)
@@ -193,7 +204,7 @@ def build_observation_window(
                     "semantic_type": stream.get("semantic_type"),
                     "source_topic": stream.get("source_topic"),
                     "source_message_type": source_message_type,
-                    "payload_schema_id": payload_schema_id(source_message_type),
+                    "payload_schema_id": payload_schema_id(stream_id, source_message_type),
                     "status": "missing_in_window",
                     "delta_ms": None,
                     "delta_abs_ms": None,
@@ -216,7 +227,7 @@ def build_observation_window(
                 "semantic_type": sample.get("semantic_type") or stream.get("semantic_type"),
                 "source_topic": sample.get("source_topic", stream.get("source_topic")),
                 "source_message_type": sample.get("source_message_type") or source_message_type,
-                "payload_schema_id": payload_schema_id(sample.get("source_message_type") or source_message_type),
+                "payload_schema_id": payload_schema_id(stream_id, sample.get("source_message_type") or source_message_type),
                 "status": "ok",
                 "delta_ms": delta_ms,
                 "delta_abs_ms": abs(delta_ms) if delta_ms is not None else None,

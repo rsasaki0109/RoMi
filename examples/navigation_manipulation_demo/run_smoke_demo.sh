@@ -61,6 +61,10 @@ case "${DEMO_SOURCE}" in
     ;;
   ros2)
     require_command ros2
+    if [[ -z "${ROS_DOMAIN_ID:-}" ]]; then
+      export ROS_DOMAIN_ID=73
+      echo "[romi demo] ROS_DOMAIN_ID not set; using isolated demo domain ${ROS_DOMAIN_ID}"
+    fi
     python3 - <<'PY'
 try:
     import rclpy  # noqa: F401

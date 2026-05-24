@@ -10,8 +10,7 @@
     "encoding",
     "is_bigendian",
     "step",
-    "data_len",
-    "synthetic_scene"
+    "data_len"
   ],
   "properties": {
     "height": {

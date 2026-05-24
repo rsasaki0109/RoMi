@@ -6,9 +6,7 @@
   "type": "object",
   "required": [
     "transform_count",
-    "frames_sample",
-    "synthetic_base_translation",
-    "synthetic_object_position"
+    "frames_sample"
   ],
   "properties": {
     "transform_count": {

@@ -59,6 +59,18 @@ def stream_contract(contract: dict[str, Any], stream_id: str) -> dict[str, Any]:
     raise AssertionError(f"missing stream contract: {stream_id}")
 
 
+def source_system_for_streams(events: list[dict[str, Any]]) -> str:
+    systems = {
+        event.get("source_system")
+        for event in events
+        if event.get("kind") == "stream_sample"
+    }
+    require(len(systems) == 1, f"source-events.jsonl should use one source_system, got {sorted(systems)}")
+    system = next(iter(systems))
+    require(isinstance(system, str), "source_system must be a string")
+    return system
+
+
 def check_stream_sample_schema(events: list[dict[str, Any]], schema: dict[str, Any], label: str) -> None:
     samples = [event for event in events if event.get("kind") == "stream_sample"]
     require(samples, f"{label} must include stream_sample events")
@@ -104,6 +116,15 @@ def check_joint_contract(source_events: list[dict[str, Any]], contract: dict[str
     names = payload.get("joint_names_sample") or []
     positions = payload.get("position_sample") or []
 
+    if event.get("source_system") == "ros2":
+        require(payload.get("joint_count", 0) > 0, "ROS2 joint_count must be positive")
+        require(payload.get("joint_count") == len(names), "ROS2 joint_count must match joint_names_sample length")
+        require(payload.get("position_count") == len(positions), "ROS2 position_count must match position_sample length")
+        require(payload.get("velocity_count", -1) >= 0, "ROS2 velocity_count must be non-negative")
+        require(payload.get("effort_count", -1) >= 0, "ROS2 effort_count must be non-negative")
+        require(event.get("metadata", {}).get("bridge") == "rclpy_bridge", "ROS2 joint sample bridge metadata missing")
+        return
+
     require(payload.get("joint_count") == joint_contract["joint_count"], "joint_count must match contract")
     require(names == joint_contract["joint_names"], "joint_names_sample must match contract")
     require(payload.get("position_count") == joint_contract["position_count"], "position_count must match contract")
@@ -119,13 +140,24 @@ def check_source_contract(source_events: list[dict[str, Any]], contract: dict[st
     missing = required_stream_ids(contract) - stream_ids
     require(not missing, f"missing required source streams: {sorted(missing)}")
     expected_clock = contract["source_invariants"]["clock_domain"]
+    source_system = source_system_for_streams(source_events)
+    is_ros2 = source_system == "ros2"
     for stream_id in required_stream_ids(contract):
         event = first_stream(source_events, stream_id)
         stream = stream_contract(contract, stream_id)
         require(event.get("semantic_type") == stream["semantic_type"], f"{stream_id} semantic_type mismatch")
+        require(event.get("clock_domain") == expected_clock, f"{stream_id} clock_domain mismatch")
+        if is_ros2:
+            require(event.get("source_topic"), f"{stream_id} ROS2 source_topic missing")
+            require(event.get("source_message_type"), f"{stream_id} ROS2 source_message_type missing")
+            require(isinstance(event.get("qos"), dict), f"{stream_id} ROS2 QoS metadata missing")
+            require(event.get("bridge_receive_time_ns") is not None, f"{stream_id} ROS2 bridge_receive_time_ns missing")
+            require(event.get("metadata", {}).get("bridge") == "rclpy_bridge", f"{stream_id} ROS2 bridge metadata missing")
+            if stream_id != "robot.frames.tf":
+                require(event.get("frame_id") == stream["frame_id"], f"{stream_id} frame_id mismatch")
+            continue
         require(event.get("frame_id") == stream["frame_id"], f"{stream_id} frame_id mismatch")
         require(event.get("source_message_type") == stream["source_message_type"], f"{stream_id} source_message_type mismatch")
-        require(event.get("clock_domain") == expected_clock, f"{stream_id} clock_domain mismatch")
         require(event.get("metadata", {}).get("scenario_id") == contract["scenario_id"], f"{stream_id} scenario_id mismatch")
 
     rgb = first_stream(source_events, "robot.camera.rgb")
@@ -133,7 +165,8 @@ def check_source_contract(source_events: list[dict[str, Any]], contract: dict[st
     rgb_payload = rgb.get("payload_summary") or {}
     require(rgb_payload.get("encoding") == rgb_contract["encoding"], "RGB encoding mismatch")
     require(rgb_payload.get("data_len") == rgb_payload.get("height") * rgb_payload.get("width") * rgb_contract["channels"], "RGB data_len/shape mismatch")
-    require(rgb_payload.get("synthetic_scene", {}).get("target_visible") is True, "RGB target should be visible at episode start")
+    if not is_ros2:
+        require(rgb_payload.get("synthetic_scene", {}).get("target_visible") is True, "RGB target should be visible at episode start")
 
     depth = first_stream(source_events, "robot.camera.depth")
     depth_contract = stream_contract(contract, "robot.camera.depth")["payload_invariants"]
@@ -144,6 +177,10 @@ def check_source_contract(source_events: list[dict[str, Any]], contract: dict[st
     tf = first_stream(source_events, "robot.frames.tf")
     tf_contract = stream_contract(contract, "robot.frames.tf")["payload_invariants"]
     tf_payload = tf.get("payload_summary") or {}
+    if is_ros2:
+        require(tf_payload.get("transform_count", 0) > 0, "ROS2 TF summary must include transforms")
+        require(tf_payload.get("frames_sample"), "ROS2 TF summary must include frame samples")
+        return
     require(tf_payload.get("transform_count") == tf_contract["transform_count"], "TF summary transform_count mismatch")
     require(all("stamp_ns" in frame for frame in tf_payload.get("frames_sample", [])), "TF frames must carry stamp_ns")
     for field in tf_contract["required_fields"]:

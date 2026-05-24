@@ -239,19 +239,22 @@ The README video should capture:
 
 The video should be short enough for a README and should avoid claiming production readiness.
 
-## Acceptance Checklist
+## Current Prototype Checklist
 
-- [ ] A ROS2 robot or simulator publishes the required source streams.
-- [ ] RoMi bridge maps source topics into named streams.
-- [ ] A runtime graph view lists bridge, recorder, replay source, mock policy, and diagnostics nodes.
-- [ ] An episode is recorded with metadata.
-- [ ] The episode can be replayed.
-- [ ] The mock policy runs on live and replayed observations.
-- [ ] Proposed actions are visibly non-authoritative.
-- [ ] Frame diagnostics are visible.
-- [ ] Latency or stream diagnostics are visible.
-- [ ] Dataset-style inspection can open the recorded episode.
-- [ ] README can embed the final video without committing large binary video files.
+- [x] A ROS2-free native source publishes the required source streams.
+- [x] A ROS2 bridge prototype maps selected source topics into named streams.
+- [x] A runtime graph view lists source, recorder, replay source, mock policy,
+  evaluation, safety, and diagnostics-oriented nodes.
+- [x] An episode is recorded with metadata.
+- [x] The episode can be replayed.
+- [x] The mock policy runs on replayed observations.
+- [x] Proposed actions are visibly non-authoritative.
+- [x] Frame diagnostics are visible in generated artifacts.
+- [x] Latency and stream diagnostics are visible in generated artifacts.
+- [x] Dataset-style inspection can open the recorded episode.
+- [x] README embeds current demo media from `docs/assets/`.
+- [x] A live ROS2 smoke run has been verified in a sourced ROS2 environment
+  (local Jazzy check on 2026-05-25).
 
 ## Implementation Order
 

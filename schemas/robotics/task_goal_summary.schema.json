@@ -5,8 +5,6 @@
   "description": "Compact task-goal payload summary used by demo stream samples.",
   "type": "object",
   "required": [
-    "scenario_id",
-    "target_object",
     "position",
     "orientation"
   ],
