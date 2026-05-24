@@ -9,8 +9,10 @@
 #   Not required to run the offline eval example or its contract check.
 # matplotlib/imageio: used by tools/policy_eval/romi_eval_visualize.py to render
 #   the evaluation animation. Not required for the eval itself or CI.
+# mcap: used by tools/mcap_export to write Foxglove-compatible MCAP files.
 jsonschema>=4.0,<5
 numpy>=1.24
+mcap>=1.0
 pyarrow>=14
 matplotlib>=3.7
 imageio>=2.30

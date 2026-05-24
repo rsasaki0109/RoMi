@@ -153,12 +153,39 @@ def check(repo_root: Path) -> None:
         "bc_knn should top the held-out leaderboard",
     )
 
+    # 7. MCAP export round-trips to valid Foxglove-schema channels
+    from mcap.reader import make_reader
+
+    exporter = repo_root / "tools" / "mcap_export" / "romi_mcap_export.py"
+    with tempfile.TemporaryDirectory() as tmp:
+        out_mcap = Path(tmp) / "episode.mcap"
+        subprocess.run(
+            [sys.executable, str(exporter), "--episode", str(sample / "episode.jsonl"),
+             "--policy", str(sample / "policy.bc_knn.jsonl"), "--output", str(out_mcap)],
+            check=True, capture_output=True,
+        )
+        with out_mcap.open("rb") as handle:
+            reader = make_reader(handle)
+            summary = reader.get_summary()
+            topics = {channel.topic for channel in summary.channels.values()}
+            schema_names = {schema.name for schema in summary.schemas.values()}
+        require(
+            {"/robot/base/pose", "/expert/goal", "/policy/proposed_goal"} <= topics,
+            f"MCAP export missing expected channels, got {topics}",
+        )
+        require(
+            "foxglove.PoseInFrame" in schema_names,
+            f"MCAP export missing foxglove.PoseInFrame schema, got {schema_names}",
+        )
+        require(summary.statistics.message_count > 0, "MCAP export has no messages")
+
     print(
         "OK lerobot_vla_eval: "
         f"{len(stream_samples)} stream samples; "
         f"heuristic mean={mean_error['heuristic']}px, bc_knn mean={mean_error['bc_knn']}px; "
         f"leaderboard best={leaderboard['best_policy']} over "
-        f"{len(leaderboard['held_out_episodes'])} held-out episodes"
+        f"{len(leaderboard['held_out_episodes'])} held-out episodes; "
+        "MCAP export valid (foxglove.PoseInFrame)"
     )
 
 

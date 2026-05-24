@@ -33,7 +33,7 @@ jobs:
         run: python3 -m pip install -r requirements-browser.txt
 
       - name: Install eval contract dependencies
-        run: python3 -m pip install jsonschema numpy
+        run: python3 -m pip install jsonschema numpy mcap
 
       - name: Python syntax check
         run: |

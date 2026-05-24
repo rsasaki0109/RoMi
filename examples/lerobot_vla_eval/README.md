@@ -111,6 +111,24 @@ python3 ../../tools/policy_eval/romi_batch_eval.py \
   --png-output ../../docs/assets/lerobot-vla-leaderboard.png
 ```
 
+## Open it in Foxglove
+
+The episode (and the policy's proposals) export to an [MCAP](https://mcap.dev)
+file that opens directly in [Foxglove Studio](https://foxglove.dev):
+
+```bash
+python3 ../../tools/mcap_export/romi_mcap_export.py \
+  --episode sample_output/episode.jsonl \
+  --policy sample_output/policy.bc_knn.jsonl \
+  --output sample_output/episode.mcap
+```
+
+Open [`sample_output/episode.mcap`](sample_output/episode.mcap) in Foxglove
+(`File → Open local file`) to scrub the agent pose (`/robot/base/pose`), the
+recorded expert goal (`/expert/goal`), and the policy's proposed goal
+(`/policy/proposed_goal`) together on one timeline. RoMi stays
+MCAP-compatible, not MCAP-only.
+
 ## Pieces
 
 | Tool | Role |
@@ -121,6 +139,7 @@ python3 ../../tools/policy_eval/romi_batch_eval.py \
 | [`tools/policy_eval`](../../tools/policy_eval) | Counterfactual eval: proposals vs recorded expert actions |
 | [`tools/policy_eval/romi_batch_eval.py`](../../tools/policy_eval) | Score and rank policies across held-out episodes (leaderboard) |
 | [`tools/policy_eval/romi_eval_visualize.py`](../../tools/policy_eval) | Render the eval report into the animation above (GIF + poster PNG) |
+| [`tools/mcap_export`](../../tools/mcap_export) | Export the episode + proposals to a Foxglove-ready `.mcap` |
 
 Regenerate the animation from a committed report with:
 

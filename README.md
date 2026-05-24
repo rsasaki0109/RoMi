@@ -63,8 +63,10 @@ learned policy against the recorded expert on a held-out `pusht` episode:
 | `bc_knn` (learned from 20 demo episodes) | 21.3 px | 56.5% |
 
 A `claude` reasoning policy or a real local VLA can slot in behind the same
-envelope. See [`examples/lerobot_vla_eval`](examples/lerobot_vla_eval) and the
-sample report [`policy_eval.md`](examples/lerobot_vla_eval/sample_output/policy_eval.md).
+envelope. The episode and proposals also export to a Foxglove-ready
+[MCAP](https://mcap.dev) file. See
+[`examples/lerobot_vla_eval`](examples/lerobot_vla_eval) and the sample report
+[`policy_eval.md`](examples/lerobot_vla_eval/sample_output/policy_eval.md).
 
 ## Try It
 
@@ -190,6 +192,7 @@ The current repository contains a small end-to-end prototype path:
 - [Pluggable VLA-style policy (heuristic / bc_knn / Claude)](tools/vla_policy)
 - [LeRobot dataset importer](tools/lerobot_import)
 - [Counterfactual policy evaluation](tools/policy_eval)
+- [MCAP export for Foxglove](tools/mcap_export)
 - [Dataset inspector](tools/dataset_inspector)
 - [LeRobot VLA counterfactual evaluation example](examples/lerobot_vla_eval)
 - [Navigation + manipulation demo](examples/navigation_manipulation_demo)

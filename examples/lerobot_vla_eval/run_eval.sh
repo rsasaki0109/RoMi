@@ -28,29 +28,44 @@ EPISODE_JSONL="${OUT_DIR}/episode.jsonl"
 POLICY_JSONL="${OUT_DIR}/policy.${BACKEND}.jsonl"
 EVAL_JSON="${OUT_DIR}/policy_eval.json"
 EVAL_MD="${OUT_DIR}/policy_eval.md"
+MCAP_OUT="${OUT_DIR}/episode.mcap"
 
 IMPORT="${REPO_ROOT}/tools/lerobot_import/romi_lerobot_import.py"
 POLICY="${REPO_ROOT}/tools/vla_policy/romi_vla_policy.py"
 EVAL="${REPO_ROOT}/tools/policy_eval/romi_policy_eval.py"
+MCAP="${REPO_ROOT}/tools/mcap_export/romi_mcap_export.py"
 
 if [ "${OFFLINE}" -eq 1 ]; then
-  echo "[1/3] offline mode: using committed sample episode"
+  echo "[1/4] offline mode: using committed sample episode"
   cp "${SCRIPT_DIR}/sample_output/episode.jsonl" "${EPISODE_JSONL}"
 else
-  echo "[1/3] importing ${REPO_ID} episode ${EPISODE}"
+  echo "[1/4] importing ${REPO_ID} episode ${EPISODE}"
   python3 "${IMPORT}" --repo-id "${REPO_ID}" --episode "${EPISODE}" --output "${EPISODE_JSONL}"
 fi
 
-echo "[2/3] running ${BACKEND} policy"
-python3 "${POLICY}" --input "${EPISODE_JSONL}" --backend "${BACKEND}" --output "${POLICY_JSONL}"
+# bc_knn needs an imitation memory; default to the committed sample memory.
+POLICY_ARGS=(--input "${EPISODE_JSONL}" --backend "${BACKEND}" --output "${POLICY_JSONL}")
+if [ "${BACKEND}" = "bc_knn" ]; then
+  POLICY_ARGS+=(--bc-memory "${ROMI_BC_MEMORY:-${SCRIPT_DIR}/sample_output/bc_memory.json}")
+fi
 
-echo "[3/3] evaluating proposals vs recorded expert actions"
+echo "[2/4] running ${BACKEND} policy"
+python3 "${POLICY}" "${POLICY_ARGS[@]}"
+
+echo "[3/4] evaluating proposals vs recorded expert actions"
 python3 "${EVAL}" --episode "${EPISODE_JSONL}" --policy "${POLICY_JSONL}" \
   --json-output "${EVAL_JSON}" --md-output "${EVAL_MD}"
+
+echo "[4/4] exporting MCAP for Foxglove"
+if python3 -c "import mcap" 2>/dev/null; then
+  python3 "${MCAP}" --episode "${EPISODE_JSONL}" --policy "${POLICY_JSONL}" --output "${MCAP_OUT}"
+else
+  echo "  (skipped: pip install mcap to export Foxglove-ready .mcap)"
+fi
 
 echo
 echo "artifacts written to ${OUT_DIR}:"
 echo "  - episode.jsonl"
 echo "  - policy.${BACKEND}.jsonl"
-echo "  - policy_eval.json"
-echo "  - policy_eval.md"
+echo "  - policy_eval.json / policy_eval.md"
+echo "  - episode.mcap (open in Foxglove Studio)"
