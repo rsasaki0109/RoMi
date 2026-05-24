@@ -68,3 +68,9 @@ jobs:
 
       - name: Check LeRobot VLA eval contract
         run: python3 tests/check_lerobot_vla_eval.py
+
+      - name: Policy regression gate
+        run: |
+          python3 tools/policy_eval/romi_regression_gate.py \
+            --episode examples/lerobot_vla_eval/sample_output/episode.jsonl \
+            --baseline examples/lerobot_vla_eval/sample_output/regression_baseline.json

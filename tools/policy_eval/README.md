@@ -39,6 +39,22 @@ python3 romi_batch_eval.py \
   --json-output leaderboard.json --md-output leaderboard.md --png-output leaderboard.png
 ```
 
+## Regression gate
+
+`romi_regression_gate.py` turns the eval into a CI check: it re-runs the
+deterministic offline policies (`heuristic`, `bc_knn`) on a committed episode and
+fails (exit non-zero) if any policy's mean action error drifts beyond a committed
+baseline plus a tolerance. It needs no torch or GPU.
+
+```bash
+python3 romi_regression_gate.py \
+  --episode episode.jsonl \
+  --baseline regression_baseline.json
+```
+
+A change that makes a policy (or the eval/runtime) drift away from expert
+behavior is caught before it lands.
+
 ## Visualization
 
 `romi_eval_visualize.py` renders a report into a shareable animated GIF (expert

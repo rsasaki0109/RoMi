@@ -63,6 +63,9 @@ the recorded expert across 5 held-out `pusht` episodes and ranks them:
 | `bc_knn` (k-NN imitation from demos) | 25.5 px | 44.3% |
 | `neural_bc` (GPU-trained MLP on demos) | 22.3 px | 51.9% |
 
+The eval doubles as a CI regression gate: a committed baseline fails the build if
+a policy drifts away from expert behavior (deterministic, no torch needed).
+
 GPU-trained vision policies (`vision_cnn`, and `vision_resnet` on a pretrained
 ImageNet backbone) are also scored on the same harness — which reveals, honestly,
 that the small task-specific CNN generalizes better here than the frozen

@@ -1,0 +1,11 @@
+{
+  "dataset": "lerobot/pusht",
+  "episode_id": "lerobot_pusht_ep000000",
+  "reference": "recorded_expert_action",
+  "tolerance_px": 1.0,
+  "note": "Mean action error (px) ceilings for the deterministic offline policies. The gate fails CI if a policy drifts beyond the value plus tolerance_px.",
+  "max_mean_action_error_px": {
+    "heuristic": 55.6126,
+    "bc_knn": 21.3261
+  }
+}

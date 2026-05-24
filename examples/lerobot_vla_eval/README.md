@@ -173,6 +173,26 @@ python3 ../../tools/policy_eval/romi_batch_eval.py \
   --png-output ../../docs/assets/lerobot-vla-leaderboard.png
 ```
 
+## Regression gate (CI)
+
+The eval doubles as a regression check. `romi_regression_gate.py` re-runs the
+deterministic offline policies on the committed episode and fails if any drifts
+beyond a committed baseline — so a change that pushes a policy away from expert
+behavior is caught in CI (no torch or GPU needed):
+
+```bash
+python3 ../../tools/policy_eval/romi_regression_gate.py \
+  --episode sample_output/episode.jsonl \
+  --baseline sample_output/regression_baseline.json
+```
+
+```text
+policy regression gate:
+  heuristic    mean= 55.613px  limit= 56.613px  ok
+  bc_knn       mean= 21.326px  limit= 22.326px  ok
+PASS: no regression beyond 1.0px tolerance.
+```
+
 ## Open it in Foxglove
 
 The episode (and the policy's proposals) export to an [MCAP](https://mcap.dev)
@@ -204,6 +224,7 @@ MCAP-compatible, not MCAP-only.
 | [`tools/vla_policy/train_resnet_bc.py`](../../tools/vla_policy) | Train the `vision_resnet` head on a frozen pretrained ResNet-18 backbone |
 | [`tools/policy_eval`](../../tools/policy_eval) | Counterfactual eval: proposals vs recorded expert actions |
 | [`tools/policy_eval/romi_batch_eval.py`](../../tools/policy_eval) | Score and rank policies across held-out episodes (leaderboard) |
+| [`tools/policy_eval/romi_regression_gate.py`](../../tools/policy_eval) | Fail CI when a policy drifts beyond a committed baseline |
 | [`tools/policy_eval/romi_eval_visualize.py`](../../tools/policy_eval) | Render the eval report into the animation above (GIF + poster PNG) |
 | [`tools/mcap_export`](../../tools/mcap_export) | Export the episode + proposals to a Foxglove-ready `.mcap` |
 
