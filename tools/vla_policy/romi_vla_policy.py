@@ -61,7 +61,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--output", type=Path, default=None, help="Policy JSONL. Defaults to stdout.")
     parser.add_argument(
         "--backend",
-        choices=["heuristic", "claude"],
+        choices=["heuristic", "bc_knn", "claude"],
         default="heuristic",
         help="Policy backend. Defaults to heuristic (offline).",
     )
@@ -101,6 +101,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         default=60.0,
         help="Heuristic maximum proposed step magnitude in pixels.",
     )
+    parser.add_argument("--bc-memory", type=Path, default=None, help="bc_knn training memory JSON (from build_bc_memory.py).")
+    parser.add_argument("--bc-k", type=int, default=5, help="bc_knn number of nearest demonstrations.")
     parser.add_argument("--claude-model", default="claude-haiku-4-5-20251001", help="Claude model id.")
     parser.add_argument("--max-actions", type=int, default=None, help="Cap proposed actions.")
     return parser.parse_args(argv)
@@ -196,6 +198,44 @@ class HeuristicBackend:
         return {"x": position["x"] + dx, "y": position["y"] + dy}
 
 
+class BCKnnBackend:
+    """Non-parametric behavior-cloning policy over demonstrated (state, action) pairs.
+
+    For the current agent state it proposes a distance-weighted average of the
+    actions taken in the k nearest demonstrated states. Learned purely from data,
+    deterministic, and needs only numpy - no torch, GPU, or API key.
+    """
+
+    policy_id = "romi_bc_knn"
+
+    def __init__(self, *, memory_path: Path, k: int) -> None:
+        try:
+            import numpy as np  # local import: optional dependency
+        except ImportError as exc:
+            raise RuntimeError("The bc_knn backend needs numpy: pip install numpy") from exc
+        if memory_path is None or not memory_path.exists():
+            raise RuntimeError(
+                "The bc_knn backend needs --bc-memory pointing to a memory JSON "
+                "(build one with tools/vla_policy/build_bc_memory.py)."
+            )
+        memory = json.loads(memory_path.read_text(encoding="utf-8"))
+        self.np = np
+        self.states = np.asarray(memory["states"], dtype=float)
+        self.actions = np.asarray(memory["actions"], dtype=float)
+        if self.states.shape[0] == 0:
+            raise RuntimeError("bc_knn memory is empty.")
+        self.k = max(1, min(k, self.states.shape[0]))
+
+    def propose(self, *, position: dict[str, float], history: list[dict[str, float]]) -> dict[str, float]:
+        np = self.np
+        query = np.array([position["x"], position["y"]], dtype=float)
+        distances = np.linalg.norm(self.states - query, axis=1)
+        nearest = np.argpartition(distances, self.k - 1)[: self.k]
+        weights = 1.0 / (distances[nearest] + 1e-6)
+        goal = np.average(self.actions[nearest], axis=0, weights=weights)
+        return {"x": float(goal[0]), "y": float(goal[1])}
+
+
 class ClaudeBackend:
     """Real-reasoning policy backed by the Anthropic SDK."""
 
@@ -253,6 +293,8 @@ def build_backend(args: argparse.Namespace, task: str | None) -> Any:
     if args.backend == "heuristic":
         ax, ay = (float(v) for v in args.anchor.split(","))
         return HeuristicBackend(anchor=(ax, ay), gain=args.gain, max_step=args.max_step)
+    if args.backend == "bc_knn":
+        return BCKnnBackend(memory_path=args.bc_memory, k=args.bc_k)
     return ClaudeBackend(model=args.claude_model, task=task)
 
 

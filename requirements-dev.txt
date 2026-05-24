@@ -10,6 +10,7 @@
 # matplotlib/imageio: used by tools/policy_eval/romi_eval_visualize.py to render
 #   the evaluation animation. Not required for the eval itself or CI.
 jsonschema>=4.0,<5
+numpy>=1.24
 pyarrow>=14
 matplotlib>=3.7
 imageio>=2.30

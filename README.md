@@ -42,9 +42,10 @@ the recorded expert demonstration — before any actuator is touched.
 # Offline, no API key, no GPU: uses a committed lerobot/pusht sample episode
 examples/lerobot_vla_eval/run_eval.sh --offline
 
-# Fetch fresh data from HuggingFace, or use the Claude reasoning policy
-examples/lerobot_vla_eval/run_eval.sh
+# Learned imitation policy (numpy only), Claude, or fresh data
+BACKEND=bc_knn examples/lerobot_vla_eval/run_eval.sh --offline
 BACKEND=claude examples/lerobot_vla_eval/run_eval.sh --offline   # needs ANTHROPIC_API_KEY
+examples/lerobot_vla_eval/run_eval.sh                            # fetch from HuggingFace
 ```
 
 ```text
@@ -53,10 +54,17 @@ LeRobot episode -> RoMi import -> replay -> policy proposal
   -> actuator authority stays "none"
 ```
 
-The policy backend is pluggable: a deterministic offline `heuristic` baseline, a
-`claude` reasoning policy, or a real local VLA behind the same envelope later.
-See [`examples/lerobot_vla_eval`](examples/lerobot_vla_eval) and the sample
-report [`policy_eval.md`](examples/lerobot_vla_eval/sample_output/policy_eval.md).
+The policy backend is pluggable. The same harness scores a naive baseline and a
+learned policy against the recorded expert on a held-out `pusht` episode:
+
+| Policy | Mean action error | Agreement within 20 px |
+| --- | --- | --- |
+| `heuristic` (go-to-center) | 55.6 px | 8.7% |
+| `bc_knn` (learned from 20 demo episodes) | 21.3 px | 56.5% |
+
+A `claude` reasoning policy or a real local VLA can slot in behind the same
+envelope. See [`examples/lerobot_vla_eval`](examples/lerobot_vla_eval) and the
+sample report [`policy_eval.md`](examples/lerobot_vla_eval/sample_output/policy_eval.md).
 
 ## Try It
 
@@ -179,7 +187,7 @@ The current repository contains a small end-to-end prototype path:
 - [Episode recorder](tools/episode_recorder)
 - [Replay source](tools/replay_source)
 - [Mock policy](tools/mock_policy)
-- [Pluggable VLA-style policy (heuristic / Claude)](tools/vla_policy)
+- [Pluggable VLA-style policy (heuristic / bc_knn / Claude)](tools/vla_policy)
 - [LeRobot dataset importer](tools/lerobot_import)
 - [Counterfactual policy evaluation](tools/policy_eval)
 - [Dataset inspector](tools/dataset_inspector)

@@ -18,7 +18,7 @@ goals against the recorded expert actions.
 LeRobot episode (real public data)
   -> RoMi import (stream-sample envelopes, no torch/lerobot needed)
   -> replay
-  -> policy proposal  (heuristic baseline | Claude reasoning | swap in a VLA)
+  -> policy proposal  (heuristic baseline | bc_knn imitation | Claude | a VLA)
   -> counterfactual eval vs recorded expert actions
   -> policy_eval.md / policy_eval.json
   -> actuator authority stays "none"
@@ -38,7 +38,10 @@ behavior, and where does it diverge?" — with no robot and no actuator authorit
 # Fresh data: fetch lerobot/pusht episode 0 from HuggingFace
 ./run_eval.sh
 
-# Use the Claude reasoning policy instead of the heuristic baseline
+# Learned imitation policy (k-NN behavior cloning over demonstrated episodes)
+BACKEND=bc_knn ./run_eval.sh --offline    # numpy only, no API key, no GPU
+
+# Use the Claude reasoning policy instead
 BACKEND=claude ./run_eval.sh --offline    # needs ANTHROPIC_API_KEY
 
 # A different episode or dataset
@@ -65,12 +68,36 @@ go-to-center baseline on `pusht` episode 0 diverges substantially from the exper
 The Markdown report also renders an action-error sparkline across the replay so
 you can see *when* the policy diverges, not just by how much.
 
+## Compare a naive baseline against a learned policy
+
+The same harness evaluates any policy. Here a **k-NN behavior-cloning policy**
+(`bc_knn`), learned only from 20 *other* `pusht` episodes and evaluated on the
+held-out episode 0, is compared against the naive go-to-center baseline:
+
+| Policy | Mean action error | Agreement within 20 px |
+| --- | --- | --- |
+| `heuristic` (go-to-center) | 55.6 px | 8.7% |
+| **`bc_knn`** (learned from demos) | **21.3 px** | **56.5%** |
+
+<p align="center">
+  <img src="../../docs/assets/lerobot-vla-eval-bc-knn.gif" alt="Learned bc_knn policy tracking the expert demonstration" width="860">
+</p>
+
+The learned policy tracks the recorded expert far more closely — and the report
+shows exactly where it still diverges. Build the imitation memory with:
+
+```bash
+python3 ../../tools/vla_policy/build_bc_memory.py \
+  --episodes 1-20 --output sample_output/bc_memory.json
+```
+
 ## Pieces
 
 | Tool | Role |
 | --- | --- |
 | [`tools/lerobot_import`](../../tools/lerobot_import) | LeRobot v3 episode → RoMi episode JSONL (parquet over HTTP, no torch) |
-| [`tools/vla_policy`](../../tools/vla_policy) | Pluggable policy: `heuristic` (offline) or `claude` (real reasoning) |
+| [`tools/vla_policy`](../../tools/vla_policy) | Pluggable policy: `heuristic` (offline), `bc_knn` (learned), or `claude` |
+| [`tools/vla_policy/build_bc_memory.py`](../../tools/vla_policy) | Build the imitation memory for `bc_knn` from demonstration episodes |
 | [`tools/policy_eval`](../../tools/policy_eval) | Counterfactual eval: proposals vs recorded expert actions |
 | [`tools/policy_eval/romi_eval_visualize.py`](../../tools/policy_eval) | Render the eval report into the animation above (GIF + poster PNG) |
 
@@ -114,7 +141,8 @@ This evaluation never does so.
 
 - validates committed envelopes against `schemas/core/stream_sample.schema.json`
   and `schemas/ml/policy_io.schema.json`,
-- validates the report against `schemas/ml/policy_eval.schema.json`,
-- re-runs the heuristic policy + eval and asserts the deterministic results
-  reproduce the committed report,
-- asserts the actuator-authority boundary stays explicit.
+- validates both reports against `schemas/ml/policy_eval.schema.json`,
+- re-runs the `heuristic` and `bc_knn` policies + eval and asserts the
+  deterministic results reproduce the committed reports,
+- asserts the actuator-authority boundary stays explicit,
+- asserts the learned `bc_knn` policy beats the naive baseline.

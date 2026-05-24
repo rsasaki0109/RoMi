@@ -5,10 +5,12 @@ Runs fully offline against committed sample artifacts. It:
 
 1. Validates the committed episode stream samples against the core stream
    sample schema and the policy proposals against the policy IO schema.
-2. Validates the committed evaluation report against the policy eval schema.
-3. Re-runs the heuristic policy and evaluation from the committed episode JSONL
-   and asserts the deterministic results match the committed report.
+2. Validates the committed evaluation reports against the policy eval schema.
+3. Re-runs each policy backend and evaluation from the committed episode JSONL
+   and asserts the deterministic results match the committed reports.
 4. Asserts the policy/actuator authority boundary stays explicit.
+5. Asserts the learned bc_knn policy tracks the expert better than the naive
+   heuristic baseline.
 """
 
 from __future__ import annotations
@@ -54,64 +56,89 @@ def check(repo_root: Path) -> None:
     eval_schema = load_json(schemas / "ml" / "policy_eval.schema.json")
 
     episode = load_jsonl(sample / "episode.jsonl")
-    policy = load_jsonl(sample / "policy.heuristic.jsonl")
-    report = load_json(sample / "policy_eval.json")
 
-    # 1. envelope conformance
+    # 1. episode envelope conformance
     stream_samples = [e for e in episode if e.get("kind") == "stream_sample"]
     require(len(stream_samples) > 0, "episode has no stream samples")
     for event in stream_samples:
         jsonschema.validate(event, core_schema)
 
-    proposals = [
-        e for e in policy
-        if e.get("kind") == "stream_sample" and e.get("stream_id") == "policy.proposed_action"
-    ]
-    require(len(proposals) > 0, "policy has no proposed_action samples")
-    for event in proposals:
-        jsonschema.validate(event["payload_summary"], policy_io_schema)
-        require(
-            event["payload_summary"]["safety_boundary"]["actuator_authority"] == "none",
-            "proposal must not claim actuator authority",
-        )
-
-    # 2. report schema conformance
-    jsonschema.validate(report, eval_schema)
-    require(
-        report["safety_boundary"]["actuator_authority"] == "none"
-        and report["safety_boundary"]["command_stream_emitted"] is False
-        and report["safety_boundary"]["policy_authority"] == "proposed_only",
-        "eval report safety boundary must stay proposed_only / actuator none",
-    )
-
-    # 3. deterministic reproduction from the committed episode
     vla = repo_root / "tools" / "vla_policy" / "romi_vla_policy.py"
     eval_tool = repo_root / "tools" / "policy_eval" / "romi_policy_eval.py"
-    with tempfile.TemporaryDirectory() as tmp:
-        tmp_dir = Path(tmp)
-        repro_policy = tmp_dir / "policy.jsonl"
-        repro_report = tmp_dir / "eval.json"
-        subprocess.run(
-            [sys.executable, str(vla), "--input", str(sample / "episode.jsonl"),
-             "--backend", "heuristic", "--output", str(repro_policy)],
-            check=True, capture_output=True,
-        )
-        subprocess.run(
-            [sys.executable, str(eval_tool), "--episode", str(sample / "episode.jsonl"),
-             "--policy", str(repro_policy), "--json-output", str(repro_report)],
-            check=True, capture_output=True,
-        )
-        reproduced = load_json(repro_report)
+
+    cases = [
+        {
+            "name": "heuristic",
+            "policy": "policy.heuristic.jsonl",
+            "report": "policy_eval.json",
+            "extra": ["--backend", "heuristic"],
+        },
+        {
+            "name": "bc_knn",
+            "policy": "policy.bc_knn.jsonl",
+            "report": "policy_eval.bc_knn.json",
+            "extra": ["--backend", "bc_knn", "--bc-memory", str(sample / "bc_memory.json"), "--bc-k", "5"],
+        },
+    ]
+
+    mean_error: dict[str, float] = {}
+    for case in cases:
+        policy = load_jsonl(sample / case["policy"])
+        report = load_json(sample / case["report"])
+
+        proposals = [
+            e for e in policy
+            if e.get("kind") == "stream_sample" and e.get("stream_id") == "policy.proposed_action"
+        ]
+        require(len(proposals) > 0, f"{case['name']}: no proposed_action samples")
+        for event in proposals:
+            jsonschema.validate(event["payload_summary"], policy_io_schema)
+            require(
+                event["payload_summary"]["safety_boundary"]["actuator_authority"] == "none",
+                f"{case['name']}: proposal must not claim actuator authority",
+            )
+
+        jsonschema.validate(report, eval_schema)
         require(
-            deterministic_view(reproduced) == deterministic_view(report),
-            "re-running the heuristic policy + eval did not reproduce the committed report",
+            report["safety_boundary"]["actuator_authority"] == "none"
+            and report["safety_boundary"]["command_stream_emitted"] is False
+            and report["safety_boundary"]["policy_authority"] == "proposed_only",
+            f"{case['name']}: report safety boundary must stay proposed_only / actuator none",
         )
 
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = Path(tmp)
+            repro_policy = tmp_dir / "policy.jsonl"
+            repro_report = tmp_dir / "eval.json"
+            subprocess.run(
+                [sys.executable, str(vla), "--input", str(sample / "episode.jsonl"),
+                 "--output", str(repro_policy), *case["extra"]],
+                check=True, capture_output=True,
+            )
+            subprocess.run(
+                [sys.executable, str(eval_tool), "--episode", str(sample / "episode.jsonl"),
+                 "--policy", str(repro_policy), "--json-output", str(repro_report)],
+                check=True, capture_output=True,
+            )
+            reproduced = load_json(repro_report)
+            require(
+                deterministic_view(reproduced) == deterministic_view(report),
+                f"{case['name']}: re-running policy + eval did not reproduce the committed report",
+            )
+
+        mean_error[case["name"]] = report["summary"]["mean_action_error_px"]
+
+    # 5. the learned policy should track the expert better than the naive baseline
+    require(
+        mean_error["bc_knn"] < mean_error["heuristic"],
+        f"bc_knn mean error ({mean_error['bc_knn']}) should beat heuristic ({mean_error['heuristic']})",
+    )
+
     print(
-        f"OK lerobot_vla_eval: {len(stream_samples)} stream samples, "
-        f"{len(proposals)} proposals, {report['matched_steps']} matched steps, "
-        f"mean={report['summary']['mean_action_error_px']}px "
-        f"agreement={round(report['summary']['agreement_rate_within_tolerance'] * 100, 1)}%"
+        "OK lerobot_vla_eval: "
+        f"{len(stream_samples)} stream samples; "
+        f"heuristic mean={mean_error['heuristic']}px, bc_knn mean={mean_error['bc_knn']}px "
+        "(learned policy beats baseline)"
     )
 
 
