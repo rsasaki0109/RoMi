@@ -287,7 +287,7 @@ The smoke demo currently generates dataset reports from CLI tools. The browser
 Studio generates policy compare artifacts. That is acceptable for a prototype,
 but users should eventually have a single reproducible path for sample artifacts.
 
-Planned actions:
+Completed actions:
 
 - Added `examples/navigation_manipulation_demo/generate_sample_artifacts.py`.
 - Generates or refreshes:
@@ -297,7 +297,7 @@ Planned actions:
 - Keeps generated sample files deterministic enough for review.
 - Documents artifact regeneration in README and demo docs.
 
-Still open:
+Operational note:
 
 - README media regeneration remains separate through `capture_readme_video.py`.
 
@@ -310,7 +310,7 @@ Exit criteria:
 
 ## Milestone D: Contracts And Schemas
 
-Status: partially implemented.
+Status: implemented for the current prototype surface.
 
 Goal:
 
@@ -329,18 +329,21 @@ Schema targets:
 
 Completed actions:
 
-- Added schema files under `schemas/ml/` for policy compare and evaluation
-  timeline.
+- Added schema files under `schemas/ml/` for policy compare, evaluation
+  timeline, and policy IO.
+- Added schema files under `schemas/core/` for stream samples, lifecycle
+  events, dataset reports, safety authority reports, and report manifests.
+- Added compact robotics payload summary schemas under `schemas/robotics/`.
 - Sample artifacts declare schema version and report kind.
-- Added CI validation for committed policy compare and timeline samples.
+- Added CI validation for committed report artifacts, source/replay/policy
+  samples, browser/native samples, and representative ROS2 bridge samples.
 - Kept schema content small and readable.
 
-Still open:
+Next:
 
-- Event envelope schema consolidation.
-- Dataset report schema.
-- Safety authority report schema.
-- Graph metadata schema in generated reports.
+- Keep schemas small until the prototype has more real examples.
+- Add MCAP mapping documentation once the stream envelope is exercised beyond
+  the current demo.
 
 Exit criteria:
 
@@ -350,7 +353,8 @@ Exit criteria:
 
 ## Milestone E: Runtime Graph Contract
 
-Status: browser graph exists, runtime model still prototype.
+Status: implemented first pass for generated reports; runtime model still
+prototype.
 
 Goal:
 
@@ -367,12 +371,17 @@ Planned graph concepts:
 - Safety boundary nodes.
 - Observability nodes.
 
-Planned actions:
+Completed actions:
 
 - Add graph metadata to sample artifacts.
-- Add a graph report that lists node inputs, outputs, status, and authority.
-- Expose graph state in a CLI or JSON report.
+- Add runtime graph metadata that lists node inputs, outputs, status, and
+  authority boundaries in policy compare and evaluation timeline reports.
 - Keep browser Studio as a visualization of the same graph contract.
+
+Still open:
+
+- Expose graph state through a small CLI or standalone JSON report if that
+  becomes useful outside the Studio/report artifact path.
 
 Exit criteria:
 
@@ -412,18 +421,26 @@ Exit criteria:
 
 ## Milestone G: MCAP And Dataset Direction
 
-Status: design direction only.
+Status: first-pass MCAP exporter implemented; dataset direction still evolving.
 
 Goal:
 
 Align episode storage with common robotics tooling without prematurely choosing
 a final storage layer.
 
-Planned actions:
+Completed actions:
 
-- Keep JSONL prototype simple for now.
-- Document how event envelopes map to MCAP concepts.
-- Add MCAP bridge or exporter only when the contract is stable enough.
+- Added `tools/mcap_export/` exporting an episode and policy proposals to a
+  Foxglove-ready MCAP file using `foxglove.PoseInFrame` schemas, preserving event
+  time, frame id, and stream identity.
+- Imported a real LeRobot v3 dataset episode (parquet + AV1 video) into the RoMi
+  stream-sample contract, confirming the envelope maps to dataset concepts.
+
+Still open:
+
+- Keep the JSONL prototype simple; treat MCAP as an export target, not the store.
+- Broaden MCAP topic/schema coverage beyond pose streams as more stream kinds are
+  exercised.
 - Make dataset loading notebook-friendly later, but do not make the repository
   Python-only.
 
@@ -621,6 +638,51 @@ Deliverables:
 
 These are the best next issues to cut from the plan.
 
+### LeRobot VLA Counterfactual Evaluation Vertical Slice
+
+Labels: `policy`, `dataset`, `replay`, `eval`, `lerobot`, `schema`, `ci`
+
+Status: implemented first pass.
+
+This realizes an early form of the 90-day vertical slice (source/bridge ->
+episode -> replay -> policy -> evaluation artifact -> safety boundary) against
+real public robot data instead of only the browser demo.
+
+Deliverables:
+
+- `tools/lerobot_import/` imports a LeRobot v3 dataset episode into the RoMi
+  stream-sample contract (parquet over HTTP, no torch/lerobot). `extract_frames.py`
+  also decodes the episode camera video (software AV1 via ffmpeg) to a compact NPZ.
+- `tools/vla_policy/` runs a pluggable non-authoritative policy. Backends:
+  - `heuristic` (deterministic, offline),
+  - `bc_knn` (k-NN behavior cloning over demonstrated state/action pairs, numpy),
+  - `neural_bc` (a small MLP trained by gradient descent on GPU; deterministic
+    CPU inference),
+  - `vision_cnn` (a CNN trained on camera frames on GPU),
+  - `vision_resnet` (a trained head on a frozen pretrained ImageNet ResNet-18),
+  - `claude` (Anthropic SDK reasoning policy; not run in this slice).
+- `tools/policy_eval/` counterfactually compares proposed actions against the
+  recorded expert actions: `romi_policy_eval.py` (single episode `policy_eval.md`
+  / `policy_eval.json` plus an error sparkline), `romi_eval_visualize.py`
+  (shareable GIF/poster), `romi_batch_eval.py` (dataset-scale leaderboard across
+  held-out episodes), and `romi_regression_gate.py` (CI gate that fails on policy
+  drift beyond a committed baseline).
+- `tools/mcap_export/` exports the episode and proposals to a Foxglove-ready MCAP
+  file using `foxglove.PoseInFrame` schemas.
+- Schemas: `schemas/ml/policy_eval.schema.json` and
+  `schemas/ml/policy_eval_leaderboard.schema.json`.
+- `examples/lerobot_vla_eval/` with a one-command runner, committed sample
+  artifacts (offline-reproducible), hero GIFs, and a CI policy-regression gate.
+- `tests/check_lerobot_vla_eval.py` validates envelopes, both report schemas,
+  the leaderboard, deterministic reproduction (torch-gated for neural/vision),
+  the MCAP round-trip, and the `proposed_only` / actuator-`none` boundary.
+
+Honest finding kept in the docs: on `pusht` the state is so informative that the
+state-based policies (`neural_bc`, `bc_knn`) beat the vision policies, and the
+frozen pretrained ResNet backbone generalizes worse than a small task-specific
+CNN despite a lower training loss. The eval harness makes this measurable on
+equal footing.
+
 ### Add Dataset Report And Safety Authority Schemas
 
 Labels: `schema`, `dataset`, `safety`, `observability`
@@ -809,7 +871,7 @@ Deliverables:
 - Summarized interoperability, replayability, observability, transport, and
   safety/authority implications.
 - Listed main files to review and known local tests.
-- Recorded that ROS2 live smoke was intentionally not run.
+- Recorded that ROS2 live smoke had not been run in that review pass.
 
 ### Prepare Commit And PR Metadata
 
@@ -881,27 +943,27 @@ A new RoMi demo feature should generally include:
 
 ## Current Best Next Step
 
-The highest-value next implementation is:
+The LeRobot VLA counterfactual evaluation slice now realizes the 90-day "credible
+vertical slice": real public robot data (state + camera) -> RoMi import -> replay
+-> five heterogeneous policies (`heuristic`, `bc_knn`, `neural_bc`, `vision_cnn`,
+`vision_resnet`, plus a `claude`/VLA hook) -> counterfactual eval vs recorded
+expert actions -> dataset-scale leaderboard -> CI policy-regression gate ->
+Foxglove-ready MCAP export, with `proposed_only` / actuator-`none` throughout.
+The README leads with this slice. The schema/report contract work and a local
+ROS2 Jazzy smoke run were verified earlier on `main`.
+
+The highest-value next follow-ups are:
 
 ```text
-Commit or open PR
+a second dataset, then a true vision-language VLA
 ```
-
-The committed artifact set now has schema-backed policy, timeline, dataset,
-safety, ROS2 bridge diagnostics, stream sample envelope coverage, lifecycle
-event coverage, report artifact manifest coverage, and robotics payload summary
-coverage. Dataset report observation windows now carry schema-linked stream
-rows, bounds, and validated payload summaries. Native and browser policy
-payload summaries are now validated against `ml/policy_io.schema.json`. README
-media has also been refreshed against the current Studio UI, and browser/capture
-dependencies are explicit for local development.
-
-The remaining practical work is to either create the commit/open the PR, or
-split the large change set if review size needs to be reduced.
 
 The recommended order is:
 
-1. Commit or open PR.
-2. Optional split into smaller PRs if review size needs to be reduced.
-3. Optional ROS2 live smoke run when a ROS2 environment is available.
-
+1. Add a second LeRobot dataset to show the harness generalizes beyond `pusht`
+   (may require generalizing the action-space mapping).
+2. Add a real vision-language VLA backend (SmolVLA / OpenVLA) behind the same
+   `propose()` interface, using the GPU.
+3. Re-run ROS2 live smoke when bridge mappings or ROS2 message handling change.
+4. Add a small contributor guide or ADR if project governance becomes the next
+   bottleneck.
