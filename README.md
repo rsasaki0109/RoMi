@@ -6,24 +6,6 @@
 
 Replay a robot episode, swap a policy, and inspect what changed before touching actuators.
 
-RoMi stands for **Robotics Middleware**. It is an early pre-MVP project exploring a bridge-first contract layer between live robots, simulators, recorded episodes, datasets, ML policies, and deployment runtimes.
-
-- Run a ROS2-free navigation + manipulation simulator.
-- Record and replay RoMi-shaped camera, depth, joint, odometry, TF, goal, and policy streams.
-- Export dataset, policy comparison, replay timeline, safety, and bridge diagnostics artifacts for review.
-
-<p align="center">
-  <a href="docs/assets/romi-2d-nav-manip-demo.mp4">
-    <img src="docs/assets/romi-2d-nav-manip-demo.webp" alt="RoMi 2D semi-humanoid navigation and manipulation simulator demo" width="900">
-  </a>
-</p>
-
-<p align="center">
-  <sub>Actual RoMi 2D simulator capture: ROS2-free navigation/manipulation with RoMi Studio for replay, policy comparison, timeline evaluation, safety boundaries, and dataset state.</sub>
-</p>
-
-## Evaluate a policy on real robot data
-
 <p align="center">
   <a href="docs/assets/lerobot-vla-eval.gif">
     <img src="docs/assets/lerobot-vla-eval.gif" alt="RoMi counterfactual policy evaluation on a LeRobot pusht episode: expert vs proposed goal trajectories and action error over the replay" width="900">
@@ -31,8 +13,16 @@ RoMi stands for **Robotics Middleware**. It is an early pre-MVP project explorin
 </p>
 
 <p align="center">
-  <sub>Counterfactual policy evaluation on <code>lerobot/pusht</code>: the recorded expert goal trajectory (green) vs the policy's proposed goals (orange), with action error over the replay. Actuator authority stays <code>none</code>.</sub>
+  <sub>Counterfactual policy evaluation on a real <code>lerobot/pusht</code> episode: the recorded expert goal trajectory (green) vs the policy's proposed goals (orange), with action error over the replay. Actuator authority stays <code>none</code>.</sub>
 </p>
+
+RoMi stands for **Robotics Middleware** — an early pre-MVP, bridge-first contract layer between live robots, simulators, recorded episodes, datasets, ML policies, and deployment runtimes.
+
+- **Evaluate policies on real robot data**: import a [LeRobot](https://github.com/huggingface/lerobot) episode, replay it, and counterfactually score a policy (heuristic, learned, neural, vision, or VLA) against the recorded expert — before touching actuators.
+- **Run ROS2-free**: a navigation + manipulation simulator with replay, policy comparison, timeline, safety, and bridge-diagnostics artifacts.
+- **Stay inspectable and interoperable**: RoMi-shaped event envelopes, schema-backed artifacts, a CI policy-regression gate, and Foxglove-ready MCAP export.
+
+## Evaluate a policy on real robot data
 
 Point RoMi at a public [LeRobot](https://github.com/huggingface/lerobot) episode,
 run a policy over the replay, and measure how far its proposed actions are from
@@ -77,7 +67,17 @@ Foxglove-ready [MCAP](https://mcap.dev) file. See
 
 ## Try It
 
-Current visual target: **RoMi 2D semi-humanoid navigation + manipulation simulator**.
+RoMi also ships a ROS2-free **2D semi-humanoid navigation + manipulation simulator** with a browser RoMi Studio inspector:
+
+<p align="center">
+  <a href="docs/assets/romi-2d-nav-manip-demo.mp4">
+    <img src="docs/assets/romi-2d-nav-manip-demo.webp" alt="RoMi 2D semi-humanoid navigation and manipulation simulator demo" width="820">
+  </a>
+</p>
+
+<p align="center">
+  <sub>RoMi Studio: replay, policy comparison, timeline evaluation, safety boundaries, and dataset state — no ROS2 required.</sub>
+</p>
 
 Run the default ROS2-free smoke demo from the repository root:
 
