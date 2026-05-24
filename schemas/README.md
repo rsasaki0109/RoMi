@@ -24,6 +24,8 @@ Current ML report schemas:
 - `ml/evaluation_timeline.schema.json`: replay-wide policy evaluation timeline
 - `ml/policy_eval.schema.json`: counterfactual evaluation of proposed actions
   against recorded expert actions (see `examples/lerobot_vla_eval`)
+- `ml/policy_eval_leaderboard.schema.json`: dataset-scale ranking of policies by
+  counterfactual agreement across held-out episodes
 
 Both ML report schemas currently include runtime graph metadata so generated
 artifacts identify the source, replay, policy, evaluation, and safety-boundary

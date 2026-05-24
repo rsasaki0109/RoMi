@@ -26,6 +26,19 @@ A structured JSON report (`romi.counterfactual_policy_eval`, validated against
 
 This tool only evaluates proposals; it never promotes them to commands.
 
+## Leaderboard across episodes
+
+`romi_batch_eval.py` runs the eval across a held-out set of episodes and ranks
+policies by mean action error (`romi.policy_eval_leaderboard`, validated against
+`schemas/ml/policy_eval_leaderboard.schema.json`). It emits JSON + Markdown and
+an optional bar-chart PNG.
+
+```bash
+python3 romi_batch_eval.py \
+  --episodes 0,21-24 --bc-memory bc_memory.json \
+  --json-output leaderboard.json --md-output leaderboard.md --png-output leaderboard.png
+```
+
 ## Visualization
 
 `romi_eval_visualize.py` renders a report into a shareable animated GIF (expert

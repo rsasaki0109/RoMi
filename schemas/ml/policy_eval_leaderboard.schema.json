@@ -1,0 +1,145 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://romi.dev/schemas/ml/policy_eval_leaderboard.schema.json",
+  "title": "RoMi Policy Evaluation Leaderboard",
+  "description": "Draft schema for a dataset-scale leaderboard ranking policies by counterfactual agreement with recorded expert actions across held-out episodes.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "report_kind",
+    "dataset",
+    "reference",
+    "tolerance_px",
+    "held_out_episodes",
+    "best_policy",
+    "safety_boundary",
+    "leaderboard"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "0.1.0"
+    },
+    "report_kind": {
+      "type": "string",
+      "const": "romi.policy_eval_leaderboard"
+    },
+    "dataset": {
+      "type": "string"
+    },
+    "reference": {
+      "type": "string",
+      "const": "recorded_expert_action"
+    },
+    "tolerance_px": {
+      "type": "number",
+      "minimum": 0
+    },
+    "held_out_episodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "best_policy": {
+      "type": "string"
+    },
+    "safety_boundary": {
+      "type": "object",
+      "required": [
+        "policy_authority",
+        "actuator_authority",
+        "command_stream_emitted",
+        "blocked_reason"
+      ],
+      "properties": {
+        "policy_authority": {
+          "type": "string",
+          "const": "proposed_only"
+        },
+        "actuator_authority": {
+          "type": "string",
+          "const": "none"
+        },
+        "command_stream_emitted": {
+          "type": "boolean",
+          "const": false
+        },
+        "blocked_reason": {
+          "type": "string",
+          "const": "proposal_not_actuator_authority"
+        }
+      },
+      "additionalProperties": false
+    },
+    "leaderboard": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "policy_id",
+          "episodes",
+          "mean_action_error_px",
+          "mean_agreement_rate",
+          "per_episode"
+        ],
+        "properties": {
+          "policy_id": {
+            "type": "string"
+          },
+          "episodes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "mean_action_error_px": {
+            "type": "number",
+            "minimum": 0
+          },
+          "mean_agreement_rate": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "per_episode": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": [
+                "episode",
+                "mean_action_error_px",
+                "agreement_rate",
+                "matched_steps"
+              ],
+              "properties": {
+                "episode": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "mean_action_error_px": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "agreement_rate": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "matched_steps": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

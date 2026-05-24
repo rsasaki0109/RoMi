@@ -1,0 +1,99 @@
+{
+  "best_policy": "bc_knn",
+  "dataset": "lerobot/pusht",
+  "held_out_episodes": [
+    0,
+    21,
+    22,
+    23,
+    24
+  ],
+  "leaderboard": [
+    {
+      "episodes": 5,
+      "mean_action_error_px": 25.4992,
+      "mean_agreement_rate": 0.4427,
+      "per_episode": [
+        {
+          "agreement_rate": 0.5652,
+          "episode": 0,
+          "matched_steps": 161,
+          "mean_action_error_px": 21.3261
+        },
+        {
+          "agreement_rate": 0.4174,
+          "episode": 21,
+          "matched_steps": 115,
+          "mean_action_error_px": 28.0452
+        },
+        {
+          "agreement_rate": 0.3578,
+          "episode": 22,
+          "matched_steps": 109,
+          "mean_action_error_px": 24.3033
+        },
+        {
+          "agreement_rate": 0.4545,
+          "episode": 23,
+          "matched_steps": 110,
+          "mean_action_error_px": 26.2188
+        },
+        {
+          "agreement_rate": 0.4184,
+          "episode": 24,
+          "matched_steps": 98,
+          "mean_action_error_px": 27.6024
+        }
+      ],
+      "policy_id": "bc_knn"
+    },
+    {
+      "episodes": 5,
+      "mean_action_error_px": 56.8648,
+      "mean_agreement_rate": 0.0365,
+      "per_episode": [
+        {
+          "agreement_rate": 0.087,
+          "episode": 0,
+          "matched_steps": 161,
+          "mean_action_error_px": 55.6126
+        },
+        {
+          "agreement_rate": 0.0957,
+          "episode": 21,
+          "matched_steps": 115,
+          "mean_action_error_px": 49.3015
+        },
+        {
+          "agreement_rate": 0.0,
+          "episode": 22,
+          "matched_steps": 109,
+          "mean_action_error_px": 59.7713
+        },
+        {
+          "agreement_rate": 0.0,
+          "episode": 23,
+          "matched_steps": 110,
+          "mean_action_error_px": 60.0338
+        },
+        {
+          "agreement_rate": 0.0,
+          "episode": 24,
+          "matched_steps": 98,
+          "mean_action_error_px": 59.6047
+        }
+      ],
+      "policy_id": "heuristic"
+    }
+  ],
+  "reference": "recorded_expert_action",
+  "report_kind": "romi.policy_eval_leaderboard",
+  "safety_boundary": {
+    "actuator_authority": "none",
+    "blocked_reason": "proposal_not_actuator_authority",
+    "command_stream_emitted": false,
+    "policy_authority": "proposed_only"
+  },
+  "schema_version": "0.1.0",
+  "tolerance_px": 20.0
+}

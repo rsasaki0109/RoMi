@@ -134,11 +134,31 @@ def check(repo_root: Path) -> None:
         f"bc_knn mean error ({mean_error['bc_knn']}) should beat heuristic ({mean_error['heuristic']})",
     )
 
+    # 6. dataset-scale leaderboard: schema, safety, and ranking invariants
+    leaderboard_schema = load_json(schemas / "ml" / "policy_eval_leaderboard.schema.json")
+    leaderboard = load_json(sample / "leaderboard.json")
+    jsonschema.validate(leaderboard, leaderboard_schema)
+    require(
+        leaderboard["safety_boundary"]["actuator_authority"] == "none"
+        and leaderboard["safety_boundary"]["command_stream_emitted"] is False,
+        "leaderboard safety boundary must stay actuator none / no command stream",
+    )
+    ranked = leaderboard["leaderboard"]
+    require(
+        ranked == sorted(ranked, key=lambda e: e["mean_action_error_px"]),
+        "leaderboard entries must be sorted by mean action error",
+    )
+    require(
+        leaderboard["best_policy"] == ranked[0]["policy_id"] == "bc_knn",
+        "bc_knn should top the held-out leaderboard",
+    )
+
     print(
         "OK lerobot_vla_eval: "
         f"{len(stream_samples)} stream samples; "
-        f"heuristic mean={mean_error['heuristic']}px, bc_knn mean={mean_error['bc_knn']}px "
-        "(learned policy beats baseline)"
+        f"heuristic mean={mean_error['heuristic']}px, bc_knn mean={mean_error['bc_knn']}px; "
+        f"leaderboard best={leaderboard['best_policy']} over "
+        f"{len(leaderboard['held_out_episodes'])} held-out episodes"
     )
 
 

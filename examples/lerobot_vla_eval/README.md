@@ -91,6 +91,26 @@ python3 ../../tools/vla_policy/build_bc_memory.py \
   --episodes 1-20 --output sample_output/bc_memory.json
 ```
 
+## Dataset-scale leaderboard
+
+The same harness scores policies across a *set* of held-out episodes and ranks
+them, so the comparison is not a single-episode fluke:
+
+<p align="center">
+  <img src="../../docs/assets/lerobot-vla-leaderboard.png" alt="Policy leaderboard across held-out episodes" width="760">
+</p>
+
+See [`sample_output/leaderboard.md`](sample_output/leaderboard.md). Regenerate it
+across episodes `0,21,22,23,24` (held out from the `bc_knn` training set) with:
+
+```bash
+python3 ../../tools/policy_eval/romi_batch_eval.py \
+  --episodes 0,21-24 --bc-memory sample_output/bc_memory.json \
+  --json-output sample_output/leaderboard.json \
+  --md-output sample_output/leaderboard.md \
+  --png-output ../../docs/assets/lerobot-vla-leaderboard.png
+```
+
 ## Pieces
 
 | Tool | Role |
@@ -99,6 +119,7 @@ python3 ../../tools/vla_policy/build_bc_memory.py \
 | [`tools/vla_policy`](../../tools/vla_policy) | Pluggable policy: `heuristic` (offline), `bc_knn` (learned), or `claude` |
 | [`tools/vla_policy/build_bc_memory.py`](../../tools/vla_policy) | Build the imitation memory for `bc_knn` from demonstration episodes |
 | [`tools/policy_eval`](../../tools/policy_eval) | Counterfactual eval: proposals vs recorded expert actions |
+| [`tools/policy_eval/romi_batch_eval.py`](../../tools/policy_eval) | Score and rank policies across held-out episodes (leaderboard) |
 | [`tools/policy_eval/romi_eval_visualize.py`](../../tools/policy_eval) | Render the eval report into the animation above (GIF + poster PNG) |
 
 Regenerate the animation from a committed report with:
