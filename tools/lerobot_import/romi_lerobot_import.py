@@ -209,6 +209,73 @@ def load_episode_frames(
     return frames
 
 
+def decode_episode_frames(
+    *,
+    repo_id: str,
+    revision: str,
+    episode: int,
+    cache_dir: Path,
+    offline: bool,
+    video_key: str = "observation.image",
+):
+    """Decode an episode's camera frames from the dataset video via ffmpeg.
+
+    Returns an ``(N, H, W, 3)`` uint8 numpy array of RGB frames for the episode,
+    using software AV1 decoding (libdav1d) so it works without GPU video accel.
+    Requires ffmpeg on PATH and numpy.
+    """
+    import shutil
+    import subprocess
+
+    import numpy as np
+    import pyarrow.parquet as pq
+
+    if shutil.which("ffmpeg") is None:
+        raise RuntimeError("ffmpeg is required to decode dataset video frames.")
+
+    info = load_info(repo_id=repo_id, revision=revision, cache_dir=cache_dir, offline=offline)
+    shape = info["features"][video_key]["shape"]  # [H, W, C]
+    height, width = int(shape[0]), int(shape[1])
+
+    meta = cache_fetch(
+        repo_id=repo_id, revision=revision,
+        rel_path="meta/episodes/chunk-000/file-000.parquet",
+        cache_dir=cache_dir, offline=offline,
+    )
+    cols = [
+        "episode_index", "length",
+        f"videos/{video_key}/chunk_index", f"videos/{video_key}/file_index",
+        f"videos/{video_key}/from_timestamp", f"videos/{video_key}/to_timestamp",
+    ]
+    rows = pq.read_table(meta, columns=cols).to_pylist()
+    row = next((r for r in rows if int(r["episode_index"]) == episode), None)
+    if row is None:
+        raise ValueError(f"Episode {episode} not found for video decode.")
+
+    chunk = int(row[f"videos/{video_key}/chunk_index"])
+    file_index = int(row[f"videos/{video_key}/file_index"])
+    start = float(row[f"videos/{video_key}/from_timestamp"])
+    end = float(row[f"videos/{video_key}/to_timestamp"])
+    length = int(row["length"])
+
+    video_template = info.get("video_path", "videos/{video_key}/chunk-{chunk_index:03d}/file-{file_index:03d}.mp4")
+    rel = video_template.format(video_key=video_key, chunk_index=chunk, file_index=file_index)
+    video = cache_fetch(repo_id=repo_id, revision=revision, rel_path=rel, cache_dir=cache_dir, offline=offline)
+
+    cmd = [
+        "ffmpeg", "-hide_banner", "-loglevel", "error", "-c:v", "libdav1d",
+        "-i", str(video), "-ss", f"{start}", "-t", f"{max(end - start, 0.0) + 0.5}",
+        "-pix_fmt", "rgb24", "-f", "rawvideo", "-",
+    ]
+    result = subprocess.run(cmd, capture_output=True)
+    if result.returncode != 0:
+        raise RuntimeError(f"ffmpeg decode failed: {result.stderr.decode()[:300]}")
+    buffer = np.frombuffer(result.stdout, dtype=np.uint8)
+    frame_bytes = height * width * 3
+    frames = buffer[: (buffer.size // frame_bytes) * frame_bytes].reshape(-1, height, width, 3)
+    return frames[:length]
+
+
 def to_xy(value: Any) -> dict[str, float] | None:
     try:
         seq = list(value)

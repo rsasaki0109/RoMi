@@ -87,6 +87,14 @@ def check(repo_root: Path) -> None:
             "extra": ["--backend", "neural_bc", "--neural-weights", str(sample / "bc_mlp_weights.json"), "--device", "cpu"],
             "needs_torch": True,
         },
+        {
+            "name": "vision_cnn",
+            "policy": "policy.vision_cnn.jsonl",
+            "report": "policy_eval.vision_cnn.json",
+            "extra": ["--backend", "vision_cnn", "--vision-weights", str(sample / "cnn_bc_weights.npz"),
+                      "--frames", str(sample / "frames_ep0.npz"), "--device", "cpu"],
+            "needs_torch": True,
+        },
     ]
 
     torch_available = importlib.util.find_spec("torch") is not None
@@ -143,7 +151,7 @@ def check(repo_root: Path) -> None:
             )
 
     # 5. the learned policies should track the expert better than the naive baseline
-    for learned in ("bc_knn", "neural_bc"):
+    for learned in ("bc_knn", "neural_bc", "vision_cnn"):
         require(
             mean_error[learned] < mean_error["heuristic"],
             f"{learned} mean error ({mean_error[learned]}) should beat heuristic ({mean_error['heuristic']})",
@@ -201,8 +209,8 @@ def check(repo_root: Path) -> None:
     print(
         "OK lerobot_vla_eval: "
         f"{len(stream_samples)} stream samples; ep0 mean error "
-        f"heuristic={mean_error['heuristic']}px > bc_knn={mean_error['bc_knn']}px > "
-        f"neural_bc={mean_error['neural_bc']}px; "
+        f"heuristic={mean_error['heuristic']} bc_knn={mean_error['bc_knn']} "
+        f"neural_bc={mean_error['neural_bc']} vision_cnn={mean_error['vision_cnn']} px; "
         f"leaderboard best={leaderboard['best_policy']} over "
         f"{len(leaderboard['held_out_episodes'])} held-out episodes; "
         "MCAP export valid (foxglove.PoseInFrame)"

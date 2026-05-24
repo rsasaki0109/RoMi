@@ -20,5 +20,15 @@ existing 2D navigation action space, so the envelopes validate against
 Downloaded files are cached under `~/.cache/romi-lerobot/` by default
 (`--cache-dir` to override).
 
+## Camera frames
+
+`extract_frames.py` decodes an episode's camera video into a compact NPZ of RGB
+frames (software AV1 decoding via `ffmpeg` + `libdav1d`, so no GPU video accel is
+required). The `vision_cnn` policy backend reads this NPZ for image observations.
+
+```bash
+python3 extract_frames.py --episode 0 --output frames_ep0.npz
+```
+
 Pair with [`tools/vla_policy`](../vla_policy) and [`tools/policy_eval`](../policy_eval).
 See [`examples/lerobot_vla_eval`](../../examples/lerobot_vla_eval).

@@ -75,19 +75,20 @@ behavior-cloning policy** (`bc_knn`) and a **GPU-trained neural MLP** (`neural_b
 both learned only from *other* `pusht` episodes — are compared against the naive
 go-to-center baseline on the held-out episode 0:
 
-| Policy | Mean action error | Agreement within 20 px |
-| --- | --- | --- |
-| `heuristic` (go-to-center) | 55.6 px | 8.7% |
-| `bc_knn` (k-NN imitation) | 21.3 px | 56.5% |
-| **`neural_bc`** (GPU-trained MLP) | **18.3 px** | **60.2%** |
+| Policy | Observation | Mean action error | Agreement within 20 px |
+| --- | --- | --- | --- |
+| `heuristic` (go-to-center) | state | 55.6 px | 8.7% |
+| `bc_knn` (k-NN imitation) | state | 21.3 px | 56.5% |
+| **`neural_bc`** (GPU-trained MLP) | state | **18.3 px** | **60.2%** |
+| `vision_cnn` (GPU-trained CNN) | **camera image** | 26.5 px | 45.3% |
 
 <p align="center">
   <img src="../../docs/assets/lerobot-vla-eval-neural-bc.gif" alt="GPU-trained neural_bc policy tracking the expert demonstration" width="860">
 </p>
 
-The learned policies track the recorded expert far more closely than the
-baseline — and the report shows exactly where they still diverge. Build the
-imitation memory and train the neural policy with:
+Every learned policy tracks the recorded expert far more closely than the
+baseline, and the report shows exactly where each still diverges. Build the
+imitation memory and train the learned policies with:
 
 ```bash
 # k-NN imitation memory (numpy only)
@@ -98,6 +99,36 @@ python3 ../../tools/vla_policy/build_bc_memory.py \
 python3 ../../tools/vla_policy/train_bc_mlp.py \
   --episodes 1-50 --epochs 600 --output sample_output/bc_mlp_weights.json
 ```
+
+### Vision policy (image → action)
+
+`vision_cnn` is a real GPU-trained convolutional policy that consumes the
+**camera frame** instead of the 2D state — the "V" a full VLA also uses. On this
+task the state is so directly tied to the action that the state-based policies
+score higher; the harness makes that observation-modality tradeoff measurable on
+the same footing.
+
+<p align="center">
+  <img src="../../docs/assets/lerobot-vla-eval-vision-cnn.gif" alt="GPU-trained vision_cnn policy tracking the expert demonstration" width="860">
+</p>
+
+```bash
+# Decode the held-out episode's camera frames (software AV1 via ffmpeg)
+python3 ../../tools/lerobot_import/extract_frames.py \
+  --episode 0 --output sample_output/frames_ep0.npz
+
+# Train the CNN vision policy on demonstration frames (torch; CUDA when available)
+python3 ../../tools/vla_policy/train_cnn_bc.py \
+  --episodes 1-30 --epochs 40 --output sample_output/cnn_bc_weights.npz
+
+# Run it (reads the camera frames, deterministic CPU inference)
+python3 ../../tools/vla_policy/romi_vla_policy.py --input sample_output/episode.jsonl \
+  --backend vision_cnn --vision-weights sample_output/cnn_bc_weights.npz \
+  --frames sample_output/frames_ep0.npz --device cpu --output /tmp/policy.vision_cnn.jsonl
+```
+
+A real vision-language VLA (OpenVLA / SmolVLA) can replace this CNN behind the
+same `propose()` interface.
 
 ## Dataset-scale leaderboard
 
@@ -144,9 +175,11 @@ MCAP-compatible, not MCAP-only.
 | Tool | Role |
 | --- | --- |
 | [`tools/lerobot_import`](../../tools/lerobot_import) | LeRobot v3 episode → RoMi episode JSONL (parquet over HTTP, no torch) |
-| [`tools/vla_policy`](../../tools/vla_policy) | Pluggable policy: `heuristic`, `bc_knn`, `neural_bc` (GPU-trained), or `claude` |
+| [`tools/lerobot_import/extract_frames.py`](../../tools/lerobot_import) | Decode an episode's camera frames to an NPZ (software AV1 via ffmpeg) |
+| [`tools/vla_policy`](../../tools/vla_policy) | Pluggable policy: `heuristic`, `bc_knn`, `neural_bc`, `vision_cnn`, or `claude` |
 | [`tools/vla_policy/build_bc_memory.py`](../../tools/vla_policy) | Build the imitation memory for `bc_knn` from demonstration episodes |
 | [`tools/vla_policy/train_bc_mlp.py`](../../tools/vla_policy) | Train the `neural_bc` MLP policy on demonstrations (GPU when available) |
+| [`tools/vla_policy/train_cnn_bc.py`](../../tools/vla_policy) | Train the `vision_cnn` image policy on demonstration frames (GPU when available) |
 | [`tools/policy_eval`](../../tools/policy_eval) | Counterfactual eval: proposals vs recorded expert actions |
 | [`tools/policy_eval/romi_batch_eval.py`](../../tools/policy_eval) | Score and rank policies across held-out episodes (leaderboard) |
 | [`tools/policy_eval/romi_eval_visualize.py`](../../tools/policy_eval) | Render the eval report into the animation above (GIF + poster PNG) |

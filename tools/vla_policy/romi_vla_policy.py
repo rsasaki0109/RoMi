@@ -61,7 +61,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--output", type=Path, default=None, help="Policy JSONL. Defaults to stdout.")
     parser.add_argument(
         "--backend",
-        choices=["heuristic", "bc_knn", "neural_bc", "claude"],
+        choices=["heuristic", "bc_knn", "neural_bc", "vision_cnn", "claude"],
         default="heuristic",
         help="Policy backend. Defaults to heuristic (offline).",
     )
@@ -104,7 +104,9 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--bc-memory", type=Path, default=None, help="bc_knn training memory JSON (from build_bc_memory.py).")
     parser.add_argument("--bc-k", type=int, default=5, help="bc_knn number of nearest demonstrations.")
     parser.add_argument("--neural-weights", type=Path, default=None, help="neural_bc weights JSON (from train_bc_mlp.py).")
-    parser.add_argument("--device", default="cpu", help="neural_bc inference device (cpu keeps results deterministic).")
+    parser.add_argument("--vision-weights", type=Path, default=None, help="vision_cnn weights NPZ (from train_cnn_bc.py).")
+    parser.add_argument("--frames", type=Path, default=None, help="vision_cnn episode frames NPZ (from extract_frames.py).")
+    parser.add_argument("--device", default="cpu", help="neural_bc/vision_cnn inference device (cpu keeps results deterministic).")
     parser.add_argument("--claude-model", default="claude-haiku-4-5-20251001", help="Claude model id.")
     parser.add_argument("--max-actions", type=int, default=None, help="Cap proposed actions.")
     return parser.parse_args(argv)
@@ -289,6 +291,71 @@ class NeuralBCBackend:
         return {"x": float(goal[0]), "y": float(goal[1])}
 
 
+class VisionCnnBackend:
+    """A GPU-trained CNN vision policy (image -> action) run for inference.
+
+    Consumes the camera frame rather than the 2D state, so it is a real vision
+    behavior-cloning policy. Frames come from an episode NPZ (extract_frames.py)
+    and are consumed in trigger order. Inference defaults to CPU for determinism.
+    The architecture must match train_cnn_bc.build_cnn() exactly.
+    """
+
+    policy_id = "romi_vision_cnn"
+
+    @staticmethod
+    def _build_cnn():
+        import torch.nn as nn
+
+        return nn.Sequential(
+            nn.Conv2d(3, 16, 5, stride=2, padding=2), nn.ReLU(),
+            nn.Conv2d(16, 32, 5, stride=2, padding=2), nn.ReLU(),
+            nn.Conv2d(32, 64, 3, stride=2, padding=1), nn.ReLU(),
+            nn.AdaptiveAvgPool2d(4),
+            nn.Flatten(),
+            nn.Linear(64 * 4 * 4, 64), nn.ReLU(),
+            nn.Linear(64, 2),
+        )
+
+    def __init__(self, *, weights_path: Path, frames_path: Path, device: str) -> None:
+        try:
+            import numpy as np
+            import torch
+        except ImportError as exc:
+            raise RuntimeError("The vision_cnn backend needs torch and numpy.") from exc
+        if weights_path is None or not weights_path.exists():
+            raise RuntimeError("The vision_cnn backend needs --vision-weights (train with train_cnn_bc.py).")
+        if frames_path is None or not frames_path.exists():
+            raise RuntimeError("The vision_cnn backend needs --frames (build with extract_frames.py).")
+
+        self.torch = torch
+        self.device = torch.device(device)
+        blob = np.load(frames_path)
+        self.frames = blob["frames"]  # (N, H, W, 3) uint8
+
+        weights = np.load(weights_path)
+        self.model = self._build_cnn()
+        state_dict = {
+            key[len("param::"):]: torch.tensor(weights[key], dtype=torch.float32)
+            for key in weights.files if key.startswith("param::")
+        }
+        self.model.load_state_dict(state_dict)
+        self.model.to(self.device).eval()
+        self.action_mean = torch.tensor(weights["action_mean"], dtype=torch.float32, device=self.device)
+        self.action_std = torch.tensor(weights["action_std"], dtype=torch.float32, device=self.device)
+        self.index = 0
+
+    def propose(self, *, position: dict[str, float], history: list[dict[str, float]]) -> dict[str, float]:
+        torch = self.torch
+        frame_index = min(self.index, len(self.frames) - 1)
+        self.index += 1
+        with torch.no_grad():
+            frame = torch.tensor(self.frames[frame_index], dtype=torch.float32, device=self.device)
+            image = (frame.permute(2, 0, 1) / 255.0).unsqueeze(0)
+            output = self.model(image).squeeze(0)
+            goal = output * self.action_std + self.action_mean
+        return {"x": float(goal[0]), "y": float(goal[1])}
+
+
 class ClaudeBackend:
     """Real-reasoning policy backed by the Anthropic SDK."""
 
@@ -350,6 +417,8 @@ def build_backend(args: argparse.Namespace, task: str | None) -> Any:
         return BCKnnBackend(memory_path=args.bc_memory, k=args.bc_k)
     if args.backend == "neural_bc":
         return NeuralBCBackend(weights_path=args.neural_weights, device=args.device)
+    if args.backend == "vision_cnn":
+        return VisionCnnBackend(weights_path=args.vision_weights, frames_path=args.frames, device=args.device)
     return ClaudeBackend(model=args.claude_model, task=task)
 
 
